@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { ALL_PRODUCTS } from "./products.js";
 import { supabase } from "./supabase.js";
-import { getStockOverrides, getCatalogue, getUtilisateurs } from "./db.js";
+import { getStockOverrides, getStockOverridesSite, getCatalogue, getUtilisateurs } from "./db.js";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend,
   ResponsiveContainer, Cell,
@@ -135,11 +135,13 @@ export default function AdminDashboard({ user, navigateTo }) {
     setErrors({});
     const since30 = new Date(Date.now() - 30 * 86400000).toISOString();
 
-    const [ovRes, clRes, stRes, mvRes, prRes, orRes, usRes] =
+    const [ovRes, clRes, stRes, clOvRes, stOvRes, mvRes, prRes, orRes, usRes] =
       await Promise.allSettled([
         getStockOverrides(),
         getCatalogue("claisse_rail"),
         getCatalogue("stmf"),
+        getStockOverridesSite("claisse_rail"),
+        getStockOverridesSite("stmf"),
         supabase
           .from("mouvements")
           .select("id,created_at,type,site_id")
@@ -166,13 +168,23 @@ export default function AdminDashboard({ user, navigateTo }) {
       }))
     );
 
-    // Stock CLAISSE RAIL
-    if (clRes.status === "fulfilled") setStockClaisse(clRes.value);
-    else errs.stockClaisse = "Erreur chargement stock CLAISSE RAIL";
+    // Stock CLAISSE RAIL — catalogue + overrides live
+    if (clRes.status === "fulfilled") {
+      const clOv = clOvRes.status === "fulfilled" ? clOvRes.value : {};
+      setStockClaisse(clRes.value.map(p => ({
+        ...p,
+        stock: clOv[p.id] !== undefined ? clOv[p.id] : p.stock,
+      })));
+    } else errs.stockClaisse = "Erreur chargement stock CLAISSE RAIL";
 
-    // Stock STMF
-    if (stRes.status === "fulfilled") setStockStmf(stRes.value);
-    else errs.stockStmf = "Erreur chargement stock STMF";
+    // Stock STMF — catalogue + overrides live
+    if (stRes.status === "fulfilled") {
+      const stOv = stOvRes.status === "fulfilled" ? stOvRes.value : {};
+      setStockStmf(stRes.value.map(p => ({
+        ...p,
+        stock: stOv[p.id] !== undefined ? stOv[p.id] : p.stock,
+      })));
+    } else errs.stockStmf = "Erreur chargement stock STMF";
 
     // Mouvements
     if (mvRes.status === "fulfilled" && !mvRes.value.error)
