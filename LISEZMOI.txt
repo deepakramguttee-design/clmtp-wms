@@ -1,0 +1,39 @@
+============================================
+       LogiWMS - Guide d'installation
+============================================
+
+ETAPE 1 - Installer Node.js (une seule fois)
+---------------------------------------------
+Si ce n'est pas deja fait :
+1. Allez sur https://nodejs.org
+2. Cliquez sur le bouton vert "LTS"
+3. Installez le programme telecharge
+4. Redemarrez votre ordinateur
+
+ETAPE 2 - Installer le logiciel
+---------------------------------
+Double-cliquez sur : INSTALLER.bat
+Attendez que l'installation se termine (1-2 minutes)
+
+ETAPE 3 - Lancer le logiciel
+------------------------------
+Double-cliquez sur : LANCER.bat
+Le logiciel s'ouvre automatiquement dans votre navigateur
+
+UTILISATION QUOTIDIENNE
+------------------------
+Chaque matin, double-cliquez sur LANCER.bat
+Le logiciel fonctionne sur votre ordinateur (pas besoin d'internet)
+
+ACCES DEPUIS UN AUTRE ORDINATEUR DU RESEAU
+--------------------------------------------
+Sur l'ordinateur qui fait tourner le logiciel, notez son adresse IP
+(Tapez "ipconfig" dans le terminal, notez l'adresse IPv4)
+Depuis un autre PC du meme reseau, ouvrez :
+http://[adresse-ip]:5173
+
+SUPPORT
+--------
+En cas de probleme, contactez votre administrateur informatique.
+
+============================================
