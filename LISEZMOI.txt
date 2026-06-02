@@ -37,3 +37,23 @@ SUPPORT
 En cas de probleme, contactez votre administrateur informatique.
 
 ============================================
+
+DEVELOPPEMENT
+=============
+
+Lancer le serveur de developpement :
+  npm run dev
+
+Construire pour la production :
+  npm run build
+
+VERIFICATION (script de test automatise)
+-----------------------------------------
+Verifier que le bouton "Administration" est visible uniquement
+pour les admins (necessite le serveur de dev actif sur :5173) :
+
+  node verify-admin-button.mjs
+
+Resultat attendu : 5 lignes avec checkmark vert et "RESULTAT : PASS"
+
+============================================
