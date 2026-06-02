@@ -3404,7 +3404,7 @@ function GestionCatalogue({ siteId, catalogue, setCatalogue }) {
             stock: parseInt(row["Stock"]||row["QTÉ"]||row["Quantité"]||0)||0,
             min: parseInt(row["Min"]||row["Minimum"]||row["Stock min"]||0)||0,
             location: String(row["Emplacement"]||row["Location"]||""),
-            prix: parseFloat(row["Prix"]||row["Prix HT"]||0)||0,
+            prix: parseFloat(row["Prix"]||row["Prix HT"]||row["prix_unitaire"]||0)||0,
             unit: String(row["Unité"]||"pcs"),
           });
           idx++;
