@@ -60,7 +60,7 @@ function Spinner() {
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
-function Dashboard({ stockOverrides, mouvements, ordres, products }) {
+function Dashboard({ stockOverrides, mouvements, ordres, products, user, navigateTo }) {
   const [time, setTime] = useState(new Date());
   useEffect(()=>{const t=setInterval(()=>setTime(new Date()),1000);return()=>clearInterval(t);},[]);
   const siteProducts = products || ALL_PRODUCTS;
@@ -84,7 +84,14 @@ function Dashboard({ stockOverrides, mouvements, ordres, products }) {
           <h1 style={{fontSize:26,fontWeight:900,color:"#111827",margin:0}}>Tableau de bord</h1>
           <p style={{color:"#6b7280",margin:"4px 0 0",fontSize:13}}>{time.toLocaleDateString("fr-FR",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</p>
         </div>
-        <div style={{background:"#111827",color:"#fff",borderRadius:10,padding:"8px 16px",fontFamily:"monospace",fontSize:16,fontWeight:700}}>{time.toLocaleTimeString("fr-FR")}</div>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          {user?.role==="admin"&&navigateTo&&(
+            <button onClick={()=>navigateTo("admin")} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #e5e7eb",background:"#fff",color:"#374151",fontWeight:600,cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",gap:6}}>
+              🛡️ Administration
+            </button>
+          )}
+          <div style={{background:"#111827",color:"#fff",borderRadius:10,padding:"8px 16px",fontFamily:"monospace",fontSize:16,fontWeight:700}}>{time.toLocaleTimeString("fr-FR")}</div>
+        </div>
       </div>
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(155px,1fr))",gap:12}}>
@@ -4244,7 +4251,7 @@ export default function App() {
 
   const renderPage=()=>{
     if(loading) return <Spinner/>;
-    if(page==="dashboard") return <Dashboard stockOverrides={stockOverrides} mouvements={mouvements} ordres={ordres} products={ALL_SITE_PRODUCTS}/>;
+    if(page==="dashboard") return <Dashboard stockOverrides={stockOverrides} mouvements={mouvements} ordres={ordres} products={ALL_SITE_PRODUCTS} user={user} navigateTo={setPage}/>;
     if(page==="stock")     return <Stock stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} products={PRODUCTS} siteId={siteId} user={user} customArticles={customArticles} setCustomArticles={setCustomArticles} autoOpenNewArticle={autoOpenNewArticle} setAutoOpenNewArticle={setAutoOpenNewArticle}/>;
     if(page==="mouvements") return <EntreesSorties mouvements={mouvements.filter(m=>!m.site_id||m.site_id===siteId)} setMouvements={setMouvements} stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} siteId={siteId} products={ALL_SITE_PRODUCTS} user={user} navigateTo={setPage} setAutoOpenNewArticle={setAutoOpenNewArticle}/>;
     if(page==="ordres")    return <OrdresReparation ordres={ordres.filter(o=>!o.site_id||o.site_id===siteId)} setOrdres={setOrdres} mouvements={mouvements} setMouvements={setMouvements} stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} siteId={siteId} products={ALL_SITE_PRODUCTS} user={user}/>;
