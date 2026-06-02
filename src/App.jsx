@@ -4257,7 +4257,7 @@ export default function App() {
     if(page==="location")  return <LocationMateriel locations={locations} setLocations={setLocations} siteId={siteId} products={ALL_SITE_PRODUCTS}/>;
     if(page==="pret")      return <PretMateriel prets={prets} setPrets={setPrets} siteId={siteId} products={ALL_SITE_PRODUCTS}/>;
     if(page==="catalogue") return <GestionCatalogue siteId={siteId} catalogue={catalogue} setCatalogue={setCatalogue}/>;
-    if(page==="admin")     return <AdminDashboard user={user}/>;
+    if(page==="admin")     return <AdminDashboard user={user} navigateTo={setPage}/>;
   };
 
   return (

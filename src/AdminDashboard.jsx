@@ -117,7 +117,7 @@ function SiteCard({ siteKey, products, loading, error }) {
 }
 
 // ── MAIN COMPONENT ────────────────────────────────────────────────────────────
-export default function AdminDashboard({ user }) {
+export default function AdminDashboard({ user, navigateTo }) {
   const [loading,      setLoading]      = useState(false);
   const [lastRefresh,  setLastRefresh]  = useState(null);
   const [errors,       setErrors]       = useState({});
@@ -269,7 +269,19 @@ export default function AdminDashboard({ user }) {
         display: "flex", justifyContent: "space-between", alignItems: "center",
         marginBottom: 28, flexWrap: "wrap", gap: 12,
       }}>
-        <div>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          {navigateTo && (
+            <button
+              onClick={() => navigateTo("dashboard")}
+              style={{
+                background: "none", border: "1px solid #334155", borderRadius: 8,
+                color: "#94a3b8", cursor: "pointer", fontSize: 13, fontWeight: 600,
+                padding: "6px 12px", display: "flex", alignItems: "center", gap: 6,
+              }}
+            >
+              ← Dashboard
+            </button>
+          )}
           <h1 style={{ margin: 0, fontSize: 26, fontWeight: 900, color: "#f1f5f9" }}>
             ⚙️ Administration
           </h1>
