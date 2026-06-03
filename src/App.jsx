@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ALL_PRODUCTS } from "./products.js";
 import AdminDashboard from "./AdminDashboard.jsx";
 import VueEclatee from "./VueEclatee.jsx";
@@ -21,6 +21,7 @@ import {
   getPrets, addPret, updatePret, deletePret,
   getUserPermissions,
   getPermissions, savePermissions, deletePermissions,
+  getFiltrationVehicules, getFiltrationEngins,
 } from "./db.js";
 
 // ── STATUTS ───────────────────────────────────────────────────────────────────
@@ -1876,30 +1877,45 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
   const [confirmDeleteOR,setConfirmDeleteOR]=useState(null);
   const [parcSearch,setParcSearch]=useState("");
   const [parcSugg,setParcSugg]=useState([]);
+  const [refFiltreSelectionne, setRefFiltreSelectionne]=useState(null);
+  const [refVehicules, setRefVehicules]=useState([]);
+  const [refEngins, setRefEngins]=useState([]);
+  const parcDropRef=useRef(null);
 
   const canDelete = user && (user.role==="admin" || user.role==="magasinier");
   const [selectedVehicle,setSelectedVehicle]=useState(null);
   const [form,setForm]=useState({machine:"",immat:"",typePanne:"",technicien:"",priorite:"normale",description:""});
 
+  useEffect(()=>{
+    getFiltrationVehicules().then(setRefVehicules);
+    getFiltrationEngins().then(setRefEngins);
+  },[]);
+
+  useEffect(()=>{
+    const onKey=e=>{if(e.key==="Escape")setParcSugg([]);};
+    const onClick=e=>{if(parcDropRef.current&&!parcDropRef.current.contains(e.target))setParcSugg([]);};
+    document.addEventListener("keydown",onKey);
+    document.addEventListener("mousedown",onClick);
+    return()=>{document.removeEventListener("keydown",onKey);document.removeEventListener("mousedown",onClick);};
+  },[]);
+
   const handleParcSearch = v => {
-    setParcSearch(v); setSelectedVehicle(null);
+    setParcSearch(v); setSelectedVehicle(null); setRefFiltreSelectionne(null);
     setForm(f=>({...f,machine:v,immat:""}));
     if(v.length<2){setParcSugg([]);return;}
     const s=v.toLowerCase();
-    setParcSugg(PARC_VEHICULES.filter(p=>
-      p.name.toLowerCase().includes(s)||
-      p.num.toLowerCase().includes(s)||
-      p.immat.toLowerCase().includes(s)||
-      p.marque.toLowerCase().includes(s)||
-      p.modele.toLowerCase().includes(s)
-    ).slice(0,8));
+    const veh=refVehicules.filter(p=>(p.designation||"").toLowerCase().includes(s)).map(p=>({...p,_type:"vehicule",_label:p.designation,_code:""}));
+    const eng=refEngins.filter(p=>(p.engin||"").toLowerCase().includes(s)||(p.code||"").toLowerCase().includes(s)).map(p=>({...p,_type:"engin",_label:p.engin,_code:p.code||""}));
+    setParcSugg([...veh,...eng].slice(0,8));
   };
 
   const selectVehicle = v => {
     setSelectedVehicle(v);
-    setParcSearch(`${v.num} — ${v.name}`);
+    setRefFiltreSelectionne(v);
+    const label=v._type==="vehicule"?v.designation:(v._code?`${v._code} — ${v.engin}`:v.engin);
+    setParcSearch(label);
     setParcSugg([]);
-    setForm(f=>({...f, machine:`${v.num} — ${v.name}`, immat:v.immat||""}));
+    setForm(f=>({...f,machine:label,immat:""}));
   };
 
   const handleCreate = async () => {
@@ -1915,7 +1931,7 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
     setOrdres(prev=>[ordreAvecId,...prev]);
     setShowForm(false);
     setForm({machine:"",immat:"",typePanne:"",technicien:"",priorite:"normale",description:""});
-    setParcSearch(""); setSelectedVehicle(null);
+    setParcSearch(""); setSelectedVehicle(null); setRefFiltreSelectionne(null);
     setFicheOrdre(ordreAvecId);
     setSaving(false);
   };
@@ -2062,23 +2078,28 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
               <button onClick={()=>setShowForm(false)} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:16}}>✕</button>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:12}}>
-              {/* Sélecteur parc véhicules */}
+              {/* Sélecteur véhicule / engin (Références filtres) */}
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Véhicule / Engin du parc *</label>
-                <div style={{position:"relative"}}>
+                <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Véhicule / Engin *</label>
+                <div ref={parcDropRef} style={{position:"relative"}}>
                   <input value={parcSearch} onChange={e=>handleParcSearch(e.target.value)}
-                    placeholder="🔍 N° parc, désignation, immat, marque…"
+                    placeholder="🔍 Désignation, code véhicule ou engin…"
                     style={{width:"100%",padding:"10px 13px",border:`1px solid ${selectedVehicle?"#10b981":"#e5e7eb"}`,borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
-                  {parcSugg.length>0&&(
-                    <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.12)",zIndex:200,overflow:"hidden",marginTop:4,maxHeight:260,overflowY:"auto"}}>
-                      {parcSugg.map((v,i)=>(
-                        <div key={i} onClick={()=>selectVehicle(v)} style={{padding:"9px 14px",cursor:"pointer",borderBottom:"1px solid #f3f4f6",display:"flex",justifyContent:"space-between",alignItems:"center"}}
-                          onMouseEnter={e=>e.currentTarget.style.background="#f9fafb"} onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
-                          <div>
-                            <div style={{fontWeight:700,fontSize:13,color:"#111827"}}>{v.num} — {v.name}</div>
-                            <div style={{fontSize:11,color:"#6b7280",marginTop:1}}>{v.marque} {v.modele}{v.immat&&` · ${v.immat}`}{v.affectation&&` · ${v.affectation}`}</div>
+                  {parcSearch.length>=2&&(
+                    <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.15)",zIndex:500,marginTop:4,maxHeight:280,overflowY:"auto"}}>
+                      {parcSugg.length===0?(
+                        <div style={{padding:"14px 16px",color:"#9ca3af",fontSize:13,textAlign:"center"}}>Aucun véhicule/engin trouvé</div>
+                      ):parcSugg.map((v,i)=>(
+                        <div key={i} onClick={()=>selectVehicle(v)}
+                          style={{padding:"10px 14px",cursor:"pointer",borderBottom:"1px solid #f3f4f6",display:"flex",justifyContent:"space-between",alignItems:"center"}}
+                          onMouseEnter={e=>e.currentTarget.style.background="#f9fafb"} onMouseLeave={e=>e.currentTarget.style.background=""}>
+                          <div style={{minWidth:0}}>
+                            {v._code&&<span style={{fontFamily:"monospace",fontSize:11,color:"#6b7280",marginRight:6}}>{v._code}</span>}
+                            <span style={{fontWeight:700,fontSize:13,color:"#111827"}}>{v._label}</span>
                           </div>
-                          <span style={{color:"#3b82f6",fontSize:12,fontWeight:600,flexShrink:0,marginLeft:8}}>Sélect.</span>
+                          <span style={{background:v._type==="vehicule"?"#dbeafe":"#d1fae5",color:v._type==="vehicule"?"#1e40af":"#065f46",padding:"2px 8px",borderRadius:99,fontSize:10,fontWeight:700,flexShrink:0,marginLeft:8}}>
+                            {v._type==="vehicule"?"Véhicule":"Engin"}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -2086,9 +2107,11 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
                 </div>
                 {selectedVehicle&&(
                   <div style={{marginTop:6,padding:"8px 12px",background:"#f0fdf4",borderRadius:8,fontSize:12,color:"#065f46",border:"1px solid #bbf7d0"}}>
-                    ✅ <strong>{selectedVehicle.num}</strong> — {selectedVehicle.name}
-                    {selectedVehicle.immat&&<span> · <strong>{selectedVehicle.immat}</strong></span>}
-                    {selectedVehicle.chauffeur&&<span> · {selectedVehicle.chauffeur}</span>}
+                    ✅{" "}
+                    {selectedVehicle._type==="vehicule"
+                      ?<strong>{selectedVehicle.designation}</strong>
+                      :<>{selectedVehicle._code&&<strong>{selectedVehicle._code} — </strong>}{selectedVehicle.engin}</>}
+                    {selectedVehicle.categorie&&<span> · <em>{selectedVehicle.categorie}</em></span>}
                   </div>
                 )}
               </div>
