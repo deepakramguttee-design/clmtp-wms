@@ -742,3 +742,50 @@ export async function deletePermissions(userId) {
   const { error } = await supabase.from('user_permissions').delete().eq('user_id', userId)
   if (error) console.error(error)
 }
+
+// ── VUES ÉCLATÉES ─────────────────────────────────────────────────────────────
+export async function getVuesEclatees() {
+  const { data, error } = await supabase
+    .from('vues_eclatees')
+    .select('*')
+    .order('site_id')
+    .order('ordre')
+    .order('created_at')
+  if (error) { console.error(error); return []; }
+  return data || [];
+}
+
+export async function addVueEclatee(payload) {
+  const { data, error } = await supabase
+    .from('vues_eclatees')
+    .insert([{
+      site_id: payload.site_id,
+      nom_equipement: payload.nom_equipement,
+      description: payload.description || null,
+      image_url: payload.image_url || null,
+      ordre: payload.ordre || 0,
+    }])
+    .select()
+  if (error) { console.error(error); return null; }
+  return data?.[0];
+}
+
+export async function updateVueEclatee(id, payload) {
+  const { error } = await supabase
+    .from('vues_eclatees')
+    .update({
+      nom_equipement: payload.nom_equipement,
+      description: payload.description || null,
+      image_url: payload.image_url || null,
+    })
+    .eq('id', id)
+  if (error) console.error(error);
+}
+
+export async function deleteVueEclatee(id) {
+  const { error } = await supabase
+    .from('vues_eclatees')
+    .delete()
+    .eq('id', id)
+  if (error) console.error(error);
+}
