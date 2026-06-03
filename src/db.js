@@ -789,3 +789,43 @@ export async function deleteVueEclatee(id) {
     .eq('id', id)
   if (error) console.error(error);
 }
+
+// ── FILTRATION VÉHICULES ──────────────────────────────────────────────────────
+export async function getFiltrationVehicules() {
+  const { data, error } = await supabase.from('filtration_vehicules').select('*').order('designation')
+  if (error) { console.error(error); return []; }
+  return data || [];
+}
+export async function addFiltrationVehicule(payload) {
+  const { data, error } = await supabase.from('filtration_vehicules').insert([payload]).select()
+  if (error) { console.error(error); return null; }
+  return data?.[0];
+}
+export async function updateFiltrationVehicule(id, payload) {
+  const { error } = await supabase.from('filtration_vehicules').update(payload).eq('id', id)
+  if (error) console.error(error);
+}
+export async function deleteFiltrationVehicule(id) {
+  const { error } = await supabase.from('filtration_vehicules').delete().eq('id', id)
+  if (error) console.error(error);
+}
+
+// ── FILTRATION ENGINS ─────────────────────────────────────────────────────────
+export async function getFiltrationEngins() {
+  const { data, error } = await supabase.from('filtration_engins').select('*').order('categorie').order('engin')
+  if (error) { console.error(error); return []; }
+  return data || [];
+}
+export async function addFiltrationEngin(payload) {
+  const { data, error } = await supabase.from('filtration_engins').insert([payload]).select()
+  if (error) { console.error(error); return null; }
+  return data?.[0];
+}
+export async function updateFiltrationEngin(id, payload) {
+  const { error } = await supabase.from('filtration_engins').update(payload).eq('id', id)
+  if (error) console.error(error);
+}
+export async function deleteFiltrationEngin(id) {
+  const { error } = await supabase.from('filtration_engins').delete().eq('id', id)
+  if (error) console.error(error);
+}

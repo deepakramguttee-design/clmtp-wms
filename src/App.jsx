@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ALL_PRODUCTS } from "./products.js";
 import AdminDashboard from "./AdminDashboard.jsx";
 import VueEclatee from "./VueEclatee.jsx";
+import ReferenceFiltres from "./ReferenceFiltres.jsx";
 import { PARC_VEHICULES } from "./parc.js";
 import { supabase } from "./supabase.js";
 import {
@@ -3579,6 +3580,7 @@ const NAV_ALL = [
   { id:"prix",         label:"Gestion des prix",     icon:"💶", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"equivalences", label:"Équivalences",         icon:"↔️", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"vue_eclatee",  label:"Vue éclatée",           icon:"🔍", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+  { id:"ref_filtres",  label:"Références filtres",    icon:"🔩", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"catalogue",    label:"Catalogue articles",   icon:"📋", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"utilisateurs", label:"Utilisateurs",         icon:"👥", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"admin",        label:"Administration",        icon:"🛡️", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
@@ -3710,15 +3712,16 @@ const MODULES_PERMISSIONS = [
   { id:"equivalences", label:"Équivalences",         icon:"↔️", desc:"Substituts en rupture" },
   { id:"catalogue",    label:"Catalogue articles",   icon:"📋", desc:"Import catalogue Excel" },
   { id:"vue_eclatee",  label:"Vue éclatée",          icon:"🔍", desc:"Schémas éclatés des équipements" },
+  { id:"ref_filtres",  label:"Références filtres",   icon:"🔩", desc:"Références filtres véhicules et engins" },
 ];
 
 const DEFAULT_PERMISSIONS = {
   admin:                  null,
-  technicien:             ["dashboard","stock","scanner","ordres","equivalences","vue_eclatee"],
-  magasinier:             ["dashboard","stock","scanner","mouvements","ordres","equivalences","vue_eclatee"],
-  preparateur:            ["dashboard","stock","scanner","ordres","location","pret","equivalences","vue_eclatee"],
-  magasinier_preparateur: ["dashboard","stock","scanner","mouvements","ordres","location","pret","equivalences","vue_eclatee"],
-  lecteur:                ["dashboard","stock","scanner","vue_eclatee"],
+  technicien:             ["dashboard","stock","scanner","ordres","equivalences","vue_eclatee","ref_filtres"],
+  magasinier:             ["dashboard","stock","scanner","mouvements","ordres","equivalences","vue_eclatee","ref_filtres"],
+  preparateur:            ["dashboard","stock","scanner","ordres","location","pret","equivalences","vue_eclatee","ref_filtres"],
+  magasinier_preparateur: ["dashboard","stock","scanner","mouvements","ordres","location","pret","equivalences","vue_eclatee","ref_filtres"],
+  lecteur:                ["dashboard","stock","scanner","vue_eclatee","ref_filtres"],
 };
 
 // ── BOUTON VOIR MOT DE PASSE (super admin uniquement) ────────────────────────
@@ -4285,6 +4288,7 @@ export default function App() {
     if(page==="ordres")    return <OrdresReparation ordres={ordres.filter(o=>!o.site_id||o.site_id===siteId)} setOrdres={setOrdres} mouvements={mouvements} setMouvements={setMouvements} stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} siteId={siteId} products={ALL_SITE_PRODUCTS} user={user}/>;
     if(page==="prix")      return <GestionPrix prixFournisseurs={prixFournisseurs} setPrixFournisseurs={setPrixFournisseurs} historiquePrix={historiquePrix} setHistoriquePrix={setHistoriquePrix} products={ALL_SITE_PRODUCTS}/>;
     if(page==="vue_eclatee") return <VueEclatee user={user} siteId={siteId}/>;
+    if(page==="ref_filtres") return <ReferenceFiltres user={user}/>;
     if(page==="fifo")      return <GestionFIFO products={ALL_SITE_PRODUCTS}/>;
     if(page==="equivalences") return <Equivalences equivalences={equivalences} setEquivalences={setEquivalences} products={ALL_SITE_PRODUCTS}/>;
     if(page==="utilisateurs") return <GestionUtilisateurs currentUser={user} siteId={siteId}/>;
