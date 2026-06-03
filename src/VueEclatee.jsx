@@ -65,10 +65,12 @@ export default function VueEclatee({ user, siteId }) {
         const safeName = form.imageFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
         const path = `${form.site_id}/${Date.now()}_${safeName}`;
         const { error: uploadErr } = await supabase.storage.from('vues-eclatees').upload(path, form.imageFile);
-        if (!uploadErr) {
-          const { data: urlData } = supabase.storage.from('vues-eclatees').getPublicUrl(path);
-          image_url = urlData.publicUrl;
+        if (uploadErr) {
+          alert("Erreur lors de l'upload de l'image : " + uploadErr.message);
+          return;
         }
+        const { data: urlData } = supabase.storage.from('vues-eclatees').getPublicUrl(path);
+        image_url = urlData.publicUrl;
       }
 
       const payload = { nom_equipement: form.nom, description: form.description, site_id: form.site_id, image_url };
