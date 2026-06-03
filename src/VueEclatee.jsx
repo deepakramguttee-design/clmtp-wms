@@ -25,7 +25,7 @@ export default function VueEclatee({ user, siteId }) {
   const [form, setForm] = useState({ nom: '', description: '', site_id: siteId, imageFile: null, imagePreview: null });
   const [saving, setSaving] = useState(false);
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = !!user;
 
   useEffect(() => {
     getVuesEclatees().then(data => { setEquipements(data); setLoading(false); });
