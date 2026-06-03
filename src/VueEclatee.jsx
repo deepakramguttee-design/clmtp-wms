@@ -25,7 +25,8 @@ export default function VueEclatee({ user, siteId }) {
   const [form, setForm] = useState({ nom: '', description: '', site_id: siteId, imageFile: null, imagePreview: null });
   const [saving, setSaving] = useState(false);
 
-  const isAdmin = !!user;
+  const canEdit = !!user;
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
     getVuesEclatees().then(data => { setEquipements(data); setLoading(false); });
@@ -115,7 +116,7 @@ export default function VueEclatee({ user, siteId }) {
           <h1 style={{fontSize:22,fontWeight:900,color:'#111827',margin:0}}>Vue éclatée</h1>
           <p style={{color:'#6b7280',fontSize:13,margin:'4px 0 0'}}>{total} équipement{total!==1?'s':''} · 3 sites</p>
         </div>
-        {isAdmin&&(
+        {canEdit&&(
           <button onClick={()=>openAdd(siteId)} style={{background:'#111827',color:'#fff',border:'none',borderRadius:10,padding:'9px 18px',fontWeight:700,cursor:'pointer',fontSize:13}}>
             + Ajouter équipement
           </button>
@@ -134,7 +135,7 @@ export default function VueEclatee({ user, siteId }) {
 
             {items.length===0?(
               <div style={{background:'#fff',borderRadius:14,border:'1px dashed #e5e7eb',padding:'32px 24px',textAlign:'center',color:'#9ca3af',fontSize:13}}>
-                {isAdmin
+                {canEdit
                   ?<><div style={{marginBottom:10}}>Aucun équipement pour ce site.</div><button onClick={()=>openAdd(site.id)} style={{padding:'8px 18px',background:'#f3f4f6',border:'none',borderRadius:9,fontWeight:600,cursor:'pointer',fontSize:13,color:'#374151'}}>+ Ajouter le premier équipement</button></>
                   :'Aucun équipement enregistré pour ce site.'}
               </div>
@@ -153,10 +154,10 @@ export default function VueEclatee({ user, siteId }) {
                     <div style={{padding:'10px 14px'}}>
                       <div style={{fontWeight:700,fontSize:13,color:'#111827',marginBottom:4}}>{eq.nom_equipement}</div>
                       {eq.description&&<div style={{fontSize:11,color:'#6b7280',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{eq.description}</div>}
-                      {isAdmin&&(
+                      {canEdit&&(
                         <div style={{display:'flex',gap:6,marginTop:8}} onClick={e=>e.stopPropagation()}>
                           <button onClick={()=>openEdit(eq)} style={{flex:1,padding:'5px',background:'#f3f4f6',border:'none',borderRadius:7,cursor:'pointer',fontSize:12,fontWeight:600}}>✏️ Modifier</button>
-                          <button onClick={()=>handleDelete(eq)} style={{padding:'5px 8px',background:'#fee2e2',border:'none',borderRadius:7,cursor:'pointer',color:'#dc2626',fontSize:12}}>🗑</button>
+                          {isAdmin&&<button onClick={()=>handleDelete(eq)} style={{padding:'5px 8px',background:'#fee2e2',border:'none',borderRadius:7,cursor:'pointer',color:'#dc2626',fontSize:12}}>🗑</button>}
                         </div>
                       )}
                     </div>
@@ -179,10 +180,10 @@ export default function VueEclatee({ user, siteId }) {
             <div style={{textAlign:'center',color:'#fff'}}>
               <div style={{fontWeight:800,fontSize:18}}>{lightbox.nom_equipement}</div>
               {lightbox.description&&<div style={{fontSize:13,color:'#9ca3af',marginTop:4}}>{lightbox.description}</div>}
-              {isAdmin&&(
+              {canEdit&&(
                 <div style={{display:'flex',gap:10,marginTop:12,justifyContent:'center'}}>
                   <button onClick={()=>{setLightbox(null);openEdit(lightbox);}} style={{padding:'8px 16px',background:'#374151',border:'none',borderRadius:9,color:'#fff',cursor:'pointer',fontWeight:600,fontSize:13}}>✏️ Modifier</button>
-                  <button onClick={()=>handleDelete(lightbox)} style={{padding:'8px 16px',background:'#dc2626',border:'none',borderRadius:9,color:'#fff',cursor:'pointer',fontWeight:600,fontSize:13}}>🗑 Supprimer</button>
+                  {isAdmin&&<button onClick={()=>handleDelete(lightbox)} style={{padding:'8px 16px',background:'#dc2626',border:'none',borderRadius:9,color:'#fff',cursor:'pointer',fontWeight:600,fontSize:13}}>🗑 Supprimer</button>}
                 </div>
               )}
             </div>
