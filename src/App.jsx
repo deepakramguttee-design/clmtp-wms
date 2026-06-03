@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { ALL_PRODUCTS } from "./products.js";
 import AdminDashboard from "./AdminDashboard.jsx";
+import VueEclatee from "./VueEclatee.jsx";
 import { PARC_VEHICULES } from "./parc.js";
 import { supabase } from "./supabase.js";
 import {
@@ -1362,6 +1363,27 @@ function GestionPrix({ prixFournisseurs, setPrixFournisseurs, historiquePrix, se
     setPrixFournisseurs(prev=>prev.filter(p=>p.id!==id));
   };
 
+  const handleExportExcel = () => {
+    const XLSX = window.XLSX;
+    if(!XLSX){alert("Bibliothèque Excel non chargée. Rechargez la page.");return;}
+    const rows = prixFournisseurs.map(p=>({
+      "SKU": p.article_id,
+      "Article": p.article_name,
+      "Fournisseur": p.fournisseur,
+      "Prix HT": p.prix_ht,
+      "Devise": p.devise||"EUR",
+      "Délai (j)": p.delai_livraison||0,
+      "Qté min": p.quantite_min||1,
+      "Notes": p.notes||"",
+      "Date mise à jour": new Date(p.created_at).toLocaleDateString("fr-FR"),
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [12,30,20,10,8,10,8,25,16].map(w=>({wch:w}));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Prix fournisseurs");
+    XLSX.writeFile(wb, `prix_fournisseurs_${new Date().toISOString().slice(0,10)}.xlsx`);
+  };
+
   const handleImportExcel = (e) => {
     const file=e.target.files[0];
     if(!file) return;
@@ -1427,6 +1449,7 @@ function GestionPrix({ prixFournisseurs, setPrixFournisseurs, historiquePrix, se
         </div>
         <div style={{display:"flex",gap:8}}>
           <button onClick={()=>setShowImport(true)} style={{padding:"9px 16px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer",fontSize:13,color:"#374151"}}>📊 Import Excel</button>
+          <button onClick={handleExportExcel} disabled={prixFournisseurs.length===0} style={{padding:"9px 16px",background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:10,fontWeight:600,cursor:prixFournisseurs.length===0?"not-allowed":"pointer",fontSize:13,color:"#065f46",opacity:prixFournisseurs.length===0?0.5:1}}>⬇️ Export Excel</button>
           <button onClick={()=>setShowForm(true)} style={{background:"#111827",color:"#fff",border:"none",borderRadius:10,padding:"9px 18px",fontWeight:700,cursor:"pointer",fontSize:13}}>+ Ajouter un prix</button>
         </div>
       </div>
@@ -3555,6 +3578,7 @@ const NAV_ALL = [
   { id:"fifo",         label:"Lots FIFO",            icon:"🏷️", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"prix",         label:"Gestion des prix",     icon:"💶", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"equivalences", label:"Équivalences",         icon:"↔️", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+  { id:"vue_eclatee",  label:"Vue éclatée",           icon:"🔍", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"catalogue",    label:"Catalogue articles",   icon:"📋", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"utilisateurs", label:"Utilisateurs",         icon:"👥", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"admin",        label:"Administration",        icon:"🛡️", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
@@ -3685,15 +3709,16 @@ const MODULES_PERMISSIONS = [
   { id:"prix",         label:"Gestion des prix",     icon:"💶", desc:"Prix fournisseurs, historique" },
   { id:"equivalences", label:"Équivalences",         icon:"↔️", desc:"Substituts en rupture" },
   { id:"catalogue",    label:"Catalogue articles",   icon:"📋", desc:"Import catalogue Excel" },
+  { id:"vue_eclatee",  label:"Vue éclatée",          icon:"🔍", desc:"Schémas éclatés des équipements" },
 ];
 
 const DEFAULT_PERMISSIONS = {
   admin:                  null,
-  technicien:             ["dashboard","stock","scanner","ordres","equivalences"],
-  magasinier:             ["dashboard","stock","scanner","mouvements","ordres","equivalences"],
-  preparateur:            ["dashboard","stock","scanner","ordres","location","pret","equivalences"],
-  magasinier_preparateur: ["dashboard","stock","scanner","mouvements","ordres","location","pret","equivalences"],
-  lecteur:                ["dashboard","stock","scanner"],
+  technicien:             ["dashboard","stock","scanner","ordres","equivalences","vue_eclatee"],
+  magasinier:             ["dashboard","stock","scanner","mouvements","ordres","equivalences","vue_eclatee"],
+  preparateur:            ["dashboard","stock","scanner","ordres","location","pret","equivalences","vue_eclatee"],
+  magasinier_preparateur: ["dashboard","stock","scanner","mouvements","ordres","location","pret","equivalences","vue_eclatee"],
+  lecteur:                ["dashboard","stock","scanner","vue_eclatee"],
 };
 
 // ── BOUTON VOIR MOT DE PASSE (super admin uniquement) ────────────────────────
@@ -4256,6 +4281,7 @@ export default function App() {
     if(page==="mouvements") return <EntreesSorties mouvements={mouvements.filter(m=>!m.site_id||m.site_id===siteId)} setMouvements={setMouvements} stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} siteId={siteId} products={ALL_SITE_PRODUCTS} user={user} navigateTo={setPage} setAutoOpenNewArticle={setAutoOpenNewArticle}/>;
     if(page==="ordres")    return <OrdresReparation ordres={ordres.filter(o=>!o.site_id||o.site_id===siteId)} setOrdres={setOrdres} mouvements={mouvements} setMouvements={setMouvements} stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} siteId={siteId} products={ALL_SITE_PRODUCTS} user={user}/>;
     if(page==="prix")      return <GestionPrix prixFournisseurs={prixFournisseurs} setPrixFournisseurs={setPrixFournisseurs} historiquePrix={historiquePrix} setHistoriquePrix={setHistoriquePrix} products={ALL_SITE_PRODUCTS}/>;
+    if(page==="vue_eclatee") return <VueEclatee user={user} siteId={siteId}/>;
     if(page==="fifo")      return <GestionFIFO products={ALL_SITE_PRODUCTS}/>;
     if(page==="equivalences") return <Equivalences equivalences={equivalences} setEquivalences={setEquivalences} products={ALL_SITE_PRODUCTS}/>;
     if(page==="utilisateurs") return <GestionUtilisateurs currentUser={user} siteId={siteId}/>;
