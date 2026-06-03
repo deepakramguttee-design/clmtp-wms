@@ -1895,8 +1895,6 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
   const [refEngins, setRefEngins]=useState([]);
   const [parcDropOpen, setParcDropOpen]=useState(false);
   const parcDropRef=useRef(null);
-  const [filtresChecked, setFiltresChecked]=useState({});
-  const [filtresPieces, setFiltresPieces]=useState([]);
 
   const canDelete = user && (user.role==="admin" || user.role==="magasinier");
   const [selectedVehicle,setSelectedVehicle]=useState(null);
@@ -1906,47 +1904,6 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
     getFiltrationVehicules().then(setRefVehicules);
     getFiltrationEngins().then(setRefEngins);
   },[]);
-
-  useEffect(()=>{
-    if(refFiltreSelectionne?._type==="engin"){
-      const checked={};
-      FILTRE_OR_LABELS.forEach(f=>{ if(refFiltreSelectionne[f.key]) checked[f.key]=true; });
-      setFiltresChecked(checked);
-    } else {
-      setFiltresChecked({});
-    }
-    setFiltresPieces([]);
-  },[refFiltreSelectionne]);
-
-  const handleAddFiltres = () => {
-    const allProds=products||ALL_PRODUCTS;
-    const pieces=[];
-    const usedIds=new Set();
-    FILTRE_OR_LABELS.forEach(f=>{
-      if(!filtresChecked[f.key]||!refFiltreSelectionne?.[f.key]) return;
-      const ref=refFiltreSelectionne[f.key];
-      const refs=ref.split('/').map(r=>r.trim().replace(/\s*x\d+$/i,'').trim()).filter(Boolean);
-      let found=null;
-      for(const r of refs){
-        const rL=r.toLowerCase();
-        found=allProds.find(p=>(p.id||'').toLowerCase()===rL||(p.id||'').toLowerCase().includes(rL)||(p.name||'').toLowerCase().includes(rL));
-        if(found) break;
-      }
-      const pieceId=found?found.id:`ref-${f.key}`;
-      if(usedIds.has(pieceId)) return;
-      usedIds.add(pieceId);
-      pieces.push({
-        id:pieceId,
-        name:found?found.name:`${f.label} — ${ref}`,
-        fournisseur:found?found.fournisseur||'':'',
-        location:found?found.location||'':'',
-        prix:found?found.prix||0:0,
-        qte:1,
-        sortie:false,
-      });
-    });
-    setFiltresPieces(pieces);
-  };
 
   useEffect(()=>{
     const onKey=e=>{if(e.key==="Escape"){setParcSugg([]);setParcDropOpen(false);}};
@@ -1983,14 +1940,14 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
     const newOrdre={
       numero:`OR-${new Date().getFullYear()}-${String(ordres.length+1).padStart(4,"0")}`,
       dateOuverture:new Date().toISOString(), dateCloture:null, statut:"ouvert",
-      ...form, pieces:filtresPieces, notes:"",
+      ...form, pieces:[], notes:"",
     };
     const saved = await createOrdre(newOrdre);
     const ordreAvecId = saved ? {...newOrdre, id:saved.id} : {...newOrdre, id:Date.now()};
     setOrdres(prev=>[ordreAvecId,...prev]);
     setShowForm(false);
     setForm({machine:"",immat:"",typePanne:"",technicien:"",priorite:"normale",description:""});
-    setParcSearch(""); setSelectedVehicle(null); setRefFiltreSelectionne(null); setFiltresPieces([]);
+    setParcSearch(""); setSelectedVehicle(null); setRefFiltreSelectionne(null);
     setFicheOrdre(ordreAvecId);
     setSaving(false);
   };
@@ -2105,7 +2062,7 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
 
       {/* Fiche OR détaillée */}
       {ficheOrdre&&(
-        <FicheOR ordre={ficheOrdre} onClose={()=>setFicheOrdre(null)} onUpdate={handleUpdate} onSortir={handleSortirPiece} stockOverrides={stockOverrides} getStock={p=>stockOverrides[p.id]!==undefined?stockOverrides[p.id]:p.stock}/>
+        <FicheOR ordre={ficheOrdre} onClose={()=>setFicheOrdre(null)} onUpdate={handleUpdate} onSortir={handleSortirPiece} stockOverrides={stockOverrides} getStock={p=>stockOverrides[p.id]!==undefined?stockOverrides[p.id]:p.stock} refEngins={refEngins}/>
       )}
 
       {/* Modal confirmation suppression OR */}
@@ -2175,40 +2132,6 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
                 )}
               </div>
 
-              {/* Filtres disponibles pour l'engin sélectionné */}
-              {refFiltreSelectionne?._type==="engin"&&(
-                <div style={{background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:12,padding:"14px 16px"}}>
-                  <div style={{fontWeight:700,fontSize:13,color:"#111827",marginBottom:10}}>🔩 Filtres disponibles pour cet engin</div>
-                  <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                    {FILTRE_OR_LABELS.filter(f=>refFiltreSelectionne[f.key]).map(f=>(
-                      <label key={f.key} style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",padding:"6px 8px",borderRadius:8,background:filtresChecked[f.key]?"#eff6ff":"#fff",border:`1px solid ${filtresChecked[f.key]?"#bfdbfe":"#e5e7eb"}`}}>
-                        <input type="checkbox" checked={!!filtresChecked[f.key]}
-                          onChange={e=>setFiltresChecked(p=>({...p,[f.key]:e.target.checked}))}
-                          style={{width:15,height:15,cursor:"pointer",accentColor:"#1e40af"}}/>
-                        <span style={{fontSize:12,fontWeight:600,color:"#374151",minWidth:130}}>{f.label}</span>
-                        <span style={{fontSize:11,color:"#6b7280",fontFamily:"monospace"}}>{refFiltreSelectionne[f.key]}</span>
-                      </label>
-                    ))}
-                  </div>
-                  {FILTRE_OR_LABELS.some(f=>refFiltreSelectionne[f.key])&&(
-                    <div style={{marginTop:10}}>
-                      {filtresPieces.length===0?(
-                        <button onClick={handleAddFiltres}
-                          disabled={!Object.values(filtresChecked).some(Boolean)}
-                          style={{width:"100%",padding:"9px",background:Object.values(filtresChecked).some(Boolean)?"#1e40af":"#e5e7eb",color:Object.values(filtresChecked).some(Boolean)?"#fff":"#9ca3af",border:"none",borderRadius:9,fontWeight:700,cursor:"pointer",fontSize:12}}>
-                          ➕ Ajouter les filtres sélectionnés à l'OR
-                        </button>
-                      ):(
-                        <div style={{background:"#d1fae5",borderRadius:9,padding:"8px 12px",fontSize:12,color:"#065f46",fontWeight:600,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                          <span>✅ {filtresPieces.length} filtre{filtresPieces.length>1?"s":""} ajouté{filtresPieces.length>1?"s":""} à l'OR</span>
-                          <button onClick={()=>setFiltresPieces([])} style={{background:"none",border:"none",cursor:"pointer",color:"#065f46",fontSize:12,textDecoration:"underline"}}>Annuler</button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
               <div>
                 <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Immatriculation</label>
                 <input value={form.immat} onChange={e=>setForm(p=>({...p,immat:e.target.value}))} placeholder="AB-123-CD"
@@ -2241,10 +2164,50 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
   );
 }
 
-function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products }) {
+function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEngins=[] }) {
   const [searchPiece,setSearchPiece]=useState("");
   const [suggPieces,setSuggPieces]=useState([]);
   const [note,setNote]=useState(ordre.notes||"");
+  const [showFiltresMenu,setShowFiltresMenu]=useState(false);
+  const [filtresChecked,setFiltresChecked]=useState({});
+
+  const filtresEngin = refEngins.find(e=>{
+    const m=(ordre.machine||"").toLowerCase();
+    const codePart=m.split(" — ")[0].trim();
+    const enginPart=m.includes(" — ")?m.split(" — ").slice(1).join(" — ").trim():m;
+    return (e.code&&e.code.toLowerCase()===codePart)||e.engin.toLowerCase()===m||e.engin.toLowerCase()===enginPart||m.includes(e.engin.toLowerCase());
+  })||null;
+
+  useEffect(()=>{
+    if(filtresEngin){
+      const checked={};
+      FILTRE_OR_LABELS.forEach(f=>{ if(filtresEngin[f.key]) checked[f.key]=true; });
+      setFiltresChecked(checked);
+    }
+  },[filtresEngin?.id]);
+
+  const handleAddFiltresOR = () => {
+    const allProds=products||ALL_PRODUCTS;
+    const usedIds=new Set(ordre.pieces.map(p=>p.id));
+    const newPieces=[];
+    FILTRE_OR_LABELS.forEach(f=>{
+      if(!filtresChecked[f.key]||!filtresEngin?.[f.key]) return;
+      const ref=filtresEngin[f.key];
+      const refs=ref.split('/').map(r=>r.trim().replace(/\s*x\d+$/i,'').trim()).filter(Boolean);
+      let found=null;
+      for(const r of refs){
+        const rL=r.toLowerCase();
+        found=allProds.find(p=>(p.id||'').toLowerCase()===rL||(p.id||'').toLowerCase().includes(rL)||(p.name||'').toLowerCase().includes(rL));
+        if(found) break;
+      }
+      const pieceId=found?found.id:`ref-${f.key}-${ordre.id}`;
+      if(usedIds.has(pieceId)) return;
+      usedIds.add(pieceId);
+      newPieces.push({id:pieceId,name:found?found.name:`${f.label} — ${ref}`,fournisseur:found?found.fournisseur||'':'',location:found?found.location||'':'',prix:found?found.prix||0:0,qte:1,sortie:false});
+    });
+    if(newPieces.length>0) onUpdate({...ordre,pieces:[...ordre.pieces,...newPieces]});
+    setShowFiltresMenu(false);
+  };
 
   const handleSearchPiece = v => {
     setSearchPiece(v);
@@ -2281,10 +2244,43 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products }) {
           {ordre.description&&<div style={{background:"#fef3c7",borderRadius:10,padding:"10px 14px",fontSize:13,color:"#92400e"}}>📋 {ordre.description}</div>}
 
           <div>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:filtresEngin&&showFiltresMenu?6:10}}>
               <h3 style={{fontWeight:800,fontSize:15,color:"#111827",margin:0}}>🔧 Pièces nécessaires</h3>
-              {totalCout>0&&<div style={{fontSize:13,fontWeight:700,color:"#3b82f6"}}>Total : {totalCout.toFixed(2)} €</div>}
+              <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                {totalCout>0&&<div style={{fontSize:13,fontWeight:700,color:"#3b82f6"}}>Total : {totalCout.toFixed(2)} €</div>}
+                {filtresEngin&&(
+                  <button onClick={()=>setShowFiltresMenu(v=>!v)}
+                    style={{padding:"5px 12px",background:showFiltresMenu?"#111827":"#f1f5f9",color:showFiltresMenu?"#fff":"#374151",border:"none",borderRadius:8,fontWeight:600,cursor:"pointer",fontSize:12}}>
+                    🔩 Filtres engin {showFiltresMenu?"▲":"▼"}
+                  </button>
+                )}
+              </div>
             </div>
+            {filtresEngin&&showFiltresMenu&&(
+              <div style={{background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:12,padding:"12px 14px",marginBottom:12}}>
+                <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:8}}>
+                  Filtres pour <strong>{filtresEngin.engin}</strong>{filtresEngin.categorie&&<span style={{background:"#e0e7ff",color:"#3730a3",padding:"1px 7px",borderRadius:99,fontSize:10,fontWeight:700,marginLeft:6}}>{filtresEngin.categorie}</span>}
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                  {FILTRE_OR_LABELS.filter(f=>filtresEngin[f.key]).map(f=>(
+                    <label key={f.key} style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",padding:"5px 8px",borderRadius:7,background:filtresChecked[f.key]?"#eff6ff":"#fff",border:`1px solid ${filtresChecked[f.key]?"#bfdbfe":"#e5e7eb"}`}}>
+                      <input type="checkbox" checked={!!filtresChecked[f.key]} onChange={e=>setFiltresChecked(p=>({...p,[f.key]:e.target.checked}))}
+                        style={{width:14,height:14,cursor:"pointer",accentColor:"#1e40af"}}/>
+                      <span style={{fontSize:11,fontWeight:600,color:"#374151",minWidth:120}}>{f.label}</span>
+                      <span style={{fontSize:10,color:"#6b7280",fontFamily:"monospace"}}>{filtresEngin[f.key]}</span>
+                    </label>
+                  ))}
+                </div>
+                <div style={{display:"flex",gap:8,marginTop:10}}>
+                  <button onClick={handleAddFiltresOR}
+                    disabled={!Object.values(filtresChecked).some(Boolean)}
+                    style={{flex:1,padding:"8px",background:Object.values(filtresChecked).some(Boolean)?"#111827":"#e5e7eb",color:Object.values(filtresChecked).some(Boolean)?"#fff":"#9ca3af",border:"none",borderRadius:8,fontWeight:700,cursor:"pointer",fontSize:12}}>
+                    ➕ Ajouter à l'OR
+                  </button>
+                  <button onClick={()=>setShowFiltresMenu(false)} style={{padding:"8px 14px",background:"#f3f4f6",border:"none",borderRadius:8,fontWeight:600,cursor:"pointer",fontSize:12}}>Fermer</button>
+                </div>
+              </div>
+            )}
             {ordre.pieces.length===0?(
               <div style={{padding:16,textAlign:"center",background:"#f9fafb",borderRadius:10,color:"#9ca3af",fontSize:13,marginBottom:12}}>Aucune pièce — recherchez ci-dessous</div>
             ):(
