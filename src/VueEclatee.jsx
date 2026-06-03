@@ -128,11 +128,6 @@ export default function VueEclatee({ user, siteId }) {
         const items=equipements.filter(e=>e.site_id===site.id);
         return (
           <div key={site.id}>
-            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
-              <span style={{background:site.bg,color:site.color,borderRadius:8,padding:'4px 14px',fontWeight:800,fontSize:13}}>{site.icon} {site.label}</span>
-              <span style={{fontSize:12,color:'#9ca3af'}}>{items.length} équipement{items.length!==1?'s':''}</span>
-            </div>
-
             {items.length===0?(
               <div style={{background:'#fff',borderRadius:14,border:'1px dashed #e5e7eb',padding:'32px 24px',textAlign:'center',color:'#9ca3af',fontSize:13}}>
                 {canEdit
