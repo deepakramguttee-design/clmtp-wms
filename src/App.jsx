@@ -2178,7 +2178,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
     const direct=refEngins.find(e=>(e.code&&e.code.toLowerCase()===codePart)||e.engin.toLowerCase()===m||e.engin.toLowerCase()===enginPart||(enginPart&&e.engin.toLowerCase().includes(enginPart))||m.includes(e.engin.toLowerCase()));
     if(direct) return direct;
     const BRANDS=['renault','peugeot','citroen','fiat','ford','opel','volkswagen','mercedes','iveco','dacia','toyota','nissan'];
-    const keywords=m.split(/[\s\-—\/]+/).filter(w=>w.length>=3&&!BRANDS.includes(w)&&!/^v[uplc]/i.test(w)&&!/^\d{1,2}$/.test(w)).map(w=>/^[a-z]{2,}\d+$/i.test(w)?w.replace(/\d+$/,''):w).filter(w=>w.length>=3);
+    const keywords=m.split(/[\s\-—\/]+/).filter(w=>w.length>=3&&!BRANDS.includes(w)&&!/^v[uplc]/i.test(w)&&!/^\d{1,2}$/.test(w)).map(w=>/[a-z]/i.test(w)?w.replace(/\d+$/,''):w).filter(w=>w.length>=3);
     if(!keywords.length) return null;
     return refEngins.find(e=>keywords.some(kw=>e.engin.toLowerCase().includes(kw)))||null;
   })();
