@@ -1974,7 +1974,7 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
     setParcSearch(label);
     setParcSugg([]);
     setParcDropOpen(false);
-    setForm(f=>({...f,machine:label,immat:""}));
+    setForm(f=>({...f,machine:label,immat:v._code||""}));
   };
 
   const handleCreate = async () => {
