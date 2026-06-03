@@ -4267,7 +4267,10 @@ export default function App() {
     if(user.permissions && Array.isArray(user.permissions) && user.permissions.length > 0) {
       // Admin voit toujours tous les modules de son site
       if(user.role === "admin") return n.roles.includes("admin");
-      return user.permissions.includes(n.id);
+      // Fusionner permissions stockées + DEFAULT_PERMISSIONS du rôle pour que les
+      // nouveaux modules ajoutés aux defaults soient visibles sans re-sauvegarder en base
+      const defaults = DEFAULT_PERMISSIONS[user.role] || [];
+      return user.permissions.includes(n.id) || defaults.includes(n.id);
     }
     return n.roles.includes(user.role);
   });
