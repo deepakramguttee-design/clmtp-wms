@@ -31,6 +31,12 @@ export default function VueEclatee({ user, siteId }) {
     getVuesEclatees().then(data => { setEquipements(data); setLoading(false); });
   }, []);
 
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') { setLightbox(null); setShowForm(false); } };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   const openAdd = (site) => {
     setEditTarget(null);
     setForm({ nom: '', description: '', site_id: site, imageFile: null, imagePreview: null });
