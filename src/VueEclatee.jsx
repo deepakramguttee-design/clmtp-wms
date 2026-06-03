@@ -52,29 +52,32 @@ export default function VueEclatee({ user, siteId }) {
   const handleSave = async () => {
     if (!form.nom || (!editTarget && !form.imageFile)) return;
     setSaving(true);
-    let image_url = editTarget?.image_url || null;
+    try {
+      let image_url = editTarget?.image_url || null;
 
-    if (form.imageFile) {
-      const safeName = form.imageFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const path = `${form.site_id}/${Date.now()}_${safeName}`;
-      const { error: uploadErr } = await supabase.storage.from('vues-eclatees').upload(path, form.imageFile);
-      if (!uploadErr) {
-        const { data: urlData } = supabase.storage.from('vues-eclatees').getPublicUrl(path);
-        image_url = urlData.publicUrl;
+      if (form.imageFile) {
+        const safeName = form.imageFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const path = `${form.site_id}/${Date.now()}_${safeName}`;
+        const { error: uploadErr } = await supabase.storage.from('vues-eclatees').upload(path, form.imageFile);
+        if (!uploadErr) {
+          const { data: urlData } = supabase.storage.from('vues-eclatees').getPublicUrl(path);
+          image_url = urlData.publicUrl;
+        }
       }
-    }
 
-    const payload = { nom_equipement: form.nom, description: form.description, site_id: form.site_id, image_url };
+      const payload = { nom_equipement: form.nom, description: form.description, site_id: form.site_id, image_url };
 
-    if (editTarget) {
-      await updateVueEclatee(editTarget.id, payload);
-      setEquipements(prev => prev.map(e => e.id === editTarget.id ? { ...e, ...payload } : e));
-    } else {
-      const saved = await addVueEclatee(payload);
-      if (saved) setEquipements(prev => [...prev, saved]);
+      if (editTarget) {
+        await updateVueEclatee(editTarget.id, payload);
+        setEquipements(prev => prev.map(e => e.id === editTarget.id ? { ...e, ...payload } : e));
+      } else {
+        const saved = await addVueEclatee(payload);
+        if (saved) setEquipements(prev => [...prev, saved]);
+      }
+      setShowForm(false);
+    } finally {
+      setSaving(false);
     }
-    setShowForm(false);
-    setSaving(false);
   };
 
   const handleDelete = async (eq) => {
@@ -82,7 +85,10 @@ export default function VueEclatee({ user, siteId }) {
     await deleteVueEclatee(eq.id);
     if (eq.image_url) {
       const parts = eq.image_url.split('/object/public/vues-eclatees/');
-      if (parts[1]) supabase.storage.from('vues-eclatees').remove([decodeURIComponent(parts[1])]);
+      if (parts[1]) {
+        const storagePath = decodeURIComponent(parts[1].split('?')[0]);
+        supabase.storage.from('vues-eclatees').remove([storagePath]);
+      }
     }
     setEquipements(prev => prev.filter(e => e.id !== eq.id));
     if (lightbox?.id === eq.id) setLightbox(null);
