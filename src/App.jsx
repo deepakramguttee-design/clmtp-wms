@@ -1880,6 +1880,7 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
   const [refFiltreSelectionne, setRefFiltreSelectionne]=useState(null);
   const [refVehicules, setRefVehicules]=useState([]);
   const [refEngins, setRefEngins]=useState([]);
+  const [parcDropOpen, setParcDropOpen]=useState(false);
   const parcDropRef=useRef(null);
 
   const canDelete = user && (user.role==="admin" || user.role==="magasinier");
@@ -1892,8 +1893,8 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
   },[]);
 
   useEffect(()=>{
-    const onKey=e=>{if(e.key==="Escape")setParcSugg([]);};
-    const onClick=e=>{if(parcDropRef.current&&!parcDropRef.current.contains(e.target))setParcSugg([]);};
+    const onKey=e=>{if(e.key==="Escape"){setParcSugg([]);setParcDropOpen(false);}};
+    const onClick=e=>{if(parcDropRef.current&&!parcDropRef.current.contains(e.target)){setParcSugg([]);setParcDropOpen(false);}};
     document.addEventListener("keydown",onKey);
     document.addEventListener("mousedown",onClick);
     return()=>{document.removeEventListener("keydown",onKey);document.removeEventListener("mousedown",onClick);};
@@ -1902,7 +1903,8 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
   const handleParcSearch = v => {
     setParcSearch(v); setSelectedVehicle(null); setRefFiltreSelectionne(null);
     setForm(f=>({...f,machine:v,immat:""}));
-    if(v.length<2){setParcSugg([]);return;}
+    if(v.length<2){setParcSugg([]);setParcDropOpen(false);return;}
+    setParcDropOpen(true);
     const s=v.toLowerCase();
     const veh=refVehicules.filter(p=>(p.designation||"").toLowerCase().includes(s)).map(p=>({...p,_type:"vehicule",_label:p.designation,_code:""}));
     const eng=refEngins.filter(p=>(p.engin||"").toLowerCase().includes(s)||(p.code||"").toLowerCase().includes(s)).map(p=>({...p,_type:"engin",_label:p.engin,_code:p.code||""}));
@@ -1915,6 +1917,7 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
     const label=v._type==="vehicule"?v.designation:(v._code?`${v._code} — ${v.engin}`:v.engin);
     setParcSearch(label);
     setParcSugg([]);
+    setParcDropOpen(false);
     setForm(f=>({...f,machine:label,immat:""}));
   };
 
@@ -2085,7 +2088,7 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
                   <input value={parcSearch} onChange={e=>handleParcSearch(e.target.value)}
                     placeholder="🔍 Désignation, code véhicule ou engin…"
                     style={{width:"100%",padding:"10px 13px",border:`1px solid ${selectedVehicle?"#10b981":"#e5e7eb"}`,borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
-                  {parcSearch.length>=2&&(
+                  {parcDropOpen&&(
                     <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.15)",zIndex:500,marginTop:4,maxHeight:280,overflowY:"auto"}}>
                       {parcSugg.length===0?(
                         <div style={{padding:"14px 16px",color:"#9ca3af",fontSize:13,textAlign:"center"}}>Aucun véhicule/engin trouvé</div>
