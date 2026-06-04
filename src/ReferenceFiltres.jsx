@@ -14,7 +14,7 @@ const VEH_COLS = [
   { key:'plaquette_arriere', label:'Plaquette AR' },
   { key:'disque_avant',      label:'Disque AV' },
   { key:'disque_arriere',    label:'Disque AR' },
-  { key:'pneu',              label:'Pneu' },
+  { key:'pneu',              label:'Pneu', noSplit:true },
 ];
 
 const ENG_COLS = [
@@ -206,7 +206,23 @@ export default function ReferenceFiltres({ user }) {
               <tr key={row.id} style={{transition:'background 0.1s'}}
                 onMouseEnter={e=>e.currentTarget.style.background='#f9fafb'}
                 onMouseLeave={e=>e.currentTarget.style.background=''}>
-                {cols.map(c=><td key={c.key} style={tdStyle}>{row[c.key]||'—'}</td>)}
+                {cols.map(c=>{
+                  const val=row[c.key];
+                  if(!val) return <td key={c.key} style={tdStyle}>—</td>;
+                  const parts=c.noSplit?[val]:val.split('/').map(p=>p.trim()).filter(Boolean);
+                  if(parts.length<=1) return <td key={c.key} style={tdStyle}>{val}</td>;
+                  return(
+                    <td key={c.key} style={{...tdStyle,whiteSpace:'normal'}}>
+                      <div style={{display:'flex',flexWrap:'wrap',gap:3}}>
+                        {parts.map((p,i)=>(
+                          <span key={i} style={{background:'#f3f4f6',fontFamily:'monospace',borderRadius:4,padding:'2px 6px',fontSize:11,color:'#374151',display:'inline-block'}}>
+                            {p}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                  );
+                })}
                 {isAdmin&&(
                   <td style={{...tdStyle,textAlign:'center'}}>
                     <div style={{display:'flex',gap:6,justifyContent:'center'}}>

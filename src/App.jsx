@@ -1868,6 +1868,18 @@ function Equivalences({ equivalences, setEquivalences, products }) {
   );
 }
 
+const FILTRE_VEH_LABELS = [
+  { key:'filtre_air',        label:'Filtre air' },
+  { key:'filtre_habitacle',  label:'Filtre habitacle' },
+  { key:'filtre_gasoil',     label:'Filtre gasoil / carburant' },
+  { key:'filtre_huile',      label:'Filtre huile' },
+  { key:'plaquette_avant',   label:'Plaquette avant' },
+  { key:'plaquette_arriere', label:'Plaquette arrière' },
+  { key:'disque_avant',      label:'Disque avant' },
+  { key:'disque_arriere',    label:'Disque arrière' },
+  { key:'pneu',              label:'Pneu' },
+];
+
 const FILTRE_OR_LABELS = [
   { key:'f_hydraulique',  label:'Filtre hydraulique' },
   { key:'f_moteur',       label:'Filtre moteur' },
@@ -1881,7 +1893,7 @@ const FILTRE_OR_LABELS = [
   { key:'courroie',       label:'Courroie' },
 ];
 
-function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockOverrides, setStockOverrides, user, siteId, products }) {
+function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockOverrides, setStockOverrides, user, siteId, products, equivalences={} }) {
   const [showForm,setShowForm]=useState(false);
   const [ficheOrdre,setFicheOrdre]=useState(null);
   const [filterStatut,setFilterStatut]=useState("tous");
@@ -2067,7 +2079,7 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
 
       {/* Fiche OR détaillée */}
       {ficheOrdre&&(
-        <FicheOR ordre={ficheOrdre} onClose={()=>setFicheOrdre(null)} onUpdate={handleUpdate} onSortir={handleSortirPiece} stockOverrides={stockOverrides} getStock={p=>stockOverrides[p.id]!==undefined?stockOverrides[p.id]:p.stock} refEngins={refEngins}/>
+        <FicheOR ordre={ficheOrdre} onClose={()=>setFicheOrdre(null)} onUpdate={handleUpdate} onSortir={handleSortirPiece} stockOverrides={stockOverrides} getStock={p=>stockOverrides[p.id]!==undefined?stockOverrides[p.id]:p.stock} refEngins={refEngins} refVehicules={refVehicules} equivalences={equivalences}/>
       )}
 
       {/* Modal confirmation suppression OR */}
@@ -2156,6 +2168,8 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
                   <option>Vidange</option>
                   <option>Vidange hydraulique</option>
                   <option>Vidange réducteur</option>
+                  <option>Pneumatique — Remplacement de pneu</option>
+                  <option>Pneumatique — Réparation de pneu</option>
                   <option>Autre</option>
                 </select>
                 {panneSelect==="Autre"&&<input value={form.typePanne} onChange={e=>setForm(p=>({...p,typePanne:e.target.value}))} placeholder="Préciser le type de panne…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",marginTop:8}}/>}
@@ -2191,12 +2205,13 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
   );
 }
 
-function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEngins=[] }) {
+function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEngins=[], refVehicules=[], equivalences={} }) {
   const [searchPiece,setSearchPiece]=useState("");
   const [suggPieces,setSuggPieces]=useState([]);
   const [note,setNote]=useState(ordre.notes||"");
   const [showFiltresMenu,setShowFiltresMenu]=useState(false);
   const [filtresChecked,setFiltresChecked]=useState({});
+  const [nbreRoues,setNbreRoues]=useState(4);
 
   const filtresEngin=(()=>{
     const m=(ordre.machine||"").toLowerCase();
@@ -2217,21 +2232,70 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
     return found||null;
   })();
 
+  const isVehLeger=/^v[puc]\b/i.test((ordre.machine||'').trim());
+
+  const filtresVehicule=(()=>{
+    if(!isVehLeger||!refVehicules.length) return null;
+    const m=(ordre.machine||'').toLowerCase();
+    const dashIdx=m.search(/[–—]/);
+    const namePart=dashIdx>0?m.slice(dashIdx+1).trim():m;
+    let found=refVehicules.find(v=>{const d=(v.designation||'').toLowerCase();return d&&namePart.includes(d);});
+    if(found) return found;
+    const words=namePart.split(/[\s\-]+/).filter(w=>w.length>=3);
+    found=refVehicules.find(v=>{const d=(v.designation||'').toLowerCase();return d&&words.some(w=>d.includes(w)||w.includes(d));});
+    return found||null;
+  })();
+
+  const filtresActive=isVehLeger?filtresVehicule:filtresEngin;
+  const filtresActiveLabels=isVehLeger?FILTRE_VEH_LABELS:FILTRE_OR_LABELS;
+
+  const isPneuRemplacement=ordre.typePanne==="Pneumatique — Remplacement de pneu";
+  const isPneuReparation=ordre.typePanne==="Pneumatique — Réparation de pneu";
+  const isPneu=isPneuRemplacement||isPneuReparation;
+  const _allProds=products||ALL_PRODUCTS;
+  const pneuRef=filtresVehicule?.pneu||null;
+  const pneuProduit=isPneuRemplacement&&pneuRef?_allProds.find(p=>{const n=(p.name||'').toLowerCase();const id=(p.id||'').toLowerCase();const ref=pneuRef.toLowerCase();return n.includes(ref)||ref.includes(id);;}):null;
+  const forfaitMontageProd=isPneu?_allProds.find(p=>{const n=(p.name||'').toLowerCase();return n.includes('montage')&&(n.includes('quilibrage'));}):null;
+  const forfaitReparationProd=isPneuReparation?_allProds.find(p=>{const n=(p.name||'').toLowerCase();return n.includes('paration')&&n.includes('pneu');}):null;
+  const forfaitMontageVirtuel={id:'forfait-montage-equilibrage',name:'Forfait montage et équilibrage',prix:25,fournisseur:'',location:''};
+
+  const filtresDisponibles=(()=>{
+    if(ordre.typePanne!=="Révision / Entretien"||!filtresActive) return [];
+    const allProds=products||ALL_PRODUCTS;
+    const result=[];
+    filtresActiveLabels.forEach(f=>{
+      const ref=filtresActive[f.key];
+      if(!ref) return;
+      const refs=ref.split('/').map(r=>r.trim().replace(/\s*x\d+$/i,'').trim()).filter(Boolean);
+      let found=null;
+      for(const r of refs){const rL=r.toLowerCase();found=allProds.find(p=>(p.id||'').toLowerCase()===rL||(p.id||'').toLowerCase().includes(rL)||(p.name||'').toLowerCase().includes(rL));if(found)break;}
+      if(!found) return;
+      const stock=getStock(found);
+      if(stock>0){result.push({fLabel:f.label,ref,product:found,stock,isEquivalent:false,noSplit:!!f.noSplit});return;}
+      const eqIds=equivalences[found.id]||[];
+      for(const eqId of eqIds){
+        const eqProd=allProds.find(p=>p.id===eqId);
+        if(eqProd){const s=getStock(eqProd);if(s>0){result.push({fLabel:f.label,ref,product:eqProd,stock:s,isEquivalent:true,originalRef:ref});break;}}
+      }
+    });
+    return result;
+  })();
+
   useEffect(()=>{
-    if(filtresEngin){
+    if(filtresActive){
       const checked={};
-      FILTRE_OR_LABELS.forEach(f=>{ if(filtresEngin[f.key]) checked[f.key]=true; });
+      filtresActiveLabels.forEach(f=>{ if(filtresActive[f.key]) checked[f.key]=true; });
       setFiltresChecked(checked);
     }
-  },[filtresEngin?.id]);
+  },[filtresActive?.id]);
 
   const handleAddFiltresOR = () => {
     const allProds=products||ALL_PRODUCTS;
     const usedIds=new Set(ordre.pieces.map(p=>p.id));
     const newPieces=[];
-    FILTRE_OR_LABELS.forEach(f=>{
-      if(!filtresChecked[f.key]||!filtresEngin?.[f.key]) return;
-      const ref=filtresEngin[f.key];
+    filtresActiveLabels.forEach(f=>{
+      if(!filtresChecked[f.key]||!filtresActive?.[f.key]) return;
+      const ref=filtresActive[f.key];
       const refs=ref.split('/').map(r=>r.trim().replace(/\s*x\d+$/i,'').trim()).filter(Boolean);
       let found=null;
       for(const r of refs){
@@ -2252,12 +2316,30 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
     setSearchPiece(v);
     if(v.length<2){setSuggPieces([]);return;}
     const s=v.toLowerCase();
-    setSuggPieces((products||ALL_PRODUCTS).filter(p=>!ordre.pieces.find(x=>x.id===p.id)&&((p.name||"").toLowerCase().includes(s)||(p.id||"").toLowerCase().includes(s))).slice(0,6));
+    const allProds=products||ALL_PRODUCTS;
+    const usedIds=new Set(ordre.pieces.map(p=>p.id));
+    const filtreItems=[];
+    if(filtresActive){
+      filtresActiveLabels.forEach(f=>{
+        const ref=filtresActive[f.key];
+        if(!ref) return;
+        if(!f.label.toLowerCase().includes(s)&&!ref.toLowerCase().includes(s)) return;
+        const refs=ref.split('/').map(r=>r.trim().replace(/\s*x\d+$/i,'').trim()).filter(Boolean);
+        let found=null;
+        for(const r of refs){const rL=r.toLowerCase();found=allProds.find(p=>(p.id||'').toLowerCase()===rL||(p.id||'').toLowerCase().includes(rL)||(p.name||'').toLowerCase().includes(rL));if(found)break;}
+        const pieceId=found?found.id:`ref-${f.key}-${ordre.id}`;
+        if(usedIds.has(pieceId)) return;
+        filtreItems.push({_type:'filtre',_label:f.label,_ref:ref,id:pieceId,name:found?found.name:`${f.label} — ${ref}`,fournisseur:found?found.fournisseur||'':'',location:found?found.location||'':'',prix:found?found.prix||0:0,qte:1,sortie:false});
+      });
+    }
+    const catalogItems=allProds.filter(p=>!usedIds.has(p.id)&&((p.name||"").toLowerCase().includes(s)||(p.id||"").toLowerCase().includes(s)));
+    setSuggPieces([...filtreItems,...catalogItems].slice(0,8));
   };
   const addPiece = p => {
     onUpdate({...ordre,pieces:[...ordre.pieces,{id:p.id,name:p.name,fournisseur:p.fournisseur,location:p.location,prix:p.prix,qte:1,sortie:false}]});
     setSearchPiece(""); setSuggPieces([]);
   };
+  const addPieceQte=(p,qte)=>onUpdate({...ordre,pieces:[...ordre.pieces,{id:p.id||`virt-${Date.now()}`,name:p.name,fournisseur:p.fournisseur||'',location:p.location||'',prix:p.prix||0,qte,sortie:false}]});
   const removePiece = id => onUpdate({...ordre,pieces:ordre.pieces.filter(p=>p.id!==id)});
   const updateQte = (id,qte) => onUpdate({...ordre,pieces:ordre.pieces.map(p=>p.id===id?{...p,qte:parseInt(qte)||1}:p)});
   const allSorties=ordre.pieces.length>0&&ordre.pieces.every(p=>p.sortie);
@@ -2283,30 +2365,30 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
           {ordre.description&&<div style={{background:"#fef3c7",borderRadius:10,padding:"10px 14px",fontSize:13,color:"#92400e"}}>📋 {ordre.description}</div>}
 
           <div>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:filtresEngin&&showFiltresMenu?6:10}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:filtresActive&&showFiltresMenu?6:10}}>
               <h3 style={{fontWeight:800,fontSize:15,color:"#111827",margin:0}}>🔧 Pièces nécessaires</h3>
               <div style={{display:"flex",gap:8,alignItems:"center"}}>
                 {totalCout>0&&<div style={{fontSize:13,fontWeight:700,color:"#3b82f6"}}>Total : {totalCout.toFixed(2)} €</div>}
-                {filtresEngin&&(
+                {filtresActive&&(
                   <button onClick={()=>setShowFiltresMenu(v=>!v)}
                     style={{padding:"5px 12px",background:showFiltresMenu?"#111827":"#f1f5f9",color:showFiltresMenu?"#fff":"#374151",border:"none",borderRadius:8,fontWeight:600,cursor:"pointer",fontSize:12}}>
-                    🔩 Filtres engin {showFiltresMenu?"▲":"▼"}
+                    🔩 Filtres {isVehLeger?"véhicule":"engin"} {showFiltresMenu?"▲":"▼"}
                   </button>
                 )}
               </div>
             </div>
-            {filtresEngin&&showFiltresMenu&&(
+            {filtresActive&&showFiltresMenu&&(
               <div style={{background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:12,padding:"12px 14px",marginBottom:12}}>
                 <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:8}}>
-                  Filtres pour <strong>{filtresEngin.engin}</strong>{filtresEngin.categorie&&<span style={{background:"#e0e7ff",color:"#3730a3",padding:"1px 7px",borderRadius:99,fontSize:10,fontWeight:700,marginLeft:6}}>{filtresEngin.categorie}</span>}
+                  Filtres pour <strong>{filtresActive.engin||filtresActive.designation}</strong>{filtresActive.categorie&&<span style={{background:"#e0e7ff",color:"#3730a3",padding:"1px 7px",borderRadius:99,fontSize:10,fontWeight:700,marginLeft:6}}>{filtresActive.categorie}</span>}
                 </div>
                 <div style={{display:"flex",flexDirection:"column",gap:4}}>
-                  {FILTRE_OR_LABELS.filter(f=>filtresEngin[f.key]).map(f=>(
+                  {filtresActiveLabels.filter(f=>filtresActive[f.key]).map(f=>(
                     <label key={f.key} style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",padding:"5px 8px",borderRadius:7,background:filtresChecked[f.key]?"#eff6ff":"#fff",border:`1px solid ${filtresChecked[f.key]?"#bfdbfe":"#e5e7eb"}`}}>
                       <input type="checkbox" checked={!!filtresChecked[f.key]} onChange={e=>setFiltresChecked(p=>({...p,[f.key]:e.target.checked}))}
                         style={{width:14,height:14,cursor:"pointer",accentColor:"#1e40af"}}/>
                       <span style={{fontSize:11,fontWeight:600,color:"#374151",minWidth:120}}>{f.label}</span>
-                      <span style={{fontSize:10,color:"#6b7280",fontFamily:"monospace"}}>{filtresEngin[f.key]}</span>
+                      <span style={{fontSize:10,color:"#6b7280",fontFamily:"monospace"}}>{filtresActive[f.key]}</span>
                     </label>
                   ))}
                 </div>
@@ -2346,17 +2428,122 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                 })}
               </div>
             )}
+            {isPneu&&(()=>{
+              const montageRef=forfaitMontageProd||forfaitMontageVirtuel;
+              const montageAdded=ordre.pieces.some(p=>forfaitMontageProd?p.id===forfaitMontageProd.id:(p.name||'').toLowerCase().includes('montage')&&(p.name||'').toLowerCase().includes('quilibrage'));
+              const pneuAdded=pneuProduit&&ordre.pieces.some(p=>p.id===pneuProduit.id);
+              const repAdded=forfaitReparationProd&&ordre.pieces.some(p=>p.id===forfaitReparationProd.id);
+              const rowStyle={display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",borderRadius:9,border:"1px solid #e0f2fe",background:"#fff",marginBottom:5};
+              const badgeGreen={background:"#dcfce7",color:"#15803d",padding:"2px 8px",borderRadius:99,fontSize:10,fontWeight:700};
+              const badgeRed={background:"#fee2e2",color:"#dc2626",padding:"2px 8px",borderRadius:99,fontSize:10,fontWeight:700};
+              const btnAdd={color:"#3b82f6",fontSize:12,fontWeight:600,cursor:"pointer",userSelect:"none"};
+              const btnAdded={fontSize:11,color:"#10b981",fontWeight:600};
+              return(
+                <div style={{marginBottom:12,background:"#f0f9ff",border:"1px solid #bae6fd",borderRadius:12,padding:"12px 14px"}}>
+                  <div style={{fontSize:12,fontWeight:700,color:"#0c4a6e",marginBottom:8,display:"flex",alignItems:"center",gap:6}}>
+                    🛞 {isPneuRemplacement?"Pneu recommandé":"Réparation pneu"}
+                    <span style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:5,fontSize:11,fontWeight:500,color:"#374151"}}>
+                      Nb roues :
+                      <button onClick={()=>setNbreRoues(n=>Math.max(1,n-1))} style={{width:20,height:20,border:"1px solid #d1d5db",borderRadius:4,background:"#fff",cursor:"pointer",fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,padding:0}}>−</button>
+                      <strong>{nbreRoues}</strong>
+                      <button onClick={()=>setNbreRoues(n=>n+1)} style={{width:20,height:20,border:"1px solid #d1d5db",borderRadius:4,background:"#fff",cursor:"pointer",fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,padding:0}}>+</button>
+                    </span>
+                  </div>
+
+                  {isPneuRemplacement&&(pneuRef?(
+                    <div style={rowStyle}>
+                      <div>
+                        <div style={{fontWeight:700,fontSize:13}}>{pneuProduit?pneuProduit.name:"Pneu"}</div>
+                        <div style={{fontSize:11,color:"#6b7280",fontFamily:"monospace"}}>{pneuRef}</div>
+                      </div>
+                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                        {pneuProduit?(
+                          getStock(pneuProduit)>0
+                            ?<><span style={badgeGreen}>En stock : {getStock(pneuProduit)}</span>{!pneuAdded&&<span style={btnAdd} onClick={()=>addPieceQte(pneuProduit,nbreRoues)}>+ Ajouter ×{nbreRoues}</span>}{pneuAdded&&<span style={btnAdded}>✅ Ajouté</span>}</>
+                            :<span style={badgeRed}>Non en stock</span>
+                        ):<span style={{fontSize:11,color:"#6b7280",fontStyle:"italic"}}>Non référencé dans le catalogue</span>}
+                      </div>
+                    </div>
+                  ):<div style={{fontSize:12,color:"#6b7280",fontStyle:"italic",marginBottom:6}}>Pneu non référencé pour ce véhicule</div>)}
+
+                  {isPneuReparation&&(
+                    <div style={rowStyle}>
+                      <div>
+                        <div style={{fontWeight:700,fontSize:13}}>{forfaitReparationProd?forfaitReparationProd.name:"Forfait réparation pneu"}</div>
+                        {forfaitReparationProd&&forfaitReparationProd.prix>0&&<div style={{fontSize:11,color:"#6b7280"}}>{forfaitReparationProd.prix.toFixed(2)} €</div>}
+                      </div>
+                      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                        {forfaitReparationProd?(
+                          <>{!repAdded&&<span style={btnAdd} onClick={()=>addPiece(forfaitReparationProd)}>+ Ajouter</span>}{repAdded&&<span style={btnAdded}>✅ Ajouté</span>}</>
+                        ):<span style={{fontSize:11,color:"#6b7280",fontStyle:"italic"}}>À renseigner manuellement</span>}
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{...rowStyle,marginBottom:0,background:"#f0fdf4",borderColor:"#bbf7d0"}}>
+                    <div>
+                      <div style={{fontWeight:700,fontSize:13}}>{montageRef.name}</div>
+                      <div style={{fontSize:11,color:"#6b7280"}}>{(montageRef.prix||25).toFixed(2)} € × {nbreRoues} = {((montageRef.prix||25)*nbreRoues).toFixed(2)} €</div>
+                    </div>
+                    <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                      {!montageAdded&&<span style={btnAdd} onClick={()=>addPieceQte(montageRef,nbreRoues)}>+ Ajouter</span>}
+                      {montageAdded&&<span style={btnAdded}>✅ Ajouté</span>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+            {filtresDisponibles.length>0&&(
+              <div style={{marginBottom:12}}>
+                <div style={{fontSize:12,fontWeight:700,color:"#065f46",marginBottom:6,display:"flex",alignItems:"center",gap:5}}>🔧 Filtres disponibles en stock</div>
+                <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                  {filtresDisponibles.map((item,i)=>{
+                    const alreadyAdded=ordre.pieces.some(p=>p.id===item.product.id);
+                    return(
+                      <div key={i} onClick={()=>{if(!alreadyAdded)addPiece({...item.product,qte:1,sortie:false});}}
+                        style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 14px",background:alreadyAdded?"#f0fdf4":"#fff",border:`1px solid ${alreadyAdded?"#bbf7d0":"#d1fae5"}`,borderRadius:10,cursor:alreadyAdded?"default":"pointer"}}
+                        onMouseEnter={e=>{if(!alreadyAdded)e.currentTarget.style.background="#f0fdf4";}} onMouseLeave={e=>{if(!alreadyAdded)e.currentTarget.style.background="#fff";}}>
+                        <div>
+                          <div style={{fontWeight:700,fontSize:13,color:"#111827"}}>{item.fLabel}</div>
+                          <div style={{fontSize:11,color:"#6b7280",fontFamily:"monospace"}}>
+                            {item.product.id}
+                            {item.isEquivalent&&<span style={{color:"#92400e",marginLeft:6}}>(éq. de {item.originalRef})</span>}
+                          </div>
+                        </div>
+                        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                          {item.isEquivalent&&<span style={{background:"#fef3c7",color:"#92400e",padding:"2px 7px",borderRadius:99,fontSize:10,fontWeight:700}}>Équivalent</span>}
+                          <span style={{background:"#dcfce7",color:"#15803d",padding:"2px 8px",borderRadius:99,fontSize:10,fontWeight:700}}>En stock : {item.stock}</span>
+                          {alreadyAdded?<span style={{fontSize:11,color:"#10b981",fontWeight:600}}>✅ Ajouté</span>:<span style={{color:"#3b82f6",fontSize:12,fontWeight:600}}>+ Ajouter</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <div style={{position:"relative"}}>
               <input value={searchPiece} onChange={e=>handleSearchPiece(e.target.value)} placeholder="🔍  Ajouter une pièce…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
               {suggPieces.length>0&&(
                 <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.1)",zIndex:100,overflow:"hidden",marginTop:4}}>
-                  {suggPieces.map(p=>{const s=getStock(p);return(
-                    <div key={p.id} onClick={()=>addPiece(p)} style={{padding:"9px 14px",cursor:"pointer",borderBottom:"1px solid #f3f4f6",display:"flex",justifyContent:"space-between"}}
-                      onMouseEnter={e=>e.currentTarget.style.background="#f9fafb"} onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
-                      <div><div style={{fontWeight:600,fontSize:13}}>{p.name}</div><div style={{fontSize:11,color:"#6b7280"}}>{p.id} · {p.fournisseur||"—"}</div></div>
-                      <div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontWeight:700,color:s===0?"#dc2626":"#059669",fontSize:14}}>{s}</span>{p.prix>0&&<span style={{fontSize:11,color:"#9ca3af"}}>{p.prix.toFixed(2)} €</span>}<span style={{color:"#3b82f6",fontSize:12,fontWeight:600}}>+ Ajouter</span></div>
-                    </div>
-                  );})}
+                  {suggPieces.map(p=>{
+                    if(p._type==="filtre") return(
+                      <div key={p.id} onClick={()=>addPiece(p)} style={{padding:"9px 14px",cursor:"pointer",borderBottom:"1px solid #f3f4f6",display:"flex",justifyContent:"space-between",alignItems:"center"}}
+                        onMouseEnter={e=>e.currentTarget.style.background="#fff7ed"} onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
+                        <div><div style={{fontWeight:600,fontSize:13}}>{p._label}</div><div style={{fontSize:11,color:"#6b7280",fontFamily:"monospace"}}>{p._ref}</div></div>
+                        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                          <span style={{background:"#fed7aa",color:"#9a3412",padding:"2px 8px",borderRadius:99,fontSize:10,fontWeight:700}}>Filtre</span>
+                          <span style={{color:"#3b82f6",fontSize:12,fontWeight:600}}>+ Ajouter</span>
+                        </div>
+                      </div>
+                    );
+                    const s=getStock(p);return(
+                      <div key={p.id} onClick={()=>addPiece(p)} style={{padding:"9px 14px",cursor:"pointer",borderBottom:"1px solid #f3f4f6",display:"flex",justifyContent:"space-between"}}
+                        onMouseEnter={e=>e.currentTarget.style.background="#f9fafb"} onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
+                        <div><div style={{fontWeight:600,fontSize:13}}>{p.name}</div><div style={{fontSize:11,color:"#6b7280"}}>{p.id} · {p.fournisseur||"—"}</div></div>
+                        <div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontWeight:700,color:s===0?"#dc2626":"#059669",fontSize:14}}>{s}</span>{p.prix>0&&<span style={{fontSize:11,color:"#9ca3af"}}>{p.prix.toFixed(2)} €</span>}<span style={{color:"#3b82f6",fontSize:12,fontWeight:600}}>+ Ajouter</span></div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -4437,7 +4624,7 @@ export default function App() {
     if(page==="dashboard") return <Dashboard stockOverrides={stockOverrides} mouvements={mouvements} ordres={ordres} products={ALL_SITE_PRODUCTS} user={user} navigateTo={setPage}/>;
     if(page==="stock")     return <Stock stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} products={PRODUCTS} siteId={siteId} user={user} customArticles={customArticles} setCustomArticles={setCustomArticles} autoOpenNewArticle={autoOpenNewArticle} setAutoOpenNewArticle={setAutoOpenNewArticle}/>;
     if(page==="mouvements") return <EntreesSorties mouvements={mouvements.filter(m=>!m.site_id||m.site_id===siteId)} setMouvements={setMouvements} stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} siteId={siteId} products={ALL_SITE_PRODUCTS} user={user} navigateTo={setPage} setAutoOpenNewArticle={setAutoOpenNewArticle}/>;
-    if(page==="ordres")    return <OrdresReparation ordres={ordres.filter(o=>!o.site_id||o.site_id===siteId)} setOrdres={setOrdres} mouvements={mouvements} setMouvements={setMouvements} stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} siteId={siteId} products={ALL_SITE_PRODUCTS} user={user}/>;
+    if(page==="ordres")    return <OrdresReparation ordres={ordres.filter(o=>!o.site_id||o.site_id===siteId)} setOrdres={setOrdres} mouvements={mouvements} setMouvements={setMouvements} stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} siteId={siteId} products={ALL_SITE_PRODUCTS} user={user} equivalences={equivalences}/>;
     if(page==="prix")      return <GestionPrix prixFournisseurs={prixFournisseurs} setPrixFournisseurs={setPrixFournisseurs} historiquePrix={historiquePrix} setHistoriquePrix={setHistoriquePrix} products={ALL_SITE_PRODUCTS}/>;
     if(page==="vue_eclatee") return <VueEclatee user={user} siteId={siteId}/>;
     if(page==="ref_filtres") return <ReferenceFiltres user={user}/>;
