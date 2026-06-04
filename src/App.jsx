@@ -2212,6 +2212,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
   const [searchPiece,setSearchPiece]=useState("");
   const [suggPieces,setSuggPieces]=useState([]);
   const [note,setNote]=useState(ordre.notes||"");
+  const [editDesc,setEditDesc]=useState(ordre.description||"");
   const [showFiltresMenu,setShowFiltresMenu]=useState(false);
   const [filtresChecked,setFiltresChecked]=useState({});
   const [nbreRoues,setNbreRoues]=useState(4);
@@ -2375,7 +2376,11 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
               </div>
             ))}
           </div>
-          {ordre.description&&<div style={{background:"#fef3c7",borderRadius:10,padding:"10px 14px",fontSize:13,color:"#92400e"}}>📋 {ordre.description}</div>}
+          <div>
+            <h3 style={{fontWeight:800,fontSize:15,color:"#111827",margin:"0 0 8px"}}>📋 Description</h3>
+            <textarea value={editDesc} onChange={e=>setEditDesc(e.target.value)} rows={2} placeholder="Décrivez le problème…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box",fontFamily:"inherit"}}/>
+            <button onClick={()=>onUpdate({...ordre,description:editDesc})} style={{marginTop:7,padding:"7px 16px",background:"#f3f4f6",border:"none",borderRadius:8,cursor:"pointer",fontWeight:600,fontSize:13}}>💾 Sauvegarder</button>
+          </div>
 
           <div>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:filtresActive&&showFiltresMenu?6:10}}>
