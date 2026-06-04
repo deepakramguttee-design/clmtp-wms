@@ -2355,6 +2355,10 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
           <div>
             <div style={{color:"#9ca3af",fontSize:11,fontWeight:600,marginBottom:4,letterSpacing:"0.08em"}}>ORDRE DE RÉPARATION</div>
             <div style={{color:"#fff",fontWeight:900,fontSize:28,fontFamily:"monospace",letterSpacing:"0.04em"}}>{ordre.numero}</div>
+            <div style={{marginTop:6}}>
+              <div style={{color:"#f3f4f6",fontSize:14,fontWeight:700}}>🚗 {ordre.machine}{ordre.immat?` — ${ordre.immat}`:""}</div>
+              {ordre.typePanne&&<div style={{color:"#9ca3af",fontSize:12,marginTop:2}}>🔧 {ordre.typePanne}</div>}
+            </div>
             <div style={{display:"flex",gap:12,marginTop:6,flexWrap:"wrap"}}>
               {ordre.technicien&&<span style={{color:"#d1d5db",fontSize:12}}>👤 {ordre.technicien}</span>}
               {ordre.priorite&&(()=>{const p=OR_PRIORITES[ordre.priorite];return <span style={{background:p?.bg,color:p?.text,padding:"1px 8px",borderRadius:99,fontSize:11,fontWeight:700}}>{ordre.priorite.charAt(0).toUpperCase()+ordre.priorite.slice(1)}</span>;})()}
