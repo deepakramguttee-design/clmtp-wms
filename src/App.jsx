@@ -2213,6 +2213,8 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
   const [suggPieces,setSuggPieces]=useState([]);
   const [note,setNote]=useState(ordre.notes||"");
   const [editDesc,setEditDesc]=useState(ordre.description||"");
+  const [editMachine,setEditMachine]=useState(ordre.machine||"");
+  const [editImmat,setEditImmat]=useState(ordre.immat||"");
   const [showFiltresMenu,setShowFiltresMenu]=useState(false);
   const [filtresChecked,setFiltresChecked]=useState({});
   const [nbreRoues,setNbreRoues]=useState(4);
@@ -2376,6 +2378,15 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
               </div>
             ))}
           </div>
+          <div>
+            <h3 style={{fontWeight:800,fontSize:15,color:"#111827",margin:"0 0 8px"}}>🚗 Machine / Immatriculation</h3>
+            <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:8}}>
+              <input value={editMachine} onChange={e=>setEditMachine(e.target.value)} placeholder="Désignation de la machine" style={{padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none"}}/>
+              <input value={editImmat} onChange={e=>setEditImmat(e.target.value)} placeholder="Immat." style={{padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none",width:120,fontFamily:"monospace"}}/>
+            </div>
+            <button onClick={()=>onUpdate({...ordre,machine:editMachine,immat:editImmat})} style={{marginTop:7,padding:"7px 16px",background:"#f3f4f6",border:"none",borderRadius:8,cursor:"pointer",fontWeight:600,fontSize:13}}>💾 Sauvegarder</button>
+          </div>
+
           <div>
             <h3 style={{fontWeight:800,fontSize:15,color:"#111827",margin:"0 0 8px"}}>📋 Description</h3>
             <textarea value={editDesc} onChange={e=>setEditDesc(e.target.value)} rows={2} placeholder="Décrivez le problème…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box",fontFamily:"inherit"}}/>
