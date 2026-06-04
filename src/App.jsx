@@ -1899,10 +1899,13 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
   const canDelete = user && (user.role==="admin" || user.role==="magasinier");
   const [selectedVehicle,setSelectedVehicle]=useState(null);
   const [form,setForm]=useState({machine:"",immat:"",typePanne:"",technicien:"",priorite:"normale",description:""});
+  const [panneSelect,setPanneSelect]=useState("");
+  const [siteTechniciens,setSiteTechniciens]=useState([]);
 
   useEffect(()=>{
     getFiltrationVehicules().then(setRefVehicules);
     getFiltrationEngins().then(setRefEngins);
+    getUtilisateursSite(siteId).then(setSiteTechniciens);
   },[]);
 
   useEffect(()=>{
@@ -1919,19 +1922,20 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
     if(v.length<2){setParcSugg([]);setParcDropOpen(false);return;}
     setParcDropOpen(true);
     const s=v.toLowerCase();
+    const parc=PARC_VEHICULES.filter(p=>[p.num,p.name,p.marque,p.modele,p.immat].filter(Boolean).join(" ").toLowerCase().includes(s)).map(p=>({...p,_type:"parc",_label:p.name,_code:p.num||""}));
     const veh=refVehicules.filter(p=>(p.designation||"").toLowerCase().includes(s)).map(p=>({...p,_type:"vehicule",_label:p.designation,_code:""}));
     const eng=refEngins.filter(p=>{const full=[(p.code||""),(p.engin||"")].filter(Boolean).join(" ").toLowerCase();return full.includes(s);}).map(p=>({...p,_type:"engin",_label:p.engin,_code:p.code||""}));
-    setParcSugg([...veh,...eng].slice(0,8));
+    setParcSugg([...parc,...veh,...eng].slice(0,8));
   };
 
   const selectVehicle = v => {
     setSelectedVehicle(v);
     setRefFiltreSelectionne(v);
-    const label=v._type==="vehicule"?v.designation:(v._code?`${v._code} — ${v.engin}`:v.engin);
+    const label=v._type==="vehicule"?v.designation:v._type==="parc"?(v._code?`${v._code} — ${v._label}`:v._label):(v._code?`${v._code} — ${v.engin}`:v.engin);
     setParcSearch(label);
     setParcSugg([]);
     setParcDropOpen(false);
-    setForm(f=>({...f,machine:label,immat:v._code||""}));
+    setForm(f=>({...f,machine:label,immat:v._type==="parc"?v.immat||"":v._code||""}));
   };
 
   const handleCreate = async () => {
@@ -1947,6 +1951,7 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
     setOrdres(prev=>[ordreAvecId,...prev]);
     setShowForm(false);
     setForm({machine:"",immat:"",typePanne:"",technicien:"",priorite:"normale",description:""});
+    setPanneSelect("");
     setParcSearch(""); setSelectedVehicle(null); setRefFiltreSelectionne(null);
     setFicheOrdre(ordreAvecId);
     setSaving(false);
@@ -2113,8 +2118,8 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
                             {v._code&&<span style={{fontFamily:"monospace",fontSize:11,color:"#6b7280",marginRight:6}}>{v._code}</span>}
                             <span style={{fontWeight:700,fontSize:13,color:"#111827"}}>{v._label}</span>
                           </div>
-                          <span style={{background:v._type==="vehicule"?"#dbeafe":"#d1fae5",color:v._type==="vehicule"?"#1e40af":"#065f46",padding:"2px 8px",borderRadius:99,fontSize:10,fontWeight:700,flexShrink:0,marginLeft:8}}>
-                            {v._type==="vehicule"?"Véhicule":"Engin"}
+                          <span style={{background:v._type==="vehicule"?"#dbeafe":v._type==="parc"?"#fef3c7":"#d1fae5",color:v._type==="vehicule"?"#1e40af":v._type==="parc"?"#92400e":"#065f46",padding:"2px 8px",borderRadius:99,fontSize:10,fontWeight:700,flexShrink:0,marginLeft:8}}>
+                            {v._type==="vehicule"?"Véhicule":v._type==="parc"?"Parc":"Engin"}
                           </span>
                         </div>
                       ))}
@@ -2126,7 +2131,9 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
                     ✅{" "}
                     {selectedVehicle._type==="vehicule"
                       ?<strong>{selectedVehicle.designation}</strong>
-                      :<>{selectedVehicle._code&&<strong>{selectedVehicle._code} — </strong>}{selectedVehicle.engin}</>}
+                      :selectedVehicle._type==="parc"
+                        ?<strong>{selectedVehicle._code?`${selectedVehicle._code} — `:""}{selectedVehicle._label}</strong>
+                        :<>{selectedVehicle._code&&<strong>{selectedVehicle._code} — </strong>}{selectedVehicle.engin}</>}
                     {selectedVehicle.categorie&&<span> · <em>{selectedVehicle.categorie}</em></span>}
                   </div>
                 )}
@@ -2137,10 +2144,30 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
                 <input value={form.immat} onChange={e=>setForm(p=>({...p,immat:e.target.value}))} placeholder="AB-123-CD"
                   style={{width:"100%",padding:"10px 13px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",fontFamily:"monospace",letterSpacing:1}}/>
               </div>
-              {[{l:"Type de panne *",k:"typePanne",ph:"Ex: Fuite hydraulique, moteur, électrique…"},{l:"Technicien",k:"technicien",ph:"Nom du technicien"}].map(f=>(
-                <div key={f.k}><label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>{f.l}</label>
-                  <input value={form[f.k]} onChange={e=>setForm(p=>({...p,[f.k]:e.target.value}))} placeholder={f.ph} style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
-              ))}
+              <div><label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Type de panne *</label>
+                <select value={panneSelect} onChange={e=>{const val=e.target.value;setPanneSelect(val);setForm(p=>({...p,typePanne:val==="Autre"?"":val}));}} style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",background:"#fff"}}>
+                  <option value="">— Sélectionner le type de panne —</option>
+                  <option>Fuite hydraulique</option>
+                  <option>Panne moteur</option>
+                  <option>Électrique</option>
+                  <option>Freinage</option>
+                  <option>Transmission</option>
+                  <option>Révision / Entretien</option>
+                  <option>Vidange</option>
+                  <option>Vidange hydraulique</option>
+                  <option>Vidange réducteur</option>
+                  <option>Autre</option>
+                </select>
+                {panneSelect==="Autre"&&<input value={form.typePanne} onChange={e=>setForm(p=>({...p,typePanne:e.target.value}))} placeholder="Préciser le type de panne…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",marginTop:8}}/>}
+              </div>
+              <div><label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Technicien</label>
+                {siteTechniciens.length>0
+                  ?<select value={form.technicien} onChange={e=>setForm(p=>({...p,technicien:e.target.value}))} style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",background:"#fff"}}>
+                    <option value="">— Sélectionner un technicien —</option>
+                    {siteTechniciens.map(u=><option key={u.id} value={`${u.prenom} ${u.nom}`}>{u.prenom} {u.nom}</option>)}
+                  </select>
+                  :<input value={form.technicien} onChange={e=>setForm(p=>({...p,technicien:e.target.value}))} placeholder="Nom du technicien" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                }</div>
               <div><label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Priorité</label>
                 <div style={{display:"flex",gap:8}}>
                   {[{v:"urgente",l:"🔴 Urgente"},{v:"haute",l:"🟡 Haute"},{v:"normale",l:"⚪ Normale"}].map(p=>(
@@ -2173,14 +2200,21 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
 
   const filtresEngin=(()=>{
     const m=(ordre.machine||"").toLowerCase();
-    const codePart=m.split(" — ")[0].trim();
-    const enginPart=m.includes(" — ")?m.split(" — ").slice(1).join(" — ").trim():m;
+    // split on em-dash U+2014, en-dash U+2013, hyphen, slash, whitespace
+    const SEP=/[\s–—\-\/]+/;
+    const codePart=m.split(SEP)[0].trim();
+    const dashIdx=m.search(/[–—]/);
+    const enginPart=dashIdx>0?m.slice(dashIdx+1).trim():m;
     const direct=refEngins.find(e=>(e.code&&e.code.toLowerCase()===codePart)||e.engin.toLowerCase()===m||e.engin.toLowerCase()===enginPart||(enginPart&&e.engin.toLowerCase().includes(enginPart))||m.includes(e.engin.toLowerCase()));
-    if(direct) return direct;
+    if(direct){console.log('[filtresEngin] direct →',direct.engin);return direct;}
     const BRANDS=['renault','peugeot','citroen','fiat','ford','opel','volkswagen','mercedes','iveco','dacia','toyota','nissan'];
-    const keywords=m.split(/[\s\-—\/]+/).filter(w=>w.length>=3&&!BRANDS.includes(w)&&!/^v[uplc]/i.test(w)&&!/^\d{1,2}$/.test(w)).map(w=>/[a-z]/i.test(w)?w.replace(/\d+$/,''):w).filter(w=>w.length>=3);
-    if(!keywords.length) return null;
-    return refEngins.find(e=>keywords.some(kw=>e.engin.toLowerCase().includes(kw)))||null;
+    const raw=m.split(SEP);
+    const keywords=raw.filter(w=>w.length>=3&&!BRANDS.includes(w)&&!/^v[uplc]/i.test(w)&&!/^\d{1,2}$/.test(w)).map(w=>/[a-z]/i.test(w)?w.replace(/\d+$/,''):w).filter(w=>w.length>=3);
+    console.log('[filtresEngin] machine:',JSON.stringify(m),'raw:',raw,'keywords:',keywords,'refEngins:',refEngins.length);
+    if(!keywords.length){console.log('[filtresEngin] → null (no keywords)');return null;}
+    const found=refEngins.find(e=>keywords.some(kw=>e.engin.toLowerCase().includes(kw)));
+    console.log('[filtresEngin] keyword match →',found?.engin||null);
+    return found||null;
   })();
 
   useEffect(()=>{
