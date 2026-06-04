@@ -2352,9 +2352,15 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(2px)"}}>
       <div style={{background:"#fff",borderRadius:20,width:"min(98vw,760px)",maxHeight:"92vh",overflowY:"auto",boxShadow:"0 24px 64px rgba(0,0,0,0.25)"}}>
         <div style={{padding:"20px 26px",borderBottom:"1px solid #e5e7eb",display:"flex",justifyContent:"space-between",alignItems:"center",background:"#111827",borderRadius:"20px 20px 0 0"}}>
-          <div><div style={{color:"#9ca3af",fontSize:11,fontWeight:600,marginBottom:4,letterSpacing:"0.08em"}}>ORDRE DE RÉPARATION</div>
-            <div style={{color:"#fff",fontWeight:900,fontSize:28,fontFamily:"monospace",letterSpacing:"0.04em"}}>{ordre.numero}</div></div>
-          <div style={{display:"flex",gap:10,alignItems:"center"}}><Badge status={ordre.statut} map={OR_STATUTS}/><button onClick={onClose} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:16,color:"#fff"}}>✕</button></div>
+          <div>
+            <div style={{color:"#9ca3af",fontSize:11,fontWeight:600,marginBottom:4,letterSpacing:"0.08em"}}>ORDRE DE RÉPARATION</div>
+            <div style={{color:"#fff",fontWeight:900,fontSize:28,fontFamily:"monospace",letterSpacing:"0.04em"}}>{ordre.numero}</div>
+            <div style={{display:"flex",gap:12,marginTop:6,flexWrap:"wrap"}}>
+              {ordre.technicien&&<span style={{color:"#d1d5db",fontSize:12}}>👤 {ordre.technicien}</span>}
+              {ordre.priorite&&(()=>{const p=OR_PRIORITES[ordre.priorite];return <span style={{background:p?.bg,color:p?.text,padding:"1px 8px",borderRadius:99,fontSize:11,fontWeight:700}}>{ordre.priorite.charAt(0).toUpperCase()+ordre.priorite.slice(1)}</span>;})()}
+            </div>
+          </div>
+          <div style={{display:"flex",gap:10,alignItems:"center",flexShrink:0}}><Badge status={ordre.statut} map={OR_STATUTS}/><button onClick={onClose} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:16,color:"#fff"}}>✕</button></div>
         </div>
         <div style={{padding:"22px 26px",display:"flex",flexDirection:"column",gap:20}}>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))",gap:10}}>
