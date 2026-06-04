@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LogiWMS — Système de Gestion d'Entrepôt</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --amber: #f59e0b;
+      --amber-dim: #92600a;
+      --bg: #080808;
+      --bg-1: #111111;
+      --bg-2: #1a1a1a;
+      --bg-3: #242424;
+      --line: #2a2a2a;
+      --line-amber: #3d2a00;
+      --text: #e8e8e8;
+      --text-dim: #888;
+      --text-faint: #444;
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+      --font-body: 'Barlow', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+
+    /* ── GRID TEXTURE ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 48px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(8,8,8,0.85);
+      backdrop-filter: blur(12px);
+    }
+
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 28px;
+      letter-spacing: 4px;
+      color: var(--amber);
+    }
+
+    .nav-logo span {
+      color: var(--text);
+      font-size: 13px;
+      font-family: var(--font-mono);
+      font-weight: 300;
+      display: block;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      margin-top: -4px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--amber); }
+
+    .nav-cta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--bg);
+      background: var(--amber);
+      border: none;
+      padding: 10px 24px;
+      cursor: crosshair;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    .nav-cta:hover { background: #fbbf24; }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 120px 48px 80px;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 24px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.2s;
+    }
+
+    .hero-eyebrow::before {
+      content: '▶ ';
+      opacity: 0.6;
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(100px, 18vw, 280px);
+      line-height: 0.9;
+      letter-spacing: -2px;
+      color: var(--text);
+      opacity: 0;
+      animation: fadeUp 0.8s ease forwards 0.4s;
+      position: relative;
+    }
+
+    .hero-title .accent { color: var(--amber); }
+
+    .hero-title-sub {
+      font-family: var(--font-display);
+      font-size: clamp(40px, 6vw, 96px);
+      line-height: 1;
+      letter-spacing: 8px;
+      color: var(--text-dim);
+      opacity: 0;
+      animation: fadeUp 0.8s ease forwards 0.6s;
+      margin-top: 8px;
+    }
+
+    .hero-desc {
+      font-size: 16px;
+      font-weight: 300;
+      color: var(--text-dim);
+      max-width: 520px;
+      line-height: 1.8;
+      margin-top: 40px;
+      opacity: 0;
+      animation: fadeUp 0.8s ease forwards 0.8s;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      margin-top: 48px;
+      opacity: 0;
+      animation: fadeUp 0.8s ease forwards 1s;
+    }
+
+    .btn-primary {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--bg);
+      background: var(--amber);
+      border: 1px solid var(--amber);
+      padding: 16px 40px;
+      cursor: crosshair;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: inline-block;
+    }
+
+    .btn-primary:hover {
+      background: transparent;
+      color: var(--amber);
+    }
+
+    .btn-ghost {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      background: transparent;
+      border: 1px solid var(--line);
+      padding: 16px 40px;
+      cursor: crosshair;
+      text-decoration: none;
+      transition: all 0.2s;
+      display: inline-block;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--amber);
+      color: var(--amber);
+    }
+
+    .hero-badge {
+      position: absolute;
+      right: 48px;
+      bottom: 80px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      opacity: 0;
+      animation: fadeUp 0.8s ease forwards 1.2s;
+    }
+
+    .hero-badge .version {
+      font-size: 32px;
+      font-family: var(--font-display);
+      color: var(--line);
+      letter-spacing: 4px;
+    }
+
+    /* ── MARQUEE ── */
+    .marquee-wrap {
+      border-top: 1px solid var(--line-amber);
+      border-bottom: 1px solid var(--line-amber);
+      background: var(--bg-1);
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
+
+    .marquee-inner {
+      display: flex;
+      animation: marquee 30s linear infinite;
+      width: max-content;
+    }
+
+    .marquee-item {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--amber-dim);
+      padding: 14px 48px;
+      white-space: nowrap;
+    }
+
+    .marquee-item .sep {
+      color: var(--amber);
+      margin: 0 16px;
+    }
+
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    /* ── MODULES ── */
+    .modules {
+      position: relative;
+      z-index: 1;
+      padding: 120px 48px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 24px;
+      margin-bottom: 64px;
+    }
+
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--amber);
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(48px, 6vw, 80px);
+      letter-spacing: 2px;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .modules-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      gap: 1px;
+      background: var(--line);
+    }
+
+    .module-card {
+      background: var(--bg);
+      padding: 48px 40px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s;
+    }
+
+    .module-card:hover { background: var(--bg-1); }
+
+    .module-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--amber);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s ease;
+    }
+
+    .module-card:hover::before { transform: scaleX(1); }
+
+    .module-number {
+      font-family: var(--font-display);
+      font-size: 80px;
+      color: var(--line);
+      line-height: 1;
+      margin-bottom: 24px;
+      transition: color 0.3s;
+    }
+
+    .module-card:hover .module-number { color: var(--line-amber); }
+
+    .module-icon {
+      font-size: 32px;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .module-name {
+      font-family: var(--font-display);
+      font-size: 40px;
+      letter-spacing: 2px;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+
+    .module-desc {
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--text-dim);
+      line-height: 1.8;
+      margin-bottom: 32px;
+    }
+
+    .module-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .module-features li {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: var(--text-faint);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: color 0.2s;
+    }
+
+    .module-card:hover .module-features li { color: var(--text-dim); }
+
+    .module-features li::before {
+      content: '';
+      width: 16px;
+      height: 1px;
+      background: var(--amber);
+      flex-shrink: 0;
+    }
+
+    /* ── STATS ── */
+    .stats {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: var(--bg-1);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .stat-item {
+      padding: 64px 48px;
+      border-right: 1px solid var(--line);
+      position: relative;
+    }
+
+    .stat-item:last-child { border-right: none; }
+
+    .stat-value {
+      font-family: var(--font-display);
+      font-size: 80px;
+      color: var(--amber);
+      line-height: 1;
+      letter-spacing: -2px;
+    }
+
+    .stat-unit {
+      font-family: var(--font-mono);
+      font-size: 18px;
+      color: var(--amber-dim);
+    }
+
+    .stat-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-top: 12px;
+    }
+
+    .stat-desc {
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--text-faint);
+      margin-top: 8px;
+      line-height: 1.6;
+    }
+
+    /* ── FEATURES ── */
+    .features {
+      position: relative;
+      z-index: 1;
+      padding: 120px 48px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: start;
+    }
+
+    .features-left .section-title {
+      margin-bottom: 32px;
+    }
+
+    .features-left p {
+      font-size: 15px;
+      font-weight: 300;
+      color: var(--text-dim);
+      line-height: 1.9;
+      margin-bottom: 40px;
+    }
+
+    .tech-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tech-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--amber-dim);
+      border: 1px solid var(--line-amber);
+      padding: 6px 14px;
+    }
+
+    .features-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .feature-row {
+      display: flex;
+      gap: 24px;
+      padding: 28px 0;
+      border-bottom: 1px solid var(--line);
+      align-items: flex-start;
+      transition: all 0.2s;
+      cursor: default;
+    }
+
+    .feature-row:first-child { border-top: 1px solid var(--line); }
+
+    .feature-row:hover { background: var(--bg-1); padding-left: 16px; padding-right: 16px; margin: 0 -16px; }
+
+    .feature-index {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-faint);
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
+
+    .feature-content {}
+
+    .feature-name {
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .feature-detail {
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--text-dim);
+      line-height: 1.7;
+    }
+
+    /* ── TERMINAL BLOCK ── */
+    .terminal {
+      position: relative;
+      z-index: 1;
+      padding: 0 48px 120px;
+    }
+
+    .terminal-window {
+      background: var(--bg-1);
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .terminal-bar {
+      background: var(--bg-2);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .terminal-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .terminal-dot.red { background: #ff5f56; }
+    .terminal-dot.yellow { background: #ffbd2e; }
+    .terminal-dot.green { background: #27c93f; }
+
+    .terminal-title {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-faint);
+      letter-spacing: 1px;
+      margin-left: 12px;
+    }
+
+    .terminal-body {
+      padding: 32px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 2;
+    }
+
+    .t-dim { color: var(--text-faint); }
+    .t-amber { color: var(--amber); }
+    .t-green { color: #4ade80; }
+    .t-blue { color: #60a5fa; }
+    .t-white { color: var(--text); }
+
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 14px;
+      background: var(--amber);
+      animation: blink 1s step-end infinite;
+      vertical-align: text-bottom;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* ── CTA ── */
+    .cta {
+      position: relative;
+      z-index: 1;
+      padding: 120px 48px;
+      text-align: center;
+      border-top: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .cta::before {
+      content: 'LOGIWMS';
+      position: absolute;
+      font-family: var(--font-display);
+      font-size: 400px;
+      color: var(--bg-1);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      white-space: nowrap;
+      pointer-events: none;
+      letter-spacing: -8px;
+    }
+
+    .cta-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 24px;
+    }
+
+    .cta-title {
+      font-family: var(--font-display);
+      font-size: clamp(60px, 8vw, 120px);
+      letter-spacing: 2px;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 40px;
+      position: relative;
+    }
+
+    .cta-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      position: relative;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--line);
+      padding: 32px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-1);
+    }
+
+    .footer-logo {
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 4px;
+      color: var(--amber);
+    }
+
+    .footer-meta {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      text-align: right;
+      line-height: 2;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── AMBER LINE ACCENT ── */
+    .amber-line {
+      width: 48px;
+      height: 2px;
+      background: var(--amber);
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">
+      LogiWMS
+      <span>v4.0 · CLMTP Sablé</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#modules">Modules</a></li>
+      <li><a href="#features">Fonctions</a></li>
+      <li><a href="#stack">Stack</a></li>
+    </ul>
+    <a href="/" class="nav-cta">Accéder</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <p class="hero-eyebrow">Warehouse Management System · CLMTP Sablé</p>
+    <h1 class="hero-title">
+      <span class="accent">Logi</span>WMS
+    </h1>
+    <div class="hero-title-sub">GESTION D'ENTREPÔT</div>
+    <p class="hero-desc">
+      Pilotez votre stock, vos ordres de réparation et votre parc de véhicules depuis une interface unifiée. Précision industrielle, temps réel.
+    </p>
+    <div class="hero-actions">
+      <a href="/" class="btn-primary">Ouvrir l'application</a>
+      <a href="#modules" class="btn-ghost">Voir les modules</a>
+    </div>
+    <div class="hero-badge">
+      <span class="version">V4</span>
+      <span>React 18 · Supabase · PWA</span>
+      <span>Build 2025</span>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee-wrap">
+    <div class="marquee-inner" id="marquee">
+      <!-- duplicated for seamless loop -->
+    </div>
+  </div>
+
+  <!-- MODULES -->
+  <section class="modules" id="modules">
+    <div class="section-header">
+      <span class="section-label">01 / Modules</span>
+      <h2 class="section-title">Trois piliers,<br>une plateforme.</h2>
+    </div>
+    <div class="modules-grid reveal">
+      <div class="module-card">
+        <div class="module-number">01</div>
+        <span class="module-icon">📦</span>
+        <div class="module-name">GESTION<br>DU STOCK</div>
+        <p class="module-desc">
+          Catalogue de plus de 1 800 articles. Suivi des niveaux, mouvements d'entrée/sortie et alertes de réapprovisionnement en temps réel.
+        </p>
+        <ul class="module-features">
+          <li>1 800+ références produits</li>
+          <li>Mouvements de stock temps réel</li>
+          <li>Historique complet des transactions</li>
+          <li>Alertes seuil critique</li>
+          <li>Recherche avancée multi-critères</li>
+        </ul>
+      </div>
+      <div class="module-card">
+        <div class="module-number">02</div>
+        <span class="module-icon">🔧</span>
+        <div class="module-name">ORDRES DE<br>RÉPARATION</div>
+        <p class="module-desc">
+          Création, suivi et clôture des ORs. Assignation des techniciens, gestion des pièces détachées et suivi des priorités.
+        </p>
+        <ul class="module-features">
+          <li>Création et suivi d'ORs</li>
+          <li>Assignation techniciens</li>
+          <li>Gestion des pièces liées</li>
+          <li>Niveaux de priorité</li>
+          <li>Notes et historique</li>
+        </ul>
+      </div>
+      <div class="module-card">
+        <div class="module-number">03</div>
+        <span class="module-icon">🚛</span>
+        <div class="module-name">PARC<br>VÉHICULES</div>
+        <p class="module-desc">
+          Gestion du parc VP/VU et engins lourds. Filtration, consommables, maintenance préventive et suivi des pièces d'usure.
+        </p>
+        <ul class="module-features">
+          <li>VP / VU / Engins lourds</li>
+          <li>Filtres et consommables</li>
+          <li>Plaquettes et disques</li>
+          <li>Suivi AdBlue & hydraulique</li>
+          <li>Fiche complète par véhicule</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="stats" id="stats">
+    <div class="stats-grid">
+      <div class="stat-item reveal">
+        <div class="stat-value"><span class="counter" data-target="1800">0</span><span class="stat-unit">+</span></div>
+        <div class="stat-label">Articles en stock</div>
+        <div class="stat-desc">Références cataloguées et suivies en temps réel</div>
+      </div>
+      <div class="stat-item reveal" style="transition-delay:0.1s">
+        <div class="stat-value"><span class="counter" data-target="3">0</span></div>
+        <div class="stat-label">Modules métier</div>
+        <div class="stat-desc">Stock · Ordres de réparation · Parc véhicules</div>
+      </div>
+      <div class="stat-item reveal" style="transition-delay:0.2s">
+        <div class="stat-value"><span class="counter" data-target="100">0</span><span class="stat-unit">%</span></div>
+        <div class="stat-label">Temps réel</div>
+        <div class="stat-desc">Synchronisation Supabase PostgreSQL live</div>
+      </div>
+      <div class="stat-item reveal" style="transition-delay:0.3s">
+        <div class="stat-value"><span class="counter" data-target="0">0</span></div>
+        <div class="stat-label">Installation requise</div>
+        <div class="stat-desc">PWA — fonctionne hors-ligne sur tous appareils</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
+    <div class="features-left reveal">
+      <div class="section-label" style="margin-bottom:16px">02 / Fonctionnalités</div>
+      <h2 class="section-title">Conçu pour<br>l'atelier.</h2>
+      <p>
+        Une interface pensée pour les équipes terrain — rapide, lisible, accessible depuis un smartphone ou un poste fixe, même avec une connexion limitée.
+      </p>
+      <div id="stack" style="margin-bottom:16px;">
+        <div class="amber-line"></div>
+        <div style="font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;">Stack technique</div>
+      </div>
+      <div class="tech-stack">
+        <span class="tech-tag">React 18</span>
+        <span class="tech-tag">Vite 5</span>
+        <span class="tech-tag">Supabase</span>
+        <span class="tech-tag">PostgreSQL</span>
+        <span class="tech-tag">PWA</span>
+        <span class="tech-tag">Service Worker</span>
+        <span class="tech-tag">Offline-ready</span>
+        <span class="tech-tag">Mobile-first</span>
+      </div>
+    </div>
+    <div class="features-list reveal" style="transition-delay:0.2s">
+      <div class="feature-row">
+        <span class="feature-index">01</span>
+        <div class="feature-content">
+          <div class="feature-name">Progressive Web App</div>
+          <div class="feature-detail">Installable sur Android, iOS et desktop. Mode hors-ligne avec synchronisation automatique au retour de connexion.</div>
+        </div>
+      </div>
+      <div class="feature-row">
+        <span class="feature-index">02</span>
+        <div class="feature-content">
+          <div class="feature-name">Recherche intelligente</div>
+          <div class="feature-detail">Autocomplete sur désignations, immatriculations et codes pièces. Résultats instantanés depuis le catalogue local.</div>
+        </div>
+      </div>
+      <div class="feature-row">
+        <span class="feature-index">03</span>
+        <div class="feature-content">
+          <div class="feature-name">Fiche OR complète</div>
+          <div class="feature-detail">Création d'ordres de réparation avec machine, immatriculation, type de panne, technicien assigné et pièces consommées.</div>
+        </div>
+      </div>
+      <div class="feature-row">
+        <span class="feature-index">04</span>
+        <div class="feature-content">
+          <div class="feature-name">Catalogue filtration véhicules</div>
+          <div class="feature-detail">Base de données VP/VU et engins lourds avec tous les consommables : filtres, plaquettes, disques, pneumatiques, AdBlue.</div>
+        </div>
+      </div>
+      <div class="feature-row">
+        <span class="feature-index">05</span>
+        <div class="feature-content">
+          <div class="feature-name">Synchronisation temps réel</div>
+          <div class="feature-detail">Backend Supabase avec abonnements temps réel. Chaque modification est visible instantanément sur tous les postes connectés.</div>
+        </div>
+      </div>
+      <div class="feature-row">
+        <span class="feature-index">06</span>
+        <div class="feature-content">
+          <div class="feature-name">Interface sans formation</div>
+          <div class="feature-detail">Conçu pour une prise en main immédiate par les équipes maintenance et magasiniers sans formation préalable.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TERMINAL -->
+  <div class="terminal">
+    <div class="terminal-window reveal">
+      <div class="terminal-bar">
+        <span class="terminal-dot red"></span>
+        <span class="terminal-dot yellow"></span>
+        <span class="terminal-dot green"></span>
+        <span class="terminal-title">logiwms — stack info</span>
+      </div>
+      <div class="terminal-body">
+        <div><span class="t-dim">$ </span><span class="t-amber">logiwms</span><span class="t-white"> --info</span></div>
+        <div>&nbsp;</div>
+        <div><span class="t-green">✓</span> <span class="t-white">Application</span>&nbsp;&nbsp;<span class="t-dim">LogiWMS v4.0 — CLMTP Sablé</span></div>
+        <div><span class="t-green">✓</span> <span class="t-white">Frontend</span>&nbsp;&nbsp;&nbsp;<span class="t-dim">React 18.2 + Vite 5 (PWA)</span></div>
+        <div><span class="t-green">✓</span> <span class="t-white">Backend</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-dim">Supabase · PostgreSQL · Realtime</span></div>
+        <div><span class="t-green">✓</span> <span class="t-white">Catalogue</span>&nbsp;&nbsp;<span class="t-dim">1 800 articles · src/products.js</span></div>
+        <div><span class="t-green">✓</span> <span class="t-white">Parc</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-dim">VP · VU · VL · VC · Engins lourds</span></div>
+        <div><span class="t-green">✓</span> <span class="t-white">Modules</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-dim">Stock · Ordres de réparation · Véhicules</span></div>
+        <div><span class="t-green">✓</span> <span class="t-white">Offline</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-dim">Service Worker · Cache stratégie</span></div>
+        <div>&nbsp;</div>
+        <div><span class="t-dim">$ </span><span class="t-amber">npm run dev</span></div>
+        <div><span class="t-blue">  VITE v5</span><span class="t-dim">  ready in 312ms</span></div>
+        <div><span class="t-dim">  ➜  Local: </span><span class="t-white">http://localhost:5173/</span></div>
+        <div>&nbsp;</div>
+        <div><span class="t-dim">$ </span><span class="cursor"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="cta-label">Prêt à démarrer</div>
+    <h2 class="cta-title">ACCÉDER À<br>L'APPLICATION</h2>
+    <div class="cta-actions">
+      <a href="/" class="btn-primary">Ouvrir LogiWMS</a>
+      <a href="https://github.com/deepakramguttee-design/clmtp-wms" class="btn-ghost" target="_blank">GitHub</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">LogiWMS</div>
+    <div class="footer-meta">
+      <div>CLMTP Sablé · Système de Gestion d'Entrepôt</div>
+      <div>React 18 · Supabase · PWA · 2025</div>
+    </div>
+  </footer>
+
+  <script>
+    // Marquee content
+    const items = [
+      'Gestion de Stock', 'Ordres de Réparation', 'Parc Véhicules', 'Engins Lourds',
+      'Supabase Realtime', 'PWA Offline', '1 800+ Articles', 'React 18',
+      'Filtration VP/VU', 'Maintenance Préventive', 'Synchronisation Live', 'CLMTP Sablé'
+    ];
+    const marquee = document.getElementById('marquee');
+    const allItems = [...items, ...items]; // duplicate for seamless loop
+    allItems.forEach(text => {
+      const el = document.createElement('span');
+      el.className = 'marquee-item';
+      el.innerHTML = `${text}<span class="sep">◆</span>`;
+      marquee.appendChild(el);
+    });
+
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Counter animation
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting && !e.target.dataset.done) {
+          e.target.dataset.done = '1';
+          const target = parseInt(e.target.dataset.target);
+          const duration = 1200;
+          const start = performance.now();
+          const animate = (now) => {
+            const progress = Math.min((now - start) / duration, 1);
+            const ease = 1 - Math.pow(1 - progress, 3);
+            e.target.textContent = Math.round(ease * target);
+            if (progress < 1) requestAnimationFrame(animate);
+          };
+          requestAnimationFrame(animate);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('.counter').forEach(el => counterObserver.observe(el));
+  </script>
+</body>
+</html>
