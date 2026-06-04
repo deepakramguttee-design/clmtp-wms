@@ -2553,6 +2553,13 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
             <button onClick={()=>onUpdate({...ordre,notes:note})} style={{marginTop:7,padding:"7px 16px",background:"#f3f4f6",border:"none",borderRadius:8,cursor:"pointer",fontWeight:600,fontSize:13}}>💾 Sauvegarder</button>
           </div>
 
+          {totalCout>0&&(
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 16px",background:"#f8fafc",borderRadius:12,border:"1px solid #e2e8f0"}}>
+              <div style={{fontSize:13,color:"#374151",fontWeight:600}}>💶 Coût total de l'OR</div>
+              <div style={{fontSize:20,fontWeight:900,color:"#111827"}}>{totalCout.toFixed(2)} €</div>
+            </div>
+          )}
+
           <div style={{display:"flex",gap:8,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid #e5e7eb"}}>
             <div style={{fontSize:13,fontWeight:600,color:"#374151",alignSelf:"center"}}>Statut :</div>
             {Object.entries(OR_STATUTS).map(([k,v])=>(
