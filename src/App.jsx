@@ -1868,6 +1868,8 @@ function Equivalences({ equivalences, setEquivalences, products }) {
   );
 }
 
+const isService = name => (name||'').trim().toLowerCase().startsWith('forfait');
+
 const FILTRE_VEH_LABELS = [
   { key:'filtre_air',        label:'Filtre air' },
   { key:'filtre_habitacle',  label:'Filtre habitacle' },
@@ -2212,6 +2214,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
   const [showFiltresMenu,setShowFiltresMenu]=useState(false);
   const [filtresChecked,setFiltresChecked]=useState({});
   const [nbreRoues,setNbreRoues]=useState(4);
+  const [editTechnicien,setEditTechnicien]=useState(ordre.technicien||"");
 
   const filtresEngin=(()=>{
     const m=(ordre.machine||"").toLowerCase();
@@ -2408,18 +2411,23 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                 {ordre.pieces.map(p=>{
                   const prod=(products||ALL_PRODUCTS).find(x=>x.id===p.id);
                   const stock=prod?getStock(prod):0;
+                  const svc=isService(p.name);
+                  const stockOk=svc||stock>=p.qte;
                   return (
-                    <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,padding:"11px 14px",borderRadius:10,background:p.sortie?"#f0fdf4":stock<p.qte?"#fff1f2":"#fff",border:`1px solid ${p.sortie?"#bbf7d0":stock<p.qte?"#fecaca":"#e5e7eb"}`}}>
+                    <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,padding:"11px 14px",borderRadius:10,background:p.sortie?"#f0fdf4":!stockOk?"#fff1f2":"#fff",border:`1px solid ${p.sortie?"#bbf7d0":!stockOk?"#fecaca":"#e5e7eb"}`}}>
                       <div style={{flex:1}}>
                         <div style={{fontWeight:700,fontSize:13,color:"#111827"}}>{p.name}</div>
-                        <div style={{fontSize:11,color:"#6b7280",marginTop:2}}>{p.id}{p.location?` · ${p.location}`:""} · Dispo : <strong style={{color:stock===0?"#dc2626":"#059669"}}>{stock}</strong></div>
+                        <div style={{fontSize:11,color:"#6b7280",marginTop:2}}>
+                          {!svc&&<>{p.id}{p.location?` · ${p.location}`:""} · Dispo : <strong style={{color:stock===0?"#dc2626":"#059669"}}>{stock}</strong></>}
+                          {svc&&<><span style={{background:"#dbeafe",color:"#1e40af",padding:"1px 7px",borderRadius:99,fontSize:10,fontWeight:700}}>Service</span>{p.id&&p.id!==`virt-${Date.now()}`?` · ${p.id}`:""}</>}
+                        </div>
                         {p.prix>0&&<div style={{fontSize:12,color:"#374151",marginTop:2}}><span style={{fontWeight:600}}>{p.prix.toFixed(2)} €/u</span>{p.qte>1&&<span style={{color:"#111827",fontWeight:700,marginLeft:8}}>= {(p.prix*p.qte).toFixed(2)} €</span>}</div>}
                       </div>
                       <div style={{display:"flex",alignItems:"center",gap:8}}>
                         <input type="number" min="1" value={p.qte} onChange={e=>updateQte(p.id,e.target.value)} disabled={p.sortie} style={{width:55,padding:"5px 7px",border:"1px solid #e5e7eb",borderRadius:7,fontSize:13,fontWeight:700,textAlign:"center",outline:"none"}}/>
                         {p.sortie
                           ? <span style={{background:"#d1fae5",color:"#065f46",padding:"5px 10px",borderRadius:8,fontSize:11,fontWeight:700}}>✅ Sorti</span>
-                          : <button onClick={()=>onSortir(ordre,p)} disabled={stock<p.qte} style={{padding:"6px 12px",background:stock<p.qte?"#f3f4f6":"#111827",color:stock<p.qte?"#9ca3af":"#fff",border:"none",borderRadius:8,cursor:stock<p.qte?"not-allowed":"pointer",fontSize:12,fontWeight:600}}>{stock<p.qte?"Stock insuf.":"📤 Sortir"}</button>
+                          : <button onClick={()=>onSortir(ordre,p)} disabled={!svc&&stock<p.qte} style={{padding:"6px 12px",background:!stockOk?"#f3f4f6":"#111827",color:!stockOk?"#9ca3af":"#fff",border:"none",borderRadius:8,cursor:!stockOk?"not-allowed":"pointer",fontSize:12,fontWeight:600}}>{!stockOk?"Stock insuf.":"📤 Sortir"}</button>
                         }
                         {!p.sortie&&<button onClick={()=>removePiece(p.id)} style={{padding:"5px 8px",background:"#fee2e2",border:"none",borderRadius:7,cursor:"pointer",color:"#dc2626",fontSize:12}}>✕</button>}
                       </div>
@@ -2534,11 +2542,15 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                         </div>
                       </div>
                     );
-                    const s=getStock(p);return(
+                    const svc=isService(p.name);const s=svc?null:getStock(p);return(
                       <div key={p.id} onClick={()=>addPiece(p)} style={{padding:"9px 14px",cursor:"pointer",borderBottom:"1px solid #f3f4f6",display:"flex",justifyContent:"space-between"}}
                         onMouseEnter={e=>e.currentTarget.style.background="#f9fafb"} onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
                         <div><div style={{fontWeight:600,fontSize:13}}>{p.name}</div><div style={{fontSize:11,color:"#6b7280"}}>{p.id} · {p.fournisseur||"—"}</div></div>
-                        <div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{fontWeight:700,color:s===0?"#dc2626":"#059669",fontSize:14}}>{s}</span>{p.prix>0&&<span style={{fontSize:11,color:"#9ca3af"}}>{p.prix.toFixed(2)} €</span>}<span style={{color:"#3b82f6",fontSize:12,fontWeight:600}}>+ Ajouter</span></div>
+                        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                          {svc?<span style={{background:"#dbeafe",color:"#1e40af",padding:"2px 7px",borderRadius:99,fontSize:10,fontWeight:700}}>Service</span>:<span style={{fontWeight:700,color:s===0?"#dc2626":"#059669",fontSize:14}}>{s}</span>}
+                          {p.prix>0&&<span style={{fontSize:11,color:"#9ca3af"}}>{p.prix.toFixed(2)} €</span>}
+                          <span style={{color:"#3b82f6",fontSize:12,fontWeight:600}}>+ Ajouter</span>
+                        </div>
                       </div>
                     );
                   })}
@@ -2565,6 +2577,23 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
             {Object.entries(OR_STATUTS).map(([k,v])=>(
               <button key={k} onClick={()=>onUpdate({...ordre,statut:k,dateCloture:k==="termine"?new Date().toISOString():ordre.dateCloture})} style={{padding:"7px 14px",borderRadius:9,border:`2px solid ${ordre.statut===k?"#111827":"#e5e7eb"}`,background:ordre.statut===k?v.bg:"#fff",color:ordre.statut===k?v.text:"#6b7280",fontWeight:600,cursor:"pointer",fontSize:12}}>{v.label}</button>
             ))}
+          </div>
+
+          <div style={{display:"flex",gap:8,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid #e5e7eb"}}>
+            <div style={{fontSize:13,fontWeight:600,color:"#374151",alignSelf:"center"}}>Priorité :</div>
+            {[{k:"urgente",l:"🔴 Urgente"},{k:"haute",l:"🟡 Haute"},{k:"normale",l:"⚪ Normale"}].map(({k,l})=>{
+              const v=OR_PRIORITES[k];
+              return <button key={k} onClick={()=>onUpdate({...ordre,priorite:k})} style={{padding:"7px 14px",borderRadius:9,border:`2px solid ${ordre.priorite===k?"#111827":"#e5e7eb"}`,background:ordre.priorite===k?v.bg:"#fff",color:ordre.priorite===k?v.text:"#6b7280",fontWeight:600,cursor:"pointer",fontSize:12}}>{l}</button>;
+            })}
+          </div>
+
+          <div style={{display:"flex",gap:10,alignItems:"center",paddingTop:8,borderTop:"1px solid #e5e7eb"}}>
+            <div style={{fontSize:13,fontWeight:600,color:"#374151",whiteSpace:"nowrap"}}>👤 Technicien :</div>
+            <input value={editTechnicien} onChange={e=>setEditTechnicien(e.target.value)}
+              onBlur={()=>{if(editTechnicien!==ordre.technicien)onUpdate({...ordre,technicien:editTechnicien});}}
+              onKeyDown={e=>{if(e.key==="Enter"&&editTechnicien!==ordre.technicien)onUpdate({...ordre,technicien:editTechnicien});}}
+              placeholder="Nom du technicien"
+              style={{flex:1,padding:"7px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none"}}/>
           </div>
 
           {allSorties&&ordre.statut!=="termine"&&(
