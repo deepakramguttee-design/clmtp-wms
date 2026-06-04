@@ -2255,9 +2255,8 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
   const _allProds=products||ALL_PRODUCTS;
   const pneuRef=filtresVehicule?.pneu||null;
   const pneuProduit=isPneuRemplacement&&pneuRef?_allProds.find(p=>{const n=(p.name||'').toLowerCase();const id=(p.id||'').toLowerCase();const ref=pneuRef.toLowerCase();return n.includes(ref)||ref.includes(id);;}):null;
-  const forfaitMontageProd=isPneu?_allProds.find(p=>{const n=(p.name||'').toLowerCase();return n.includes('montage')&&(n.includes('quilibrage'));}):null;
-  const forfaitReparationProd=isPneuReparation?_allProds.find(p=>{const n=(p.name||'').toLowerCase();return n.includes('paration')&&n.includes('pneu');}):null;
-  const forfaitMontageVirtuel={id:'forfait-montage-equilibrage',name:'Forfait montage et équilibrage',prix:25,fournisseur:'',location:''};
+  const svcMontage={id:'forfait-montage-equilibrage',name:'Forfait montage et équilibrage',prix:25,fournisseur:'',location:''};
+  const svcReparation={id:'forfait-reparation-pneu',name:'Forfait réparation pneu',prix:25,fournisseur:'',location:''};
 
   const filtresDisponibles=(()=>{
     if(ordre.typePanne!=="Révision / Entretien"||!filtresActive) return [];
@@ -2429,10 +2428,9 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
               </div>
             )}
             {isPneu&&(()=>{
-              const montageRef=forfaitMontageProd||forfaitMontageVirtuel;
-              const montageAdded=ordre.pieces.some(p=>forfaitMontageProd?p.id===forfaitMontageProd.id:(p.name||'').toLowerCase().includes('montage')&&(p.name||'').toLowerCase().includes('quilibrage'));
+              const montageAdded=ordre.pieces.some(p=>p.id===svcMontage.id||(p.name||'').toLowerCase().includes('montage'));
               const pneuAdded=pneuProduit&&ordre.pieces.some(p=>p.id===pneuProduit.id);
-              const repAdded=forfaitReparationProd&&ordre.pieces.some(p=>p.id===forfaitReparationProd.id);
+              const repAdded=ordre.pieces.some(p=>p.id===svcReparation.id);
               const rowStyle={display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",borderRadius:9,border:"1px solid #e0f2fe",background:"#fff",marginBottom:5};
               const badgeGreen={background:"#dcfce7",color:"#15803d",padding:"2px 8px",borderRadius:99,fontSize:10,fontWeight:700};
               const badgeRed={background:"#fee2e2",color:"#dc2626",padding:"2px 8px",borderRadius:99,fontSize:10,fontWeight:700};
@@ -2469,24 +2467,23 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                   {isPneuReparation&&(
                     <div style={rowStyle}>
                       <div>
-                        <div style={{fontWeight:700,fontSize:13}}>{forfaitReparationProd?forfaitReparationProd.name:"Forfait réparation pneu"}</div>
-                        {forfaitReparationProd&&forfaitReparationProd.prix>0&&<div style={{fontSize:11,color:"#6b7280"}}>{forfaitReparationProd.prix.toFixed(2)} €</div>}
+                        <div style={{fontWeight:700,fontSize:13}}>Forfait réparation pneu</div>
+                        <div style={{fontSize:11,color:"#6b7280"}}>25.00 € — service</div>
                       </div>
                       <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                        {forfaitReparationProd?(
-                          <>{!repAdded&&<span style={btnAdd} onClick={()=>addPiece(forfaitReparationProd)}>+ Ajouter</span>}{repAdded&&<span style={btnAdded}>✅ Ajouté</span>}</>
-                        ):<span style={{fontSize:11,color:"#6b7280",fontStyle:"italic"}}>À renseigner manuellement</span>}
+                        {!repAdded&&<span style={btnAdd} onClick={()=>addPiece(svcReparation)}>+ Ajouter</span>}
+                        {repAdded&&<span style={btnAdded}>✅ Ajouté</span>}
                       </div>
                     </div>
                   )}
 
                   <div style={{...rowStyle,marginBottom:0,background:"#f0fdf4",borderColor:"#bbf7d0"}}>
                     <div>
-                      <div style={{fontWeight:700,fontSize:13}}>{montageRef.name}</div>
-                      <div style={{fontSize:11,color:"#6b7280"}}>{(montageRef.prix||25).toFixed(2)} € × {nbreRoues} = {((montageRef.prix||25)*nbreRoues).toFixed(2)} €</div>
+                      <div style={{fontWeight:700,fontSize:13}}>Forfait montage et équilibrage</div>
+                      <div style={{fontSize:11,color:"#6b7280"}}>25.00 € × {nbreRoues} = {(25*nbreRoues).toFixed(2)} € — service</div>
                     </div>
                     <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                      {!montageAdded&&<span style={btnAdd} onClick={()=>addPieceQte(montageRef,nbreRoues)}>+ Ajouter</span>}
+                      {!montageAdded&&<span style={btnAdd} onClick={()=>addPieceQte(svcMontage,nbreRoues)}>+ Ajouter</span>}
                       {montageAdded&&<span style={btnAdded}>✅ Ajouté</span>}
                     </div>
                   </div>
