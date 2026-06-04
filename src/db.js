@@ -103,16 +103,20 @@ export async function getOrdres() {
 }
 
 export async function getNextORNumero() {
-  const year = new Date().getFullYear();
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  const prefix = `OR${y}${m}${d}`;
   const { data } = await supabase
     .from('ordres_reparation')
     .select('numero')
-    .like('numero', `OR-${year}-%`)
+    .like('numero', `${prefix}%`)
     .order('numero', { ascending: false })
     .limit(1);
   const last = data?.[0]?.numero;
-  const n = last ? (parseInt(last.split('-').pop()) || 0) : 0;
-  return `OR-${year}-${String(n + 1).padStart(4, '0')}`;
+  const seq = last ? (parseInt(last.slice(prefix.length)) || 0) : 0;
+  return `${prefix}${String(seq + 1).padStart(2, '0')}`;
 }
 
 export async function createOrdre(ordre) {
