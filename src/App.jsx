@@ -2412,7 +2412,8 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                     <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,padding:"11px 14px",borderRadius:10,background:p.sortie?"#f0fdf4":stock<p.qte?"#fff1f2":"#fff",border:`1px solid ${p.sortie?"#bbf7d0":stock<p.qte?"#fecaca":"#e5e7eb"}`}}>
                       <div style={{flex:1}}>
                         <div style={{fontWeight:700,fontSize:13,color:"#111827"}}>{p.name}</div>
-                        <div style={{fontSize:11,color:"#6b7280",marginTop:2}}>{p.id} · {p.location} · Dispo : <strong style={{color:stock===0?"#dc2626":"#059669"}}>{stock}</strong>{p.prix>0&&` · ${p.prix.toFixed(2)} €`}</div>
+                        <div style={{fontSize:11,color:"#6b7280",marginTop:2}}>{p.id}{p.location?` · ${p.location}`:""} · Dispo : <strong style={{color:stock===0?"#dc2626":"#059669"}}>{stock}</strong></div>
+                        {p.prix>0&&<div style={{fontSize:12,color:"#374151",marginTop:2}}><span style={{fontWeight:600}}>{p.prix.toFixed(2)} €/u</span>{p.qte>1&&<span style={{color:"#111827",fontWeight:700,marginLeft:8}}>= {(p.prix*p.qte).toFixed(2)} €</span>}</div>}
                       </div>
                       <div style={{display:"flex",alignItems:"center",gap:8}}>
                         <input type="number" min="1" value={p.qte} onChange={e=>updateQte(p.id,e.target.value)} disabled={p.sortie} style={{width:55,padding:"5px 7px",border:"1px solid #e5e7eb",borderRadius:7,fontSize:13,fontWeight:700,textAlign:"center",outline:"none"}}/>
