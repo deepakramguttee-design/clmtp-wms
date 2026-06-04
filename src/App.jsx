@@ -2354,7 +2354,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
         </div>
         <div style={{padding:"22px 26px",display:"flex",flexDirection:"column",gap:20}}>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))",gap:10}}>
-            {[{l:"Machine",v:ordre.machine},{l:"Immat.",v:ordre.immat||"—"},{l:"Panne",v:ordre.typePanne},{l:"Technicien",v:ordre.technicien||"—"},{l:"Ouvert le",v:new Date(ordre.dateOuverture).toLocaleDateString("fr-FR")},{l:"Priorité",v:<Badge status={ordre.priorite} map={OR_PRIORITES}/>}].map(r=>(
+            {[{l:"Machine",v:ordre.machine},{l:"Immat.",v:ordre.immat||"—"},{l:"Panne",v:ordre.typePanne},{l:"Technicien",v:ordre.technicien||"—"},{l:"Ouvert le",v:new Date(ordre.dateOuverture).toLocaleDateString("fr-FR")},{l:"Priorité",v:<Badge status={ordre.priorite} map={OR_PRIORITES}/>},...(ordre.statut==="termine"&&ordre.dateCloture?[{l:"Clôturé le",v:new Date(ordre.dateCloture).toLocaleDateString("fr-FR")}]:[])].map(r=>(
               <div key={r.l} style={{background:"#f9fafb",borderRadius:10,padding:"10px 14px"}}>
                 <div style={{fontSize:11,color:"#9ca3af",marginBottom:3}}>{r.l}</div>
                 <div style={{fontWeight:700,fontSize:13,color:"#111827"}}>{r.v}</div>
