@@ -12,7 +12,7 @@ import {
   addCatalogueArticle, updateCatalogueArticle, deleteCatalogueArticle,
   getMouvements, getMouvementsSite, addMouvement, addMouvementSite, deleteMouvement,
   getStockOverrides, getStockOverridesSite, setStockOverride, setStockOverrideSite, deleteStockOverride,
-  getOrdres, getOrdresSite, createOrdre, createOrdreSite, updateOrdre, deleteOrdre,
+  getOrdres, getOrdresSite, createOrdre, createOrdreSite, updateOrdre, deleteOrdre, getNextORNumero,
   getEquivalences, addEquivalence, removeEquivalence,
   getPrixFournisseurs, addPrixFournisseur, updatePrixFournisseur, deletePrixFournisseur,
   getHistoriquePrix, addHistoriquePrix,
@@ -1955,8 +1955,9 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
   const handleCreate = async () => {
     if(!form.machine||!form.typePanne) return;
     setSaving(true);
+    const numero=await getNextORNumero();
     const newOrdre={
-      numero:`OR-${new Date().getFullYear()}-${String(ordres.length+1).padStart(4,"0")}`,
+      numero,
       dateOuverture:new Date().toISOString(), dateCloture:null, statut:"ouvert",
       ...form, pieces:[], notes:"",
     };
