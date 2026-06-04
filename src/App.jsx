@@ -1870,6 +1870,8 @@ function Equivalences({ equivalences, setEquivalences, products }) {
 
 const isService = name => (name||'').trim().toLowerCase().startsWith('forfait');
 
+const PANNE_OPTIONS = ['Fuite hydraulique','Panne moteur','Électrique','Freinage','Transmission','Révision / Entretien','Vidange','Vidange hydraulique','Vidange réducteur','Pneumatique — Remplacement de pneu','Pneumatique — Réparation de pneu'];
+
 const FILTRE_VEH_LABELS = [
   { key:'filtre_air',        label:'Filtre air' },
   { key:'filtre_habitacle',  label:'Filtre habitacle' },
@@ -2162,17 +2164,7 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
               <div><label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Type de panne *</label>
                 <select value={panneSelect} onChange={e=>{const val=e.target.value;setPanneSelect(val);setForm(p=>({...p,typePanne:val==="Autre"?"":val}));}} style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",background:"#fff"}}>
                   <option value="">— Sélectionner le type de panne —</option>
-                  <option>Fuite hydraulique</option>
-                  <option>Panne moteur</option>
-                  <option>Électrique</option>
-                  <option>Freinage</option>
-                  <option>Transmission</option>
-                  <option>Révision / Entretien</option>
-                  <option>Vidange</option>
-                  <option>Vidange hydraulique</option>
-                  <option>Vidange réducteur</option>
-                  <option>Pneumatique — Remplacement de pneu</option>
-                  <option>Pneumatique — Réparation de pneu</option>
+                  {PANNE_OPTIONS.map(o=><option key={o}>{o}</option>)}
                   <option>Autre</option>
                 </select>
                 {panneSelect==="Autre"&&<input value={form.typePanne} onChange={e=>setForm(p=>({...p,typePanne:e.target.value}))} placeholder="Préciser le type de panne…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",marginTop:8}}/>}
@@ -2215,6 +2207,8 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
   const [editDesc,setEditDesc]=useState(ordre.description||"");
   const [editMachine,setEditMachine]=useState(ordre.machine||"");
   const [editImmat,setEditImmat]=useState(ordre.immat||"");
+  const [editPanneSelect,setEditPanneSelect]=useState(PANNE_OPTIONS.includes(ordre.typePanne)?ordre.typePanne:ordre.typePanne?"Autre":"");
+  const [editTypePanne,setEditTypePanne]=useState(ordre.typePanne||"");
   const [showFiltresMenu,setShowFiltresMenu]=useState(false);
   const [filtresChecked,setFiltresChecked]=useState({});
   const [nbreRoues,setNbreRoues]=useState(4);
@@ -2385,6 +2379,17 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
               <input value={editImmat} onChange={e=>setEditImmat(e.target.value)} placeholder="Immat." style={{padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none",width:120,fontFamily:"monospace"}}/>
             </div>
             <button onClick={()=>onUpdate({...ordre,machine:editMachine,immat:editImmat})} style={{marginTop:7,padding:"7px 16px",background:"#f3f4f6",border:"none",borderRadius:8,cursor:"pointer",fontWeight:600,fontSize:13}}>💾 Sauvegarder</button>
+          </div>
+
+          <div>
+            <h3 style={{fontWeight:800,fontSize:15,color:"#111827",margin:"0 0 8px"}}>🔧 Type de panne</h3>
+            <select value={editPanneSelect} onChange={e=>{const v=e.target.value;setEditPanneSelect(v);if(v!=="Autre")setEditTypePanne(v);else setEditTypePanne("");}} style={{width:"100%",padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none",background:"#fff"}}>
+              <option value="">— Sélectionner —</option>
+              {PANNE_OPTIONS.map(o=><option key={o}>{o}</option>)}
+              <option>Autre</option>
+            </select>
+            {editPanneSelect==="Autre"&&<input value={editTypePanne} onChange={e=>setEditTypePanne(e.target.value)} placeholder="Préciser…" style={{width:"100%",padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none",marginTop:6,boxSizing:"border-box"}}/>}
+            <button onClick={()=>onUpdate({...ordre,typePanne:editTypePanne||editPanneSelect})} disabled={!editTypePanne&&!editPanneSelect} style={{marginTop:7,padding:"7px 16px",background:"#f3f4f6",border:"none",borderRadius:8,cursor:"pointer",fontWeight:600,fontSize:13}}>💾 Sauvegarder</button>
           </div>
 
           <div>
