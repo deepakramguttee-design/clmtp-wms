@@ -65,7 +65,8 @@ const db = {
     return data || [];
   },
   addMateriel: async (d) => {
-    const { data } = await supabase.from("chantier_materiels").insert([d]).select();
+    const { data, error } = await supabase.from("chantier_materiels").insert([d]).select();
+    if (error) { console.error("addMateriel:", error); return null; }
     return data?.[0];
   },
   delMateriel: async (id) => { await supabase.from("chantier_materiels").delete().eq("id", id); },
@@ -74,7 +75,13 @@ const db = {
     return data || [];
   },
   addAgent: async (d) => {
-    const { data } = await supabase.from("chantier_agents").insert([d]).select();
+    const payload = {
+      ...d,
+      date_debut: d.date_debut || null,
+      date_fin:   d.date_fin   || null,
+    };
+    const { data, error } = await supabase.from("chantier_agents").insert([payload]).select();
+    if (error) { console.error("addAgent:", error); return null; }
     return data?.[0];
   },
   delAgent: async (id) => { await supabase.from("chantier_agents").delete().eq("id", id); },
@@ -83,7 +90,8 @@ const db = {
     return data || [];
   },
   addDepense: async (d) => {
-    const { data } = await supabase.from("chantier_depenses").insert([d]).select();
+    const { data, error } = await supabase.from("chantier_depenses").insert([d]).select();
+    if (error) { console.error("addDepense:", error); return null; }
     return data?.[0];
   },
   delDepense: async (id) => { await supabase.from("chantier_depenses").delete().eq("id", id); },
