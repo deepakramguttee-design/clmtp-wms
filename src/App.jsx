@@ -4,6 +4,7 @@ import AdminDashboard from "./AdminDashboard.jsx";
 import VueEclatee from "./VueEclatee.jsx";
 import ReferenceFiltres from "./ReferenceFiltres.jsx";
 import Chantiers from "./components/Chantiers.jsx";
+import InventaireOutillage from "./components/InventaireOutillage.jsx";
 import { PARC_VEHICULES } from "./parc.js";
 import { supabase } from "./supabase.js";
 import {
@@ -4016,6 +4017,7 @@ const NAV_SECTIONS = [
       { id:"vue_eclatee",  label:"Vue éclatée",          icon:"🔍", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
       { id:"ref_filtres",  label:"Références filtres",   icon:"🔩", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
       { id:"catalogue",    label:"Catalogue articles",   icon:"📋", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"outillage",    label:"Inventaire outillage", icon:"🔨", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
     ]
   },
   {
@@ -4743,6 +4745,7 @@ export default function App() {
     if(page==="stock")     return <Stock stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} products={PRODUCTS} siteId={siteId} user={user} customArticles={customArticles} setCustomArticles={setCustomArticles} autoOpenNewArticle={autoOpenNewArticle} setAutoOpenNewArticle={setAutoOpenNewArticle}/>;
     if(page==="mouvements") return <EntreesSorties mouvements={mouvements.filter(m=>!m.site_id||m.site_id===siteId)} setMouvements={setMouvements} stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} siteId={siteId} products={ALL_SITE_PRODUCTS} user={user} navigateTo={setPage} setAutoOpenNewArticle={setAutoOpenNewArticle}/>;
     if(page==="chantiers") return <Chantiers user={user} siteId={siteId} mouvements={mouvements}/>;
+    if(page==="outillage") return <InventaireOutillage user={user} siteId={siteId}/>;
     if(page==="ordres")    return <OrdresReparation ordres={ordres.filter(o=>!o.site_id||o.site_id===siteId)} setOrdres={setOrdres} mouvements={mouvements} setMouvements={setMouvements} stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} siteId={siteId} products={ALL_SITE_PRODUCTS} user={user} equivalences={equivalences}/>;
     if(page==="prix")      return <GestionPrix prixFournisseurs={prixFournisseurs} setPrixFournisseurs={setPrixFournisseurs} historiquePrix={historiquePrix} setHistoriquePrix={setHistoriquePrix} products={ALL_SITE_PRODUCTS}/>;
     if(page==="vue_eclatee") return <VueEclatee user={user} siteId={siteId}/>;
