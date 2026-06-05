@@ -10,6 +10,25 @@ const SITES_CONFIG = [
 
 const ACCEPTED_TYPES = { 'application/pdf': 'pdf', 'image/png': 'png' };
 
+// Documents PDF statiques intégrés (servis depuis public/docs/)
+const STATIC_DOCS = [
+  // ── CLMTP SABLÉ ──
+  { id:'s-1',  nom_equipement:'Mécanisme porte arrière',          description:'Master mécanisme porte arrière 09/11/2022', site_id:'clmtp_sable',  image_url:'/docs/mecanique_porte_arriere.pdf',  static:true },
+  { id:'s-2',  nom_equipement:'Éclaté bas-moteur TJ045E',         description:'LD-1P ECO — vue éclatée moteur',            site_id:'clmtp_sable',  image_url:'/docs/eclate_bas_moteur_TJ045E.pdf',  static:true },
+  { id:'s-3',  nom_equipement:'Clé à choc Monster 1690 Nm',       description:'KS Tools — 1690 Nm',                        site_id:'clmtp_sable',  image_url:'/docs/cle_choc_monster_1690NM.pdf',   static:true },
+  { id:'s-4',  nom_equipement:'Minipelle',                        description:'Documentation minipelle',                   site_id:'clmtp_sable',  image_url:'/docs/minipelle.pdf',                 static:true },
+  { id:'s-5',  nom_equipement:'Part Selection',                   description:'Sélection de pièces',                       site_id:'clmtp_sable',  image_url:'/docs/part_selection.pdf',            static:true },
+  { id:'s-6',  nom_equipement:'Riveteuse GP5791',                 description:'Documentation riveteuse GP5791',            site_id:'clmtp_sable',  image_url:'/docs/riveteuse_GP5791.pdf',          static:true },
+  { id:'s-7',  nom_equipement:'Bourroir autonome 2T',             description:'Bourroir autonome 2 tonnes',                site_id:'clmtp_sable',  image_url:'/docs/bourroir_autonome_2T.pdf',      static:true },
+  // ── CLAISSE RAIL ──
+  { id:'s-8',  nom_equipement:'Lorry 51.12',                      description:'Documentation Lorry 51.12',                 site_id:'claisse_rail', image_url:'/docs/lorry_51_12.pdf',               static:true },
+  { id:'s-9',  nom_equipement:'Groupe électrogène bourrage 1',    description:'Groupe électrogène pour bourrage — vol. 1', site_id:'claisse_rail', image_url:'/docs/groupe_electrogene_bourrage1.pdf', static:true },
+  { id:'s-10', nom_equipement:'Groupe électrogène bourrage 2',    description:'Groupe électrogène pour bourrage — vol. 2', site_id:'claisse_rail', image_url:'/docs/groupe_electrogene_bourrage2.pdf', static:true },
+  { id:'s-11', nom_equipement:'Bourrage électrique Robel',        description:'Groupe de bourrage électrique Robel',       site_id:'claisse_rail', image_url:'/docs/bourrage_electrique_robel.pdf', static:true },
+  { id:'s-12', nom_equipement:'Robel 5401 ED',                    description:'ET Robel 5401ED',                           site_id:'claisse_rail', image_url:'/docs/robel_5401ED.pdf',              static:true },
+  { id:'s-13', nom_equipement:'Portique à rail',                  description:'Documentation portique à rail',             site_id:'claisse_rail', image_url:'/docs/portique_a_rail.pdf',           static:true },
+];
+
 function isPdfUrl(url) {
   if (!url) return false;
   return url.split('?')[0].toLowerCase().endsWith('.pdf');
@@ -139,7 +158,7 @@ export default function VueEclatee({ user, siteId }) {
 
   if (loading) return <Spinner />;
 
-  const total = equipements.length;
+  const total = equipements.length + STATIC_DOCS.length;
 
   return (
     <div style={{display:'flex',flexDirection:'column',gap:24}}>
@@ -159,7 +178,10 @@ export default function VueEclatee({ user, siteId }) {
 
       {/* Site sections */}
       {SITES_CONFIG.map(site=>{
-        const items=equipements.filter(e=>e.site_id===site.id);
+        const items=[
+          ...STATIC_DOCS.filter(d=>d.site_id===site.id),
+          ...equipements.filter(e=>e.site_id===site.id),
+        ];
         return (
           <div key={site.id}>
             {items.length===0?(
@@ -190,9 +212,12 @@ export default function VueEclatee({ user, siteId }) {
                         )}
                       </div>
                       <div style={{padding:'10px 14px'}}>
-                        <div style={{fontWeight:700,fontSize:13,color:'#111827',marginBottom:4}}>{eq.nom_equipement}</div>
+                        <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}>
+                          <div style={{fontWeight:700,fontSize:13,color:'#111827',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{eq.nom_equipement}</div>
+                          {eq.static&&<span style={{fontSize:9,background:'#f3e8ff',color:'#7c3aed',padding:'1px 5px',borderRadius:99,fontWeight:700,flexShrink:0}}>📎</span>}
+                        </div>
                         {eq.description&&<div style={{fontSize:11,color:'#6b7280',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{eq.description}</div>}
-                        {canEdit&&(
+                        {canEdit&&!eq.static&&(
                           <div style={{display:'flex',gap:6,marginTop:8}}>
                             <button onClick={()=>openEdit(eq)} style={{flex:1,padding:'5px',background:'#f3f4f6',border:'none',borderRadius:7,cursor:'pointer',fontSize:12,fontWeight:600}}>✏️ Modifier</button>
                             {isAdmin&&<button onClick={()=>handleDelete(eq)} style={{padding:'5px 8px',background:'#fee2e2',border:'none',borderRadius:7,cursor:'pointer',color:'#dc2626',fontSize:12}}>🗑</button>}

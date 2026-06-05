@@ -3,6 +3,7 @@ import { ALL_PRODUCTS } from "./products.js";
 import AdminDashboard from "./AdminDashboard.jsx";
 import VueEclatee from "./VueEclatee.jsx";
 import ReferenceFiltres from "./ReferenceFiltres.jsx";
+import Chantiers from "./components/Chantiers.jsx";
 import { PARC_VEHICULES } from "./parc.js";
 import { supabase } from "./supabase.js";
 import {
@@ -3979,6 +3980,7 @@ const NAV_ALL = [
   { id:"barcodes",     label:"Codes-barres",         icon:"🔲", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"mouvements",   label:"Entrées / Sorties",    icon:"📥", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"ordres",       label:"Ordres de réparation", icon:"🔧", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+  { id:"chantiers",   label:"Chantiers",             icon:"🏗️", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"location",     label:"Location matériel",    icon:"🔑", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur"], sites:["clmtp_sable","stmf"] },
   { id:"pret",         label:"Prêt matériels",       icon:"🤝", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur"], sites:["clmtp_sable","stmf"] },
   { id:"fifo",         label:"Lots FIFO",            icon:"🏷️", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
@@ -3989,6 +3991,47 @@ const NAV_ALL = [
   { id:"catalogue",    label:"Catalogue articles",   icon:"📋", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"utilisateurs", label:"Utilisateurs",         icon:"👥", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"admin",        label:"Administration",        icon:"🛡️", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
+];
+
+// ── SECTIONS DE NAVIGATION ────────────────────────────────────────────────────
+const NAV_SECTIONS = [
+  {
+    id:"top", standalone:true,
+    items:[
+      { id:"dashboard",  label:"Tableau de bord", icon:"🏠", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"admin",      label:"Administration",  icon:"🛡️", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
+    ]
+  },
+  {
+    id:"atelier", label:"Atelier", icon:"🏭", defaultOpen:true,
+    items:[
+      { id:"stock",        label:"Stocks",               icon:"📦", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"scanner",      label:"Scanner articles",     icon:"📷", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"barcodes",     label:"Codes-barres",         icon:"🔲", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"mouvements",   label:"Entrées / Sorties",    icon:"📥", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"ordres",       label:"Ordres de réparation", icon:"🔧", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"fifo",         label:"Lots FIFO",            icon:"🏷️", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"prix",         label:"Gestion des prix",     icon:"💶", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"equivalences", label:"Équivalences",         icon:"↔️", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"vue_eclatee",  label:"Vue éclatée",          icon:"🔍", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"ref_filtres",  label:"Références filtres",   icon:"🔩", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"catalogue",    label:"Catalogue articles",   icon:"📋", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
+    ]
+  },
+  {
+    id:"chantiers-section", label:"Chantiers", icon:"🏗️", defaultOpen:false,
+    items:[
+      { id:"chantiers",  label:"Chantiers",          icon:"🏗️", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"location",   label:"Location matériel",  icon:"🔑", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur"], sites:["clmtp_sable","stmf"] },
+      { id:"pret",       label:"Prêt matériels",     icon:"🤝", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur"], sites:["clmtp_sable","stmf"] },
+    ]
+  },
+  {
+    id:"gestion", label:"Gestion", icon:"👥", defaultOpen:false,
+    items:[
+      { id:"utilisateurs", label:"Utilisateurs", icon:"👥", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
+    ]
+  },
 ];
 
 // ── LOGIN PAGE ────────────────────────────────────────────────────────────────
@@ -4567,6 +4610,7 @@ export default function App() {
   const [siteId, setSiteId] = useState(() => localStorage.getItem("wms_site") || "clmtp_sable");
   const [page,setPage]=useState("dashboard");
   const [sidebar,setSidebar]=useState(true);
+  const [openSections,setOpenSections]=useState({atelier:true,"chantiers-section":false,gestion:false});
   const [loading,setLoading]=useState(true);
   const [showChangePwd,setShowChangePwd]=useState(false);
   const [mouvements,setMouvements]=useState([]);
@@ -4616,6 +4660,15 @@ export default function App() {
     setMouvements([]); setOrdres([]); setStockOverrides({});
     setLocations([]); setPrets([]); setCustomArticles([]);
   };
+
+  // Ouvrir automatiquement la section contenant la page active
+  useEffect(()=>{
+    NAV_SECTIONS.forEach(sec=>{
+      if(!sec.standalone&&sec.items.some(item=>item.id===page)){
+        setOpenSections(prev=>prev[sec.id]?prev:{...prev,[sec.id]:true});
+      }
+    });
+  },[page]);
 
   // Rafraîchir les permissions de l'utilisateur connecté au démarrage
   useEffect(() => {
@@ -4670,18 +4723,17 @@ export default function App() {
 
   if(!user) return <LoginPage onLogin={handleLogin}/>;
 
-  const NAV = NAV_ALL.filter(n => {
+  const filterNavItem = n => {
     if (!n.sites.includes(siteId)) return false;
     if(user.permissions && Array.isArray(user.permissions) && user.permissions.length > 0) {
-      // Admin voit toujours tous les modules de son site
       if(user.role === "admin") return n.roles.includes("admin");
-      // Fusionner permissions stockées + DEFAULT_PERMISSIONS du rôle pour que les
-      // nouveaux modules ajoutés aux defaults soient visibles sans re-sauvegarder en base
       const defaults = DEFAULT_PERMISSIONS[user.role] || [];
       return user.permissions.includes(n.id) || defaults.includes(n.id);
     }
     return n.roles.includes(user.role);
-  });
+  };
+  const NAV_FILTERED_SECTIONS = NAV_SECTIONS.map(sec=>({...sec,items:sec.items.filter(filterNavItem)})).filter(sec=>sec.items.length>0);
+  const NAV = NAV_FILTERED_SECTIONS.flatMap(sec=>sec.items);
   const orEnCours=ordres.filter(o=>o.statut!=="termine"&&o.statut!=="annule").length;
   const mouvJour=mouvements.filter(m=>new Date(m.created_at||m.date).toDateString()===new Date().toDateString()).length;
 
@@ -4690,6 +4742,7 @@ export default function App() {
     if(page==="dashboard") return <Dashboard stockOverrides={stockOverrides} mouvements={mouvements} ordres={ordres} products={ALL_SITE_PRODUCTS} user={user} navigateTo={setPage}/>;
     if(page==="stock")     return <Stock stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} products={PRODUCTS} siteId={siteId} user={user} customArticles={customArticles} setCustomArticles={setCustomArticles} autoOpenNewArticle={autoOpenNewArticle} setAutoOpenNewArticle={setAutoOpenNewArticle}/>;
     if(page==="mouvements") return <EntreesSorties mouvements={mouvements.filter(m=>!m.site_id||m.site_id===siteId)} setMouvements={setMouvements} stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} siteId={siteId} products={ALL_SITE_PRODUCTS} user={user} navigateTo={setPage} setAutoOpenNewArticle={setAutoOpenNewArticle}/>;
+    if(page==="chantiers") return <Chantiers user={user} siteId={siteId} mouvements={mouvements}/>;
     if(page==="ordres")    return <OrdresReparation ordres={ordres.filter(o=>!o.site_id||o.site_id===siteId)} setOrdres={setOrdres} mouvements={mouvements} setMouvements={setMouvements} stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} siteId={siteId} products={ALL_SITE_PRODUCTS} user={user} equivalences={equivalences}/>;
     if(page==="prix")      return <GestionPrix prixFournisseurs={prixFournisseurs} setPrixFournisseurs={setPrixFournisseurs} historiquePrix={historiquePrix} setHistoriquePrix={setHistoriquePrix} products={ALL_SITE_PRODUCTS}/>;
     if(page==="vue_eclatee") return <VueEclatee user={user} siteId={siteId}/>;
@@ -4766,18 +4819,48 @@ export default function App() {
         <div className="desktop-sidebar" style={{width:sidebar?230:60,flexShrink:0,background:"#111827",display:"flex",flexDirection:"column",transition:"width 0.25s ease",overflow:"hidden"}}>
           <div style={{padding:sidebar?"22px 18px 18px":"22px 10px 18px",borderBottom:"1px solid rgba(255,255,255,.08)",display:"flex",alignItems:"center",gap:10}}>
             <div style={{width:34,height:34,background:`linear-gradient(135deg,${site.color},${site.color}99)`,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,flexShrink:0,color:"#fff",fontWeight:900,letterSpacing:-0.5}}>{site.logo}</div>
-            {sidebar&&<div><div style={{color:"#fff",fontWeight:900,fontSize:13}}>{site.label}</div><div style={{color:"#6b7280",fontSize:10}}>Multi-utilisateurs 🔄</div></div>}
+            {sidebar&&<div><div style={{color:"#fff",fontWeight:900,fontSize:13}}>CLMTP WMS</div><div style={{color:"#9ca3af",fontSize:10,marginTop:2}}>{user?.prenom} {user?.nom}</div></div>}
           </div>
-          <nav style={{flex:1,padding:"10px 8px",display:"flex",flexDirection:"column",gap:3,overflowY:"auto"}}>
-            {NAV.map(item=>{
-              const active=page===item.id;
-              const badge=item.id==="ordres"&&orEnCours>0?orEnCours:item.id==="mouvements"&&mouvJour>0?mouvJour:0;
-              return (
-                <button key={item.id} onClick={()=>setPage(item.id)} title={!sidebar?item.label:""} style={{display:"flex",alignItems:"center",gap:10,padding:sidebar?"10px 12px":"10px",borderRadius:9,border:"none",cursor:"pointer",background:active?"rgba(59,130,246,.15)":"transparent",color:active?"#60a5fa":"#9ca3af",fontWeight:active?700:500,fontSize:13,textAlign:"left",width:"100%",borderLeft:active?"3px solid #3b82f6":"3px solid transparent"}}>
-                  <span style={{fontSize:17,flexShrink:0}}>{item.icon}</span>
-                  {sidebar&&item.label}
-                  {sidebar&&badge>0&&<span style={{marginLeft:"auto",background:item.id==="ordres"?"#7c3aed":"#f59e0b",color:"#fff",borderRadius:99,padding:"1px 7px",fontSize:10,fontWeight:700}}>{badge}</span>}
-                </button>
+          <nav style={{flex:1,padding:"8px 8px",display:"flex",flexDirection:"column",gap:1,overflowY:"auto"}}>
+            {NAV_FILTERED_SECTIONS.map(section=>{
+              if(section.standalone){
+                return section.items.map(item=>{
+                  const active=page===item.id;
+                  const badge=item.id==="ordres"&&orEnCours>0?orEnCours:item.id==="mouvements"&&mouvJour>0?mouvJour:0;
+                  return(
+                    <button key={item.id} onClick={()=>setPage(item.id)} title={!sidebar?item.label:""}
+                      style={{display:"flex",alignItems:"center",gap:10,padding:sidebar?"10px 12px":"10px",borderRadius:9,border:"none",cursor:"pointer",background:active?"rgba(59,130,246,.15)":"transparent",color:active?"#60a5fa":"#9ca3af",fontWeight:active?700:500,fontSize:13,textAlign:"left",width:"100%",borderLeft:active?"3px solid #3b82f6":"3px solid transparent"}}>
+                      <span style={{fontSize:17,flexShrink:0}}>{item.icon}</span>
+                      {sidebar&&item.label}
+                      {sidebar&&badge>0&&<span style={{marginLeft:"auto",background:"#f59e0b",color:"#fff",borderRadius:99,padding:"1px 7px",fontSize:10,fontWeight:700}}>{badge}</span>}
+                    </button>
+                  );
+                });
+              }
+              const isOpen=openSections[section.id]||section.items.some(i=>i.id===page);
+              return(
+                <div key={section.id} style={{marginTop:4}}>
+                  <button onClick={()=>sidebar&&setOpenSections(prev=>({...prev,[section.id]:!isOpen}))}
+                    title={!sidebar?section.label:""}
+                    style={{display:"flex",alignItems:"center",gap:10,padding:sidebar?"7px 12px":"7px 10px",borderRadius:8,border:"none",cursor:"pointer",background:"transparent",color:"#4b5563",fontWeight:700,fontSize:10,textAlign:"left",width:"100%",letterSpacing:0.8,textTransform:"uppercase",userSelect:"none"}}>
+                    <span style={{fontSize:14,flexShrink:0,opacity:.8}}>{section.icon}</span>
+                    {sidebar&&<><span style={{flex:1}}>{section.label}</span><span style={{fontSize:9,opacity:.6,transition:"transform 0.2s",display:"inline-block",transform:isOpen?"rotate(90deg)":"rotate(0deg)"}}>▶</span></>}
+                  </button>
+                  <div style={{overflow:"hidden",maxHeight:isOpen?"1000px":"0",transition:"max-height 0.28s ease"}}>
+                    {section.items.map(item=>{
+                      const active=page===item.id;
+                      const badge=item.id==="ordres"&&orEnCours>0?orEnCours:item.id==="mouvements"&&mouvJour>0?mouvJour:0;
+                      return(
+                        <button key={item.id} onClick={()=>setPage(item.id)} title={!sidebar?item.label:""}
+                          style={{display:"flex",alignItems:"center",gap:10,padding:sidebar?"8px 12px 8px 22px":"8px 10px",borderRadius:9,border:"none",cursor:"pointer",background:active?"rgba(59,130,246,.15)":"transparent",color:active?"#60a5fa":"#9ca3af",fontWeight:active?700:500,fontSize:12,textAlign:"left",width:"100%",borderLeft:active?"3px solid #3b82f6":"3px solid transparent"}}>
+                          <span style={{fontSize:15,flexShrink:0}}>{item.icon}</span>
+                          {sidebar&&<span style={{flex:1}}>{item.label}</span>}
+                          {sidebar&&badge>0&&<span style={{background:item.id==="ordres"?"#7c3aed":"#f59e0b",color:"#fff",borderRadius:99,padding:"1px 7px",fontSize:10,fontWeight:700}}>{badge}</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
           </nav>
@@ -4815,20 +4898,50 @@ export default function App() {
             <div style={{padding:"16px 18px",borderBottom:"1px solid rgba(255,255,255,.08)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <div style={{width:36,height:36,background:`linear-gradient(135deg,${site.color},${site.color}99)`,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#fff",fontWeight:900}}>{site.logo}</div>
-                <div><div style={{color:"#fff",fontWeight:900,fontSize:14}}>{site.label}</div><div style={{color:"#6b7280",fontSize:11}}>Multi-utilisateurs</div></div>
+                <div><div style={{color:"#fff",fontWeight:900,fontSize:14}}>CLMTP WMS</div><div style={{color:"#9ca3af",fontSize:11,marginTop:2}}>{user?.prenom} {user?.nom}</div></div>
               </div>
               <button onClick={()=>setSidebar(false)} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#fff",cursor:"pointer",fontSize:18,padding:"4px 10px"}}>✕</button>
             </div>
-            <nav style={{flex:1,padding:"12px 10px",display:"flex",flexDirection:"column",gap:4}}>
-              {NAV.map(item=>{
-                const active=page===item.id;
-                const badge=item.id==="ordres"&&orEnCours>0?orEnCours:item.id==="mouvements"&&mouvJour>0?mouvJour:0;
-                return (
-                  <button key={item.id} onClick={()=>{setPage(item.id);setSidebar(false);}} style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",borderRadius:12,border:"none",cursor:"pointer",background:active?"rgba(59,130,246,.2)":"transparent",color:active?"#60a5fa":"#9ca3af",fontWeight:active?700:500,fontSize:15,textAlign:"left",width:"100%"}}>
-                    <span style={{fontSize:20}}>{item.icon}</span>
-                    <span style={{flex:1}}>{item.label}</span>
-                    {badge>0&&<span style={{background:item.id==="ordres"?"#7c3aed":"#f59e0b",color:"#fff",borderRadius:99,padding:"2px 8px",fontSize:11,fontWeight:700}}>{badge}</span>}
-                  </button>
+            <nav style={{flex:1,padding:"10px 10px",display:"flex",flexDirection:"column",gap:1}}>
+              {NAV_FILTERED_SECTIONS.map(section=>{
+                if(section.standalone){
+                  return section.items.map(item=>{
+                    const active=page===item.id;
+                    const badge=item.id==="ordres"&&orEnCours>0?orEnCours:item.id==="mouvements"&&mouvJour>0?mouvJour:0;
+                    return(
+                      <button key={item.id} onClick={()=>{setPage(item.id);setSidebar(false);}}
+                        style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",borderRadius:12,border:"none",cursor:"pointer",background:active?"rgba(59,130,246,.2)":"transparent",color:active?"#60a5fa":"#9ca3af",fontWeight:active?700:500,fontSize:15,textAlign:"left",width:"100%"}}>
+                        <span style={{fontSize:20}}>{item.icon}</span>
+                        <span style={{flex:1}}>{item.label}</span>
+                        {badge>0&&<span style={{background:"#f59e0b",color:"#fff",borderRadius:99,padding:"2px 8px",fontSize:11,fontWeight:700}}>{badge}</span>}
+                      </button>
+                    );
+                  });
+                }
+                const isOpen=openSections[section.id]||section.items.some(i=>i.id===page);
+                return(
+                  <div key={section.id} style={{marginTop:6}}>
+                    <button onClick={()=>setOpenSections(prev=>({...prev,[section.id]:!isOpen}))}
+                      style={{display:"flex",alignItems:"center",gap:10,padding:"8px 16px",borderRadius:10,border:"none",cursor:"pointer",background:"transparent",color:"#4b5563",fontWeight:700,fontSize:10,textAlign:"left",width:"100%",letterSpacing:0.8,textTransform:"uppercase",userSelect:"none"}}>
+                      <span style={{fontSize:15}}>{section.icon}</span>
+                      <span style={{flex:1}}>{section.label}</span>
+                      <span style={{fontSize:10,opacity:.6,transition:"transform 0.2s",display:"inline-block",transform:isOpen?"rotate(90deg)":"rotate(0deg)"}}>▶</span>
+                    </button>
+                    <div style={{overflow:"hidden",maxHeight:isOpen?"1000px":"0",transition:"max-height 0.28s ease"}}>
+                      {section.items.map(item=>{
+                        const active=page===item.id;
+                        const badge=item.id==="ordres"&&orEnCours>0?orEnCours:item.id==="mouvements"&&mouvJour>0?mouvJour:0;
+                        return(
+                          <button key={item.id} onClick={()=>{setPage(item.id);setSidebar(false);}}
+                            style={{display:"flex",alignItems:"center",gap:12,padding:"11px 16px 11px 28px",borderRadius:12,border:"none",cursor:"pointer",background:active?"rgba(59,130,246,.2)":"transparent",color:active?"#60a5fa":"#9ca3af",fontWeight:active?700:500,fontSize:14,textAlign:"left",width:"100%"}}>
+                            <span style={{fontSize:18}}>{item.icon}</span>
+                            <span style={{flex:1}}>{item.label}</span>
+                            {badge>0&&<span style={{background:item.id==="ordres"?"#7c3aed":"#f59e0b",color:"#fff",borderRadius:99,padding:"2px 8px",fontSize:11,fontWeight:700}}>{badge}</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 );
               })}
             </nav>
