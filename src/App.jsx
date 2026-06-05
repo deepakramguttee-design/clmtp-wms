@@ -3587,7 +3587,7 @@ function PretMateriel({ prets, setPrets, siteId, products }) {
 
   useEffect(() => {
     supabase.from("equipements").select("id,code,fabricant,nom,assigne_a,statut")
-      .eq("statut","Disponible").order("nom")
+      .order("nom")
       .then(({data})=>setEquipements(data||[]));
   }, []);
 
@@ -3805,13 +3805,16 @@ function PretMateriel({ prets, setPrets, siteId, products }) {
                 <>
                   <input value={equipSearch||form.materiel_nom} onChange={e=>{const q=e.target.value;setEquipSearch(q);setEquipSugg(equipements.filter(eq=>(`${eq.code||""} ${eq.fabricant||""} ${eq.nom||""}`).toLowerCase().includes(q.toLowerCase())&&q).slice(0,8));}} placeholder="Rechercher code, fabricant, désignation…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                   {equipSugg.length>0&&<div style={{border:"1px solid #e5e7eb",borderRadius:10,overflow:"hidden",marginTop:4,maxHeight:240,overflowY:"auto"}}>
-                    {equipSugg.map(eq=><div key={eq.id} onClick={()=>{setForm(f=>({...f,materiel_id:eq.id,materiel_nom:`${eq.code||""} — ${eq.fabricant||""} — ${eq.nom}`}));setEquipSearch("");setEquipSugg([]);}} style={{padding:"10px 14px",cursor:"pointer",fontSize:13,borderBottom:"1px solid #f3f4f6",background:"#fff"}} onMouseEnter={e=>e.currentTarget.style.background="#f9fafb"} onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
-                      <div style={{fontWeight:700,color:"#7c3aed",fontFamily:"monospace"}}>{eq.code||"—"}</div>
+                    {equipSugg.map(eq=>{const nonDispo=eq.statut!=="Disponible";return(<div key={eq.id} onClick={()=>{setForm(f=>({...f,materiel_id:eq.id,materiel_nom:`${eq.code||""} — ${eq.fabricant||""} — ${eq.nom}`}));setEquipSearch("");setEquipSugg([]);}} style={{padding:"10px 14px",cursor:"pointer",fontSize:13,borderBottom:"1px solid #f3f4f6",background:nonDispo?"#fffbeb":"#fff"}} onMouseEnter={e=>e.currentTarget.style.background=nonDispo?"#fef3c7":"#f9fafb"} onMouseLeave={e=>e.currentTarget.style.background=nonDispo?"#fffbeb":"#fff"}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
+                        <span style={{fontWeight:700,color:"#7c3aed",fontFamily:"monospace"}}>{eq.code||"—"}</span>
+                        {nonDispo&&<span style={{background:"#f59e0b",color:"#fff",fontSize:10,fontWeight:700,padding:"1px 7px",borderRadius:99}}>⚠️ Déjà assigné</span>}
+                      </div>
                       <div style={{fontWeight:600,fontSize:13}}>{eq.nom}</div>
-                      <div style={{fontSize:11,color:"#9ca3af"}}>{eq.fabricant}</div>
-                    </div>)}
+                      <div style={{fontSize:11,color:"#6b7280"}}>{eq.fabricant}{eq.assigne_a&&nonDispo?<span style={{color:"#d97706"}}> · {eq.assigne_a}</span>:""}</div>
+                    </div>);})}
                   </div>}
-                  {equipements.length===0&&<div style={{marginTop:6,padding:"8px 12px",background:"#fef3c7",borderRadius:8,fontSize:12,color:"#92400e"}}>⚠️ Aucun équipement disponible</div>}
+                  {equipements.length===0&&<div style={{marginTop:6,padding:"8px 12px",background:"#fef3c7",borderRadius:8,fontSize:12,color:"#92400e"}}>⚠️ Aucun équipement trouvé</div>}
                 </>
               ) : (
                 <>
