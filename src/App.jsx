@@ -3232,6 +3232,9 @@ function LocationMateriel({ locations, setLocations, siteId, products }) {
   const [parcSugg, setParcSugg] = useState([]);
   const [articleSearch, setArticleSearch] = useState("");
   const [articleSugg, setArticleSugg] = useState([]);
+  const [equipSearch, setEquipSearch] = useState("");
+  const [equipSugg, setEquipSugg] = useState([]);
+  const [equipements, setEquipements] = useState([]);
   const [form, setForm] = useState({
     type:"vehicule", materiel_id:"", materiel_nom:"",
     locataire_nom:"", locataire_entreprise:"", locataire_tel:"", locataire_email:"",
@@ -3239,6 +3242,17 @@ function LocationMateriel({ locations, setLocations, siteId, products }) {
     date_fin_prevue: new Date(Date.now()+7*86400000).toISOString().split("T")[0],
     prix_jour:0, caution:0, statut:"en_cours", notes:""
   });
+
+  useEffect(() => {
+    supabase.from("equipements").select("id,code,fabricant,nom,assigne_a,statut")
+      .eq("statut","Disponible").order("nom")
+      .then(({data})=>setEquipements(data||[]));
+  }, []);
+
+  const updateEquipStatut = async (equipId, statut, assigne_a) => {
+    if (!equipId) return;
+    await supabase.from("equipements").update({ statut, assigne_a: assigne_a||null }).eq("id", equipId);
+  };
 
   const filtered = filterStatut==="tous" ? locations : locations.filter(l=>l.statut===filterStatut);
 
@@ -3304,13 +3318,14 @@ function LocationMateriel({ locations, setLocations, siteId, products }) {
   const openAdd = () => {
     setEditLoc(null);
     setForm({ type:"vehicule", materiel_id:"", materiel_nom:"", locataire_nom:"", locataire_entreprise:"", locataire_tel:"", locataire_email:"", date_debut:new Date().toISOString().split("T")[0], date_fin_prevue:new Date(Date.now()+7*86400000).toISOString().split("T")[0], prix_jour:0, caution:0, statut:"en_cours", notes:"" });
-    setParcSearch(""); setArticleSearch("");
+    setParcSearch(""); setArticleSearch(""); setEquipSearch(""); setEquipSugg([]);
     setShowForm(true);
   };
 
   const openEdit = (loc) => {
     setEditLoc(loc);
     setForm({ type:loc.type, materiel_id:loc.materiel_id, materiel_nom:loc.materiel_nom, locataire_nom:loc.locataire_nom, locataire_entreprise:loc.locataire_entreprise||"", locataire_tel:loc.locataire_tel||"", locataire_email:loc.locataire_email||"", date_debut:loc.date_debut, date_fin_prevue:loc.date_fin_prevue, prix_jour:loc.prix_jour||0, caution:loc.caution||0, statut:loc.statut, notes:loc.notes||"" });
+    setEquipSearch(""); setEquipSugg([]);
     setShowForm(true);
   };
 
@@ -3325,7 +3340,13 @@ function LocationMateriel({ locations, setLocations, siteId, products }) {
       setLocations(prev=>prev.map(l=>l.id===editLoc.id?{...l,...data}:l));
     } else {
       const saved = await addLocation(data, siteId);
-      if(saved) setLocations(prev=>[saved,...prev]);
+      if(saved) {
+        setLocations(prev=>[saved,...prev]);
+        if(form.type==="equipement" && form.materiel_id) {
+          await updateEquipStatut(form.materiel_id, "En cours d'utilisation", form.locataire_nom);
+          setEquipements(prev=>prev.filter(e=>e.id!==form.materiel_id));
+        }
+      }
     }
     setSaving(false); setShowForm(false);
   };
@@ -3340,6 +3361,11 @@ function LocationMateriel({ locations, setLocations, siteId, products }) {
     const today = new Date().toISOString().split("T")[0];
     await updateLocation(loc.id, { statut:"termine", date_fin_reelle:today });
     setLocations(prev=>prev.map(l=>l.id===loc.id?{...l,statut:"termine",date_fin_reelle:today}:l));
+    if(loc.type==="equipement" && loc.materiel_id) {
+      await updateEquipStatut(loc.materiel_id, "Disponible", null);
+      const {data} = await supabase.from("equipements").select("id,code,fabricant,nom,assigne_a,statut").eq("id",loc.materiel_id);
+      if(data?.[0]) setEquipements(prev=>[...prev, data[0]].sort((a,b)=>a.nom.localeCompare(b.nom)));
+    }
   };
 
   const jours = (loc) => Math.max(0, Math.ceil((new Date(loc.date_fin_prevue)-new Date(loc.date_debut))/(86400000)));
@@ -3432,16 +3458,18 @@ function LocationMateriel({ locations, setLocations, siteId, products }) {
             {/* Type matériel */}
             <div style={{marginBottom:14}}>
               <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:6}}>Type de matériel</label>
-              <div style={{display:"flex",gap:8}}>
-                {[{v:"vehicule",l:"🚗 Véhicule/Engin"},{v:"article",l:"📦 Article stock"}].map(t=>(
-                  <button key={t.v} onClick={()=>{setForm(f=>({...f,type:t.v,materiel_id:"",materiel_nom:""}));setParcSearch("");setArticleSearch("");}} style={{flex:1,padding:"10px",borderRadius:10,border:`2px solid ${form.type===t.v?"#111827":"#e5e7eb"}`,background:form.type===t.v?"#111827":"#fff",color:form.type===t.v?"#fff":"#374151",fontWeight:600,cursor:"pointer",fontSize:13}}>{t.l}</button>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                {[{v:"vehicule",l:"🚗 Véhicule/Engin"},{v:"article",l:"📦 Article stock"},{v:"equipement",l:"🔧 Équipement ONE-KEY"}].map(t=>(
+                  <button key={t.v} onClick={()=>{setForm(f=>({...f,type:t.v,materiel_id:"",materiel_nom:""}));setParcSearch("");setArticleSearch("");setEquipSearch("");setEquipSugg([]);}} style={{flex:1,minWidth:120,padding:"10px",borderRadius:10,border:`2px solid ${form.type===t.v?"#111827":"#e5e7eb"}`,background:form.type===t.v?"#111827":"#fff",color:form.type===t.v?"#fff":"#374151",fontWeight:600,cursor:"pointer",fontSize:12}}>{t.l}</button>
                 ))}
               </div>
             </div>
 
             {/* Recherche matériel */}
             <div style={{marginBottom:14}}>
-              <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:6}}>{form.type==="vehicule"?"Véhicule / Engin":"Article du stock"} *</label>
+              <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:6}}>
+                {form.type==="vehicule"?"Véhicule / Engin":form.type==="equipement"?"Équipement ONE-KEY (Disponible)":"Article du stock"} *
+              </label>
               {form.type==="vehicule" ? (
                 <>
                   <input value={parcSearch||form.materiel_nom} onChange={e=>{setParcSearch(e.target.value);setParcSugg(PARC_VEHICULES.filter(v=>(v.immat||v.designation||"").toLowerCase().includes(e.target.value.toLowerCase())&&e.target.value).slice(0,6));}} placeholder="Rechercher immatriculation, désignation…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
@@ -3451,6 +3479,18 @@ function LocationMateriel({ locations, setLocations, siteId, products }) {
                       <div style={{fontSize:11,color:"#9ca3af"}}>{v.immat} {v.type?" · "+v.type:""}</div>
                     </div>)}
                   </div>}
+                </>
+              ) : form.type==="equipement" ? (
+                <>
+                  <input value={equipSearch||form.materiel_nom} onChange={e=>{const q=e.target.value;setEquipSearch(q);setEquipSugg(equipements.filter(eq=>(`${eq.code||""} ${eq.fabricant||""} ${eq.nom||""}`).toLowerCase().includes(q.toLowerCase())&&q).slice(0,8));}} placeholder="Rechercher code, fabricant, désignation…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  {equipSugg.length>0&&<div style={{border:"1px solid #e5e7eb",borderRadius:10,overflow:"hidden",marginTop:4,maxHeight:240,overflowY:"auto"}}>
+                    {equipSugg.map(eq=><div key={eq.id} onClick={()=>{setForm(f=>({...f,materiel_id:eq.id,materiel_nom:`${eq.code||""} — ${eq.fabricant||""} — ${eq.nom}`}));setEquipSearch("");setEquipSugg([]);}} style={{padding:"10px 14px",cursor:"pointer",fontSize:13,borderBottom:"1px solid #f3f4f6",background:"#fff"}} onMouseEnter={e=>e.currentTarget.style.background="#f9fafb"} onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
+                      <div style={{fontWeight:700,color:"#7c3aed",fontFamily:"monospace"}}>{eq.code||"—"}</div>
+                      <div style={{fontWeight:600,fontSize:13}}>{eq.nom}</div>
+                      <div style={{fontSize:11,color:"#9ca3af"}}>{eq.fabricant}</div>
+                    </div>)}
+                  </div>}
+                  {equipements.length===0&&<div style={{marginTop:6,padding:"8px 12px",background:"#fef3c7",borderRadius:8,fontSize:12,color:"#92400e"}}>⚠️ Aucun équipement disponible</div>}
                 </>
               ) : (
                 <>
@@ -3534,6 +3574,9 @@ function PretMateriel({ prets, setPrets, siteId, products }) {
   const [parcSugg, setParcSugg] = useState([]);
   const [articleSearch, setArticleSearch] = useState("");
   const [articleSugg, setArticleSugg] = useState([]);
+  const [equipSearch, setEquipSearch] = useState("");
+  const [equipSugg, setEquipSugg] = useState([]);
+  const [equipements, setEquipements] = useState([]);
   const [form, setForm] = useState({
     type:"vehicule", materiel_id:"", materiel_nom:"",
     emprunteur_nom:"", emprunteur_service:"", emprunteur_tel:"",
@@ -3541,6 +3584,17 @@ function PretMateriel({ prets, setPrets, siteId, products }) {
     date_retour_prevue: new Date(Date.now()+7*86400000).toISOString().split("T")[0],
     statut:"en_cours", notes:""
   });
+
+  useEffect(() => {
+    supabase.from("equipements").select("id,code,fabricant,nom,assigne_a,statut")
+      .eq("statut","Disponible").order("nom")
+      .then(({data})=>setEquipements(data||[]));
+  }, []);
+
+  const updateEquipStatut = async (equipId, statut, assigne_a) => {
+    if (!equipId) return;
+    await supabase.from("equipements").update({ statut, assigne_a: assigne_a||null }).eq("id", equipId);
+  };
 
   const filtered = filterStatut==="tous" ? prets : prets.filter(p=>p.statut===filterStatut);
   const counts = { tous: prets.length };
@@ -3600,13 +3654,14 @@ function PretMateriel({ prets, setPrets, siteId, products }) {
   const openAdd = () => {
     setEditPret(null);
     setForm({ type:"vehicule", materiel_id:"", materiel_nom:"", emprunteur_nom:"", emprunteur_service:"", emprunteur_tel:"", date_pret:new Date().toISOString().split("T")[0], date_retour_prevue:new Date(Date.now()+7*86400000).toISOString().split("T")[0], statut:"en_cours", notes:"" });
-    setParcSearch(""); setArticleSearch("");
+    setParcSearch(""); setArticleSearch(""); setEquipSearch(""); setEquipSugg([]);
     setShowForm(true);
   };
 
   const openEdit = (p) => {
     setEditPret(p);
     setForm({ type:p.type, materiel_id:p.materiel_id, materiel_nom:p.materiel_nom, emprunteur_nom:p.emprunteur_nom, emprunteur_service:p.emprunteur_service||"", emprunteur_tel:p.emprunteur_tel||"", date_pret:p.date_pret, date_retour_prevue:p.date_retour_prevue, statut:p.statut, notes:p.notes||"" });
+    setEquipSearch(""); setEquipSugg([]);
     setShowForm(true);
   };
 
@@ -3619,7 +3674,13 @@ function PretMateriel({ prets, setPrets, siteId, products }) {
       setPrets(prev=>prev.map(p=>p.id===editPret.id?{...p,...data}:p));
     } else {
       const saved = await addPret(data, siteId);
-      if(saved) setPrets(prev=>[saved,...prev]);
+      if(saved) {
+        setPrets(prev=>[saved,...prev]);
+        if(form.type==="equipement" && form.materiel_id) {
+          await updateEquipStatut(form.materiel_id, "En cours d'utilisation", form.emprunteur_nom);
+          setEquipements(prev=>prev.filter(e=>e.id!==form.materiel_id));
+        }
+      }
     }
     setSaving(false); setShowForm(false);
   };
@@ -3634,6 +3695,11 @@ function PretMateriel({ prets, setPrets, siteId, products }) {
     const today = new Date().toISOString().split("T")[0];
     await updatePret(p.id, { statut:"rendu", date_retour_reelle:today });
     setPrets(prev=>prev.map(x=>x.id===p.id?{...x,statut:"rendu",date_retour_reelle:today}:x));
+    if(p.type==="equipement" && p.materiel_id) {
+      await updateEquipStatut(p.materiel_id, "Disponible", null);
+      const {data} = await supabase.from("equipements").select("id,code,fabricant,nom,assigne_a,statut").eq("id",p.materiel_id);
+      if(data?.[0]) setEquipements(prev=>[...prev, data[0]].sort((a,b)=>a.nom.localeCompare(b.nom)));
+    }
   };
 
   const jours = (p) => Math.max(0, Math.ceil((new Date(p.date_retour_prevue)-new Date(p.date_pret))/(86400000)));
@@ -3717,21 +3783,35 @@ function PretMateriel({ prets, setPrets, siteId, products }) {
 
             <div style={{marginBottom:14}}>
               <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:6}}>Type de matériel</label>
-              <div style={{display:"flex",gap:8}}>
-                {[{v:"vehicule",l:"🚗 Véhicule/Engin"},{v:"article",l:"📦 Article stock"}].map(t=>(
-                  <button key={t.v} onClick={()=>{setForm(f=>({...f,type:t.v,materiel_id:"",materiel_nom:""}));setParcSearch("");setArticleSearch("");}} style={{flex:1,padding:"10px",borderRadius:10,border:`2px solid ${form.type===t.v?"#111827":"#e5e7eb"}`,background:form.type===t.v?"#111827":"#fff",color:form.type===t.v?"#fff":"#374151",fontWeight:600,cursor:"pointer",fontSize:13}}>{t.l}</button>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                {[{v:"vehicule",l:"🚗 Véhicule/Engin"},{v:"article",l:"📦 Article stock"},{v:"equipement",l:"🔧 Équipement ONE-KEY"}].map(t=>(
+                  <button key={t.v} onClick={()=>{setForm(f=>({...f,type:t.v,materiel_id:"",materiel_nom:""}));setParcSearch("");setArticleSearch("");setEquipSearch("");setEquipSugg([]);}} style={{flex:1,minWidth:120,padding:"10px",borderRadius:10,border:`2px solid ${form.type===t.v?"#111827":"#e5e7eb"}`,background:form.type===t.v?"#111827":"#fff",color:form.type===t.v?"#fff":"#374151",fontWeight:600,cursor:"pointer",fontSize:12}}>{t.l}</button>
                 ))}
               </div>
             </div>
 
             <div style={{marginBottom:14}}>
-              <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:6}}>{form.type==="vehicule"?"Véhicule / Engin":"Article du stock"} *</label>
+              <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:6}}>
+                {form.type==="vehicule"?"Véhicule / Engin":form.type==="equipement"?"Équipement ONE-KEY (Disponible)":"Article du stock"} *
+              </label>
               {form.type==="vehicule" ? (
                 <>
                   <input value={parcSearch||form.materiel_nom} onChange={e=>{setParcSearch(e.target.value);setParcSugg(PARC_VEHICULES.filter(v=>(v.immat||v.designation||"").toLowerCase().includes(e.target.value.toLowerCase())&&e.target.value).slice(0,6));}} placeholder="Rechercher…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                   {parcSugg.length>0&&<div style={{border:"1px solid #e5e7eb",borderRadius:10,overflow:"hidden",marginTop:4}}>
                     {parcSugg.map((v,i)=><div key={i} onClick={()=>{setForm(f=>({...f,materiel_id:v.immat||v.id||"",materiel_nom:(v.designation||v.immat||"")}));setParcSearch("");setParcSugg([]);}} style={{padding:"10px 14px",cursor:"pointer",fontSize:13,borderBottom:"1px solid #f3f4f6",background:"#fff"}}><div style={{fontWeight:600}}>{v.designation||v.immat}</div><div style={{fontSize:11,color:"#9ca3af"}}>{v.immat}</div></div>)}
                   </div>}
+                </>
+              ) : form.type==="equipement" ? (
+                <>
+                  <input value={equipSearch||form.materiel_nom} onChange={e=>{const q=e.target.value;setEquipSearch(q);setEquipSugg(equipements.filter(eq=>(`${eq.code||""} ${eq.fabricant||""} ${eq.nom||""}`).toLowerCase().includes(q.toLowerCase())&&q).slice(0,8));}} placeholder="Rechercher code, fabricant, désignation…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  {equipSugg.length>0&&<div style={{border:"1px solid #e5e7eb",borderRadius:10,overflow:"hidden",marginTop:4,maxHeight:240,overflowY:"auto"}}>
+                    {equipSugg.map(eq=><div key={eq.id} onClick={()=>{setForm(f=>({...f,materiel_id:eq.id,materiel_nom:`${eq.code||""} — ${eq.fabricant||""} — ${eq.nom}`}));setEquipSearch("");setEquipSugg([]);}} style={{padding:"10px 14px",cursor:"pointer",fontSize:13,borderBottom:"1px solid #f3f4f6",background:"#fff"}} onMouseEnter={e=>e.currentTarget.style.background="#f9fafb"} onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
+                      <div style={{fontWeight:700,color:"#7c3aed",fontFamily:"monospace"}}>{eq.code||"—"}</div>
+                      <div style={{fontWeight:600,fontSize:13}}>{eq.nom}</div>
+                      <div style={{fontSize:11,color:"#9ca3af"}}>{eq.fabricant}</div>
+                    </div>)}
+                  </div>}
+                  {equipements.length===0&&<div style={{marginTop:6,padding:"8px 12px",background:"#fef3c7",borderRadius:8,fontSize:12,color:"#92400e"}}>⚠️ Aucun équipement disponible</div>}
                 </>
               ) : (
                 <>
