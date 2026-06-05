@@ -2216,6 +2216,44 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
   const [nbreRoues,setNbreRoues]=useState(4);
   const [editTechnicien,setEditTechnicien]=useState(ordre.technicien||"");
 
+  const [tabFiche,setTabFiche]=useState("fiche");
+  const [tempsPasses,setTempsPasses]=useState([]);
+  const [loadingTemps,setLoadingTemps]=useState(false);
+  const [savingTemps,setSavingTemps]=useState(false);
+  const [formTemps,setFormTemps]=useState({
+    type:"Révision", technicien:ordre.technicien||"",
+    date:new Date().toISOString().split("T")[0], duree_heures:"", description:""
+  });
+
+  useEffect(()=>{
+    if(tabFiche!=="temps") return;
+    setLoadingTemps(true);
+    supabase.from("or_temps_passe").select("*").eq("or_id",String(ordre.id||ordre.numero)).order("date",{ascending:false})
+      .then(({data})=>{ setTempsPasses(data||[]); setLoadingTemps(false); });
+  },[tabFiche, ordre.id, ordre.numero]);
+
+  const handleAddTemps = async () => {
+    if(!formTemps.duree_heures||!formTemps.technicien) return;
+    setSavingTemps(true);
+    const payload = {
+      or_id: String(ordre.id||ordre.numero),
+      type: formTemps.type, technicien: formTemps.technicien,
+      date: formTemps.date||null,
+      duree_heures: parseFloat(formTemps.duree_heures),
+      description: formTemps.description||null,
+    };
+    const {data,error} = await supabase.from("or_temps_passe").insert([payload]).select();
+    setSavingTemps(false);
+    if(error){ console.error(error); return; }
+    if(data?.[0]) setTempsPasses(prev=>[data[0],...prev]);
+    setFormTemps(f=>({...f, duree_heures:"", description:""}));
+  };
+
+  const handleDelTemps = async (id) => {
+    await supabase.from("or_temps_passe").delete().eq("id",id);
+    setTempsPasses(prev=>prev.filter(t=>t.id!==id));
+  };
+
   const filtresEngin=(()=>{
     const m=(ordre.machine||"").toLowerCase();
     // split on em-dash U+2014, en-dash U+2013, hyphen, slash, whitespace
@@ -2365,7 +2403,17 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
           </div>
           <div style={{display:"flex",gap:10,alignItems:"center",flexShrink:0}}><Badge status={ordre.statut} map={OR_STATUTS}/><button onClick={onClose} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:16,color:"#fff"}}>✕</button></div>
         </div>
-        <div style={{padding:"22px 26px",display:"flex",flexDirection:"column",gap:20}}>
+
+        {/* Onglets */}
+        <div style={{display:"flex",borderBottom:"2px solid #e5e7eb",background:"#f9fafb"}}>
+          {[{v:"fiche",l:"📋 Fiche OR"},{v:"temps",l:"⏱️ Temps passé"}].map(t=>(
+            <button key={t.v} onClick={()=>setTabFiche(t.v)}
+              style={{padding:"13px 22px",background:"none",border:"none",borderBottom:`3px solid ${tabFiche===t.v?"#111827":"transparent"}`,marginBottom:-2,cursor:"pointer",fontWeight:tabFiche===t.v?700:500,fontSize:13,color:tabFiche===t.v?"#111827":"#6b7280",whiteSpace:"nowrap"}}>
+              {t.l}
+            </button>
+          ))}
+        </div>
+        <div style={{padding:"22px 26px",display:tabFiche==="fiche"?"flex":"none",flexDirection:"column",gap:20}}>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))",gap:10}}>
             {[{l:"Machine",v:ordre.machine},{l:"Immat.",v:ordre.immat||"—"},{l:"Panne",v:ordre.typePanne},{l:"Technicien",v:ordre.technicien||"—"},{l:"Ouvert le",v:new Date(ordre.dateOuverture).toLocaleDateString("fr-FR")},{l:"Priorité",v:<Badge status={ordre.priorite} map={OR_PRIORITES}/>},...(ordre.statut==="termine"&&ordre.dateCloture?[{l:"Clôturé le",v:new Date(ordre.dateCloture).toLocaleDateString("fr-FR")}]:[])].map(r=>(
               <div key={r.l} style={{background:"#f9fafb",borderRadius:10,padding:"10px 14px"}}>
@@ -3209,6 +3257,85 @@ function ScannerArticles({ products, stockOverrides, setStockOverrides, mouvemen
           ))}
         </div>
       )}
+
+        {/* ── ONGLET TEMPS PASSÉ ── */}
+        {tabFiche==="temps"&&(
+          <div style={{padding:"22px 26px",display:"flex",flexDirection:"column",gap:20}}>
+            <div style={{background:"#1f2937",borderRadius:16,padding:22}}>
+              <h3 style={{fontSize:14,fontWeight:800,color:"#f9fafb",margin:"0 0 16px"}}>➕ Saisir un temps</h3>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+                <div>
+                  <label style={{fontSize:11,fontWeight:600,color:"#9ca3af",display:"block",marginBottom:5}}>Type</label>
+                  <select value={formTemps.type} onChange={e=>setFormTemps(f=>({...f,type:e.target.value}))} style={{width:"100%",padding:"9px 12px",border:"1px solid #4b5563",borderRadius:9,fontSize:13,outline:"none",background:"#374151",color:"#f9fafb",cursor:"pointer"}}>
+                    {["Révision","Panne","Remplacement pneu","Autre"].map(t=><option key={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{fontSize:11,fontWeight:600,color:"#9ca3af",display:"block",marginBottom:5}}>Technicien *</label>
+                  <input value={formTemps.technicien} onChange={e=>setFormTemps(f=>({...f,technicien:e.target.value}))} placeholder="Prénom Nom…" style={{width:"100%",padding:"9px 12px",border:"1px solid #4b5563",borderRadius:9,fontSize:13,outline:"none",background:"#374151",color:"#f9fafb",boxSizing:"border-box"}}/>
+                </div>
+                <div>
+                  <label style={{fontSize:11,fontWeight:600,color:"#9ca3af",display:"block",marginBottom:5}}>Date</label>
+                  <input type="date" value={formTemps.date} onChange={e=>setFormTemps(f=>({...f,date:e.target.value}))} style={{width:"100%",padding:"9px 12px",border:"1px solid #4b5563",borderRadius:9,fontSize:13,outline:"none",background:"#374151",color:"#f9fafb",boxSizing:"border-box"}}/>
+                </div>
+                <div>
+                  <label style={{fontSize:11,fontWeight:600,color:"#9ca3af",display:"block",marginBottom:5}}>Durée (heures) *</label>
+                  <input type="number" min="0.25" step="0.25" value={formTemps.duree_heures} onChange={e=>setFormTemps(f=>({...f,duree_heures:e.target.value}))} placeholder="ex : 1.5" style={{width:"100%",padding:"9px 12px",border:"1px solid #4b5563",borderRadius:9,fontSize:13,outline:"none",background:"#374151",color:"#f9fafb",boxSizing:"border-box"}}/>
+                </div>
+                <div style={{gridColumn:"span 2"}}>
+                  <label style={{fontSize:11,fontWeight:600,color:"#9ca3af",display:"block",marginBottom:5}}>Description</label>
+                  <input value={formTemps.description} onChange={e=>setFormTemps(f=>({...f,description:e.target.value}))} placeholder="Détails de l'intervention…" style={{width:"100%",padding:"9px 12px",border:"1px solid #4b5563",borderRadius:9,fontSize:13,outline:"none",background:"#374151",color:"#f9fafb",boxSizing:"border-box"}}/>
+                </div>
+              </div>
+              <button onClick={handleAddTemps} disabled={savingTemps||!formTemps.technicien||!formTemps.duree_heures} style={{padding:"11px 22px",background:savingTemps||!formTemps.technicien||!formTemps.duree_heures?"#4b5563":"#3b82f6",color:"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:13}}>
+                {savingTemps?"⏳ Enregistrement…":"💾 Ajouter"}
+              </button>
+            </div>
+            <div style={{background:"#fff",borderRadius:14,border:"1px solid #e5e7eb",overflow:"hidden"}}>
+              <div style={{padding:"14px 18px",background:"#f9fafb",borderBottom:"1px solid #e5e7eb",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div style={{fontWeight:700,fontSize:14,color:"#111827"}}>⏱️ Temps enregistrés</div>
+                {!loadingTemps&&tempsPasses.length>0&&<div style={{background:"#111827",color:"#fff",padding:"4px 14px",borderRadius:99,fontSize:13,fontWeight:700}}>Total : {tempsPasses.reduce((s,t)=>s+(parseFloat(t.duree_heures)||0),0).toLocaleString("fr-FR",{minimumFractionDigits:2})} h</div>}
+              </div>
+              {loadingTemps?(
+                <div style={{padding:40,textAlign:"center",color:"#9ca3af",fontSize:13}}>Chargement…</div>
+              ):tempsPasses.length===0?(
+                <div style={{padding:40,textAlign:"center",color:"#9ca3af"}}>
+                  <div style={{fontSize:32,marginBottom:10}}>⏱️</div>
+                  <div style={{fontWeight:700,color:"#374151"}}>Aucun temps saisi</div>
+                  <div style={{fontSize:12,marginTop:4}}>Utilisez le formulaire ci-dessus.</div>
+                </div>
+              ):(
+                <>
+                  <div style={{overflowX:"auto"}}>
+                    <table style={{width:"100%",borderCollapse:"collapse"}}>
+                      <thead><tr style={{background:"#111827"}}>
+                        {["Date","Type","Technicien","Durée","Description",""].map(h=>(
+                          <th key={h} style={{padding:"10px 14px",textAlign:"left",fontSize:10,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:0.5,whiteSpace:"nowrap"}}>{h}</th>
+                        ))}
+                      </tr></thead>
+                      <tbody>
+                        {tempsPasses.map((t,i)=>(
+                          <tr key={t.id} style={{borderBottom:"1px solid #f3f4f6",background:i%2===0?"#fff":"#fafafa"}}>
+                            <td style={{padding:"10px 14px",fontSize:12,color:"#6b7280",whiteSpace:"nowrap"}}>{t.date?new Date(t.date).toLocaleDateString("fr-FR"):"—"}</td>
+                            <td style={{padding:"10px 14px"}}><span style={{background:"#dbeafe",color:"#1e40af",padding:"2px 9px",borderRadius:99,fontSize:11,fontWeight:700}}>{t.type}</span></td>
+                            <td style={{padding:"10px 14px",fontSize:13,fontWeight:600,color:"#111827"}}>{t.technicien||"—"}</td>
+                            <td style={{padding:"10px 14px",textAlign:"right",fontWeight:800,color:"#059669",fontSize:14,whiteSpace:"nowrap"}}>{parseFloat(t.duree_heures).toLocaleString("fr-FR",{minimumFractionDigits:2})} h</td>
+                            <td style={{padding:"10px 14px",fontSize:12,color:"#374151",maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.description||"—"}</td>
+                            <td style={{padding:"10px 14px"}}><button onClick={()=>handleDelTemps(t.id)} style={{background:"#fee2e2",border:"1px solid #fca5a5",borderRadius:7,padding:"3px 10px",cursor:"pointer",fontSize:12,color:"#dc2626",fontWeight:700}}>🗑</button></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style={{padding:"12px 18px",background:"#f9fafb",borderTop:"2px solid #e5e7eb",display:"flex",justifyContent:"flex-end",alignItems:"center",gap:16}}>
+                    <span style={{fontSize:13,color:"#6b7280"}}>{tempsPasses.length} entrée{tempsPasses.length>1?"s":""}</span>
+                    <span style={{fontSize:16,fontWeight:900,color:"#111827"}}>Total : {tempsPasses.reduce((s,t)=>s+(parseFloat(t.duree_heures)||0),0).toLocaleString("fr-FR",{minimumFractionDigits:2})} h</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
     </div>
   );
 }
