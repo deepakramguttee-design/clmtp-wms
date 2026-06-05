@@ -77,9 +77,9 @@ function ModalEdit({ equip, onClose, onSaved }) {
   };
 
   const inputStyle = {
-    width: "100%", padding: "9px 12px", border: "1px solid rgba(255,255,255,.15)",
+    width: "100%", padding: "9px 12px", border: "1px solid #4b5563",
     borderRadius: 9, fontSize: 13, outline: "none", boxSizing: "border-box",
-    background: "rgba(255,255,255,.07)", color: "#f9fafb",
+    background: "#374151", color: "#f9fafb",
   };
   const labelStyle = { fontSize: 11, fontWeight: 600, color: "#9ca3af", display: "block", marginBottom: 5 };
 
