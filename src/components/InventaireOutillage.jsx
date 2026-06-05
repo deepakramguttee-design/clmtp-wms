@@ -40,18 +40,27 @@ function Spinner() {
 }
 
 // ── MODAL ÉDITION ─────────────────────────────────────────────────────────────
-function ModalEdit({ equip, onClose, onSaved }) {
+function ModalEdit({ equip, onClose, onSaved, personnes, localisations }) {
+  const locInList = localisations.includes(equip.localisation || "");
   const [form, setForm] = useState({
     statut:      equip.statut      || "Disponible",
     assigne_a:   equip.assigne_a   || "",
     localisation:equip.localisation|| "",
     notes:       equip.notes       || "",
   });
-  const [saving, setSaving]   = useState(false);
-  const [error, setError]     = useState(null);
-  const assigneRef            = useRef(null);
+  // "__autre__" quand la localisation de l'équipement n'est pas dans la liste
+  const [locChoice, setLocChoice] = useState(locInList ? (equip.localisation || "") : "__autre__");
+  const [saving, setSaving]       = useState(false);
+  const [error, setError]         = useState(null);
+  const assigneRef                = useRef(null);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleLocChoice = (val) => {
+    setLocChoice(val);
+    if (val !== "__autre__") set("localisation", val);
+    else set("localisation", "");
+  };
 
   const handleSave = async () => {
     setSaving(true); setError(null);
@@ -86,7 +95,7 @@ function ModalEdit({ equip, onClose, onSaved }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(3px)" }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: "#1f2937", borderRadius: 20, padding: 28, width: "min(96vw,500px)", boxShadow: "0 24px 64px rgba(0,0,0,.5)", border: "1px solid rgba(255,255,255,.08)" }}>
+      <div style={{ background: "#1f2937", borderRadius: 20, padding: 28, width: "min(96vw,500px)", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 64px rgba(0,0,0,.5)", border: "1px solid rgba(255,255,255,.08)" }}>
 
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
@@ -110,6 +119,7 @@ function ModalEdit({ equip, onClose, onSaved }) {
         {/* Champs */}
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
+          {/* Statut */}
           <div>
             <label style={labelStyle}>Statut</label>
             <select value={form.statut} onChange={e => set("statut", e.target.value)}
@@ -118,29 +128,41 @@ function ModalEdit({ equip, onClose, onSaved }) {
             </select>
           </div>
 
+          {/* Assigné à — select depuis la liste des personnes uniques */}
           <div>
             <label style={labelStyle}>Assigné à</label>
-            <input
+            <select
               ref={assigneRef}
-              type="text"
               value={form.assigne_a}
               onChange={e => set("assigne_a", e.target.value)}
-              placeholder="Prénom Nom…"
-              style={inputStyle}
-            />
+              style={{ ...inputStyle, cursor: "pointer" }}>
+              <option value="">— Non assigné —</option>
+              {personnes.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
           </div>
 
+          {/* Localisation — select + option Autre */}
           <div>
             <label style={labelStyle}>Localisation</label>
-            <input
-              type="text"
-              value={form.localisation}
-              onChange={e => set("localisation", e.target.value)}
-              placeholder="Dépôt, chantier, véhicule…"
-              style={inputStyle}
-            />
+            <select value={locChoice} onChange={e => handleLocChoice(e.target.value)}
+              style={{ ...inputStyle, cursor: "pointer" }}>
+              <option value="">— Non définie —</option>
+              {localisations.map(l => <option key={l} value={l}>{l}</option>)}
+              <option value="__autre__">Autre…</option>
+            </select>
+            {locChoice === "__autre__" && (
+              <input
+                type="text"
+                value={form.localisation}
+                onChange={e => set("localisation", e.target.value)}
+                placeholder="Précisez la localisation…"
+                style={{ ...inputStyle, marginTop: 8 }}
+                autoFocus
+              />
+            )}
           </div>
 
+          {/* Notes */}
           <div>
             <label style={labelStyle}>Notes</label>
             <textarea
@@ -209,6 +231,16 @@ export default function InventaireOutillage({ user, siteId }) {
     [equipements]
   );
 
+  const personnes = useMemo(() =>
+    [...new Set(equipements.map(e => e.assigne_a).filter(Boolean))].sort(),
+    [equipements]
+  );
+
+  const localisations = useMemo(() =>
+    [...new Set(equipements.map(e => e.localisation).filter(Boolean))].sort(),
+    [equipements]
+  );
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
     return equipements.filter(e => {
@@ -243,7 +275,7 @@ export default function InventaireOutillage({ user, siteId }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
 
       {/* Modal */}
-      {editing && <ModalEdit equip={editing} onClose={() => setEditing(null)} onSaved={handleSaved} />}
+      {editing && <ModalEdit equip={editing} onClose={() => setEditing(null)} onSaved={handleSaved} personnes={personnes} localisations={localisations} />}
 
       {/* Header */}
       <div>
