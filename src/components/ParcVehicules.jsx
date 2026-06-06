@@ -8,19 +8,13 @@ const AFFECTATIONS = ["CLMTP", "CLAISSE RAIL", "STMF", ""];
 const FORM_EMPTY     = { num:"", name:"", modele:"", marque:"", immat:"", affectation:"CLMTP", chauffeur:"", annee:"", serie:"", categorie_id:"" };
 const CAT_FORM_EMPTY = { nom:"", icone:"🔧", mots_cles:"" };
 
-const CAT_TOUS = { id:"tous", label:"📋 Tous", match:() => true };
-
-const makeMatch = (mots_cles) => (v) => {
-  const n = ((v.name||"") + " " + (v.marque||"")).toUpperCase();
-  return (mots_cles||[]).some(kw => kw.trim() && n.includes(kw.trim().toUpperCase()));
-};
+const CAT_TOUS = { id:"tous", label:"📋 Tous" };
 
 const buildCategories = (dbCats) => [
   CAT_TOUS,
   ...[...dbCats].sort((a,b) => a.ordre - b.ordre).map(c => ({
     id: c.id,
     label: `${c.icone} ${c.nom}`,
-    match: makeMatch(c.mots_cles),
   })),
 ];
 
@@ -49,8 +43,9 @@ export default function ParcVehicules({ parc, setParc, user }) {
   }, []);
 
   const categories = buildCategories(dbCats);
-  const catMatch   = categories.find(c => c.id === activeTab)?.match || (() => true);
-  const inCat      = parc.filter(catMatch);
+  const inCat      = activeTab === "tous"
+    ? parc
+    : parc.filter(v => v.categorie_id === activeTab);
 
   const affCounts = {};
   inCat.forEach(v => { const k = v.affectation||""; affCounts[k] = (affCounts[k]||0)+1; });
@@ -62,7 +57,7 @@ export default function ParcVehicules({ parc, setParc, user }) {
     return okAff && okS;
   });
 
-  const catCount = cat => parc.filter(cat.match).length;
+  const catCount = cat => cat.id === "tous" ? parc.length : parc.filter(v => v.categorie_id === cat.id).length;
 
   // ── Engin CRUD ──────────────────────────────────────────────────────────────
   const openAdd  = () => { setEditItem(null); setForm(FORM_EMPTY); setShowForm(true); };
@@ -445,7 +440,7 @@ export default function ParcVehicules({ parc, setParc, user }) {
                     </div>
                   </div>
                   <span style={{fontSize:11,color:"#9ca3af",flexShrink:0}}>
-                    {parc.filter(makeMatch(c.mots_cles)).length} engins
+                    {parc.filter(v => v.categorie_id === c.id).length} engins
                   </span>
                   <div style={{display:"flex",gap:6,flexShrink:0}}>
                     <button onClick={() => openCatEdit(c)}
