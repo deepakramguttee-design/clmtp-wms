@@ -1874,6 +1874,29 @@ const isService = name => (name||'').trim().toLowerCase().startsWith('forfait');
 
 const PANNE_OPTIONS = ['Fuite hydraulique','Panne moteur','Électrique','Freinage','Transmission','Révision / Entretien','Vidange','Vidange hydraulique','Vidange réducteur','Pneumatique — Remplacement de pneu','Pneumatique — Réparation de pneu'];
 
+const TYPE_INTERV_OPTIONS = ['Révision','Panne','Remplacement pneu','Remplacement pièce','Entretien préventif','Contrôle technique','Autre'];
+const TYPE_INTERV_COLORS = {
+  'Révision':            { bg:"#d1fae5", text:"#065f46" },
+  'Panne':               { bg:"#fee2e2", text:"#991b1b" },
+  'Remplacement pneu':   { bg:"#fef3c7", text:"#92400e" },
+  'Remplacement pièce':  { bg:"#dbeafe", text:"#1e40af" },
+  'Entretien préventif': { bg:"#ede9fe", text:"#5b21b6" },
+  'Contrôle technique':  { bg:"#d1fae5", text:"#0f766e" },
+  'Autre':               { bg:"#f3f4f6", text:"#374151" },
+};
+function TypeIntervBadges({ value }) {
+  if(!value) return null;
+  const types = value.split(",").map(t=>t.trim()).filter(Boolean);
+  return (
+    <span style={{display:"inline-flex",gap:4,flexWrap:"wrap"}}>
+      {types.map(t=>{
+        const c=TYPE_INTERV_COLORS[t]||{bg:"#f3f4f6",text:"#374151"};
+        return <span key={t} style={{background:c.bg,color:c.text,padding:"2px 8px",borderRadius:99,fontSize:11,fontWeight:700,whiteSpace:"nowrap"}}>{t}</span>;
+      })}
+    </span>
+  );
+}
+
 const FILTRE_VEH_LABELS = [
   { key:'filtre_air',        label:'Filtre air' },
   { key:'filtre_habitacle',  label:'Filtre habitacle' },
