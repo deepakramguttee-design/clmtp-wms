@@ -860,9 +860,16 @@ export async function deleteFiltrationEngin(id) {
 
 // ── PARC VÉHICULES / ENGINS ───────────────────────────────────────────────────
 export async function getParcVehicules() {
-  const { data, error } = await supabase.from('parc_vehicules').select('*').order('num')
-  if (error) { console.error(error); return []; }
-  return data || [];
+  const all = []; let from = 0; const step = 1000;
+  while (true) {
+    const { data, error } = await supabase.from('parc_vehicules').select('*').order('num').range(from, from + step - 1);
+    if (error) { console.error(error); break; }
+    if (!data || data.length === 0) break;
+    all.push(...data);
+    if (data.length < step) break;
+    from += step;
+  }
+  return all;
 }
 export async function createParcVehicule(v) {
   const { data, error } = await supabase.from('parc_vehicules').insert([v]).select().single()
