@@ -9,8 +9,14 @@ const nom = v => (v.name||"").toUpperCase();
 
 const CATEGORIES = [
   {
+    id: "tous",
+    label: "📋 Tous",
+    shortLabel: "Tous",
+    match: () => true
+  },
+  {
     id: "vuvp",
-    label: "🚗 VU/VP/VC",
+    label: "🚗 VU/VP/VC/Remorques 3.5T",
     shortLabel: "VU/VP/VC",
     match: v => {
       const p = pfx(v), n = nom(v);
@@ -29,7 +35,7 @@ const CATEGORIES = [
   },
   {
     id: "prr",
-    label: "🚂 PRR",
+    label: "🚂 PRR et Équipements PRR",
     shortLabel: "PRR",
     match: v => {
       const n = nom(v);
@@ -42,7 +48,7 @@ const CATEGORIES = [
   },
   {
     id: "pl",
-    label: "🚛 PL / Remorques PL",
+    label: "🚛 Parc PL / Remorque PL",
     shortLabel: "PL",
     match: v => {
       const p = pfx(v), n = nom(v);
@@ -52,7 +58,7 @@ const CATEGORIES = [
   },
   {
     id: "gc",
-    label: "⚙️ Engins GC & MP",
+    label: "⚙️ Engins GC et MP",
     shortLabel: "GC/MP",
     match: v => {
       const p = pfx(v), n = nom(v);
@@ -106,12 +112,6 @@ const CATEGORIES = [
       return kw.some(k => n.includes(k));
     }
   },
-  {
-    id: "tous",
-    label: "📋 Tous",
-    shortLabel: "Tous",
-    match: () => true
-  }
 ];
 
 export default function ParcVehicules({ parc, setParc, user }) {
