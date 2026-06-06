@@ -4,7 +4,94 @@ import { createParcVehicule, updateParcVehicule, deleteParcVehicule } from "../d
 const AFFECTATIONS = ["CLMTP", "CLAISSE RAIL", "STMF", ""];
 const FORM_EMPTY = { num:"", name:"", modele:"", marque:"", immat:"", affectation:"CLMTP", chauffeur:"", annee:"", serie:"" };
 
+const pfx = v => (v.num||"").match(/^[A-Za-z]+/)?.[0]?.toUpperCase() || "";
+const nom = v => (v.name||"").toUpperCase();
+
+const CATEGORIES = [
+  {
+    id: "vuvp",
+    label: "🚗 VU/VP/VC",
+    shortLabel: "VU/VP/VC",
+    match: v => {
+      const p = pfx(v), n = nom(v);
+      return ["VU","VP","VC"].includes(p) ||
+             (n.includes("REMORQUE") && !n.includes("POIDS LOURD") && !/\bPL\b/.test(n) && !n.includes(" PL "));
+    }
+  },
+  {
+    id: "pelle",
+    label: "🚜 Pelle",
+    shortLabel: "Pelle",
+    match: v => {
+      const n = nom(v);
+      return n.includes("PELLE") || n.includes("PELLETEUSE") || n.includes("MINI-PELLE") || n.includes("MINIPELLE");
+    }
+  },
+  {
+    id: "prr",
+    label: "🚂 PRR",
+    shortLabel: "PRR",
+    match: v => {
+      const n = nom(v);
+      return n.includes("PRR") || n.includes("PORTIQUE") || n.includes("RAIL") || n.includes("VOIE");
+    }
+  },
+  {
+    id: "pl",
+    label: "🚛 PL / Remorques PL",
+    shortLabel: "PL",
+    match: v => {
+      const p = pfx(v), n = nom(v);
+      return p === "PL" || n.includes("POIDS LOURD") || n.includes("SEMI-REMORQUE") ||
+             (n.includes("REMORQUE") && /\bPL\b/.test(n));
+    }
+  },
+  {
+    id: "gc",
+    label: "⚙️ Engins GC & MP",
+    shortLabel: "GC/MP",
+    match: v => {
+      const n = nom(v);
+      return n.includes("BOURREUSE") || n.includes("BOURREUR") || n.includes("COMPACTEUR") ||
+             n.includes("FINISSEUR") || n.includes("NIVELEUSE") || n.includes("CHARGEUSE") ||
+             n.includes("FINITION");
+    }
+  },
+  {
+    id: "em",
+    label: "🔩 EM + BML",
+    shortLabel: "EM/BML",
+    match: v => {
+      const n = nom(v);
+      return n.includes("BML") || /\bEM\b/.test(n) || n.includes("MOTRICE") ||
+             n.includes("LOCOMOTIVE") || n.includes("LOCOTRACTEUR");
+    }
+  },
+  {
+    id: "broyeur",
+    label: "🌿 Broyeur",
+    shortLabel: "Broyeur",
+    match: v => nom(v).includes("BROYEUR") || nom(v).includes("CRIBLE")
+  },
+  {
+    id: "agri",
+    label: "🌾 Agri / Tondeuse",
+    shortLabel: "Agri",
+    match: v => {
+      const n = nom(v);
+      return n.includes("TRACTEUR") || n.includes("TONDEUSE") || n.includes("AGRI");
+    }
+  },
+  {
+    id: "tous",
+    label: "📋 Tous",
+    shortLabel: "Tous",
+    match: () => true
+  }
+];
+
 export default function ParcVehicules({ parc, setParc, user }) {
+  const [activeTab, setActiveTab] = useState("tous");
   const [search, setSearch]       = useState("");
   const [filterAff, setFilterAff] = useState("tous");
   const [showForm, setShowForm]   = useState(false);
@@ -14,15 +101,20 @@ export default function ParcVehicules({ parc, setParc, user }) {
 
   const canEdit = user && ["admin","magasinier","magasinier_preparateur"].includes(user.role);
 
-  const filtered = parc.filter(v => {
+  const catMatch = CATEGORIES.find(c => c.id === activeTab)?.match || (() => true);
+
+  const inCat   = parc.filter(catMatch);
+  const affCounts = {};
+  inCat.forEach(v => { const k = v.affectation||""; affCounts[k] = (affCounts[k]||0)+1; });
+
+  const filtered = inCat.filter(v => {
     const okAff = filterAff === "tous" || v.affectation === filterAff;
     const s = search.toLowerCase();
     const okS = !s || [v.num,v.name,v.marque,v.modele,v.immat,v.chauffeur].filter(Boolean).join(" ").toLowerCase().includes(s);
     return okAff && okS;
   });
 
-  const affCounts = {};
-  parc.forEach(v => { const k = v.affectation||""; affCounts[k] = (affCounts[k]||0)+1; });
+  const catCount = cat => parc.filter(cat.match).length;
 
   const openAdd  = () => { setEditItem(null); setForm(FORM_EMPTY); setShowForm(true); };
   const openEdit = v  => {
@@ -58,10 +150,10 @@ export default function ParcVehicules({ parc, setParc, user }) {
     setParc(prev => prev.filter(x => x.id !== v.id));
   };
 
-  const f = s => ({ fontSize:11, fontWeight:600, color:"#374151", display:"block", marginBottom:4 });
+  const lbl = { fontSize:11, fontWeight:600, color:"#374151", display:"block", marginBottom:4 };
 
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:20}}>
+    <div style={{display:"flex",flexDirection:"column",gap:16}}>
 
       {/* En-tête */}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
@@ -77,37 +169,69 @@ export default function ParcVehicules({ parc, setParc, user }) {
         )}
       </div>
 
+      {/* Onglets catégories */}
+      <div style={{overflowX:"auto",WebkitOverflowScrolling:"touch"}}>
+        <div style={{display:"flex",gap:4,borderBottom:"2px solid #e5e7eb",minWidth:"max-content",paddingBottom:0}}>
+          {CATEGORIES.map(cat => {
+            const count = catCount(cat);
+            const active = activeTab === cat.id;
+            return (
+              <button key={cat.id}
+                onClick={() => { setActiveTab(cat.id); setSearch(""); setFilterAff("tous"); }}
+                style={{
+                  padding:"10px 14px",background:"none",border:"none",cursor:"pointer",
+                  borderBottom:`3px solid ${active?"#111827":"transparent"}`,
+                  marginBottom:-2,fontWeight:active?700:500,fontSize:13,
+                  color:active?"#111827":"#6b7280",whiteSpace:"nowrap",
+                  display:"flex",flexDirection:"column",alignItems:"center",gap:2,
+                }}>
+                <span>{cat.label}</span>
+                <span style={{fontSize:10,fontWeight:700,color:active?"#111827":"#9ca3af",
+                              background:active?"#f3f4f6":"transparent",
+                              padding:"1px 6px",borderRadius:99}}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Filtres affectation */}
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-        {[{k:"tous",l:"Tous",n:parc.length}, ...AFFECTATIONS.filter(a=>a).map(a=>({k:a,l:a,n:affCounts[a]||0}))].map(btn => (
+        {[{k:"tous",l:"Tous",n:inCat.length},
+          ...AFFECTATIONS.filter(a=>a).map(a=>({k:a,l:a,n:affCounts[a]||0}))
+        ].map(btn => (
           <button key={btn.k} onClick={()=>setFilterAff(btn.k)}
-            style={{padding:"7px 16px",borderRadius:10,border:`2px solid ${filterAff===btn.k?"#111827":"#e5e7eb"}`,
+            style={{padding:"6px 14px",borderRadius:99,
+                    border:`1px solid ${filterAff===btn.k?"#111827":"#e5e7eb"}`,
                     background:filterAff===btn.k?"#111827":"#fff",
-                    color:filterAff===btn.k?"#fff":"#374151",fontWeight:600,cursor:"pointer",fontSize:13}}>
-            {btn.l} <span style={{fontSize:11,opacity:0.65}}>({btn.n})</span>
+                    color:filterAff===btn.k?"#fff":"#374151",
+                    fontWeight:600,cursor:"pointer",fontSize:12}}>
+            {btn.l} <span style={{opacity:0.65}}>({btn.n})</span>
           </button>
         ))}
       </div>
 
-      {/* Recherche */}
-      <input
-        value={search} onChange={e=>setSearch(e.target.value)}
-        placeholder="🔍  Rechercher numéro, désignation, marque, immat, chauffeur…"
-        style={{width:"100%",padding:"10px 16px",border:"1px solid #e5e7eb",borderRadius:10,
-                fontSize:13,outline:"none",boxSizing:"border-box"}}/>
-
-      {/* Compteur résultats */}
-      {(search||filterAff!=="tous") && (
-        <div style={{fontSize:13,color:"#6b7280"}}>{filtered.length} résultat{filtered.length>1?"s":""}</div>
-      )}
+      {/* Recherche + compteur */}
+      <div style={{display:"flex",gap:10,alignItems:"center"}}>
+        <input
+          value={search} onChange={e=>setSearch(e.target.value)}
+          placeholder="🔍  Rechercher numéro, désignation, marque, immat, chauffeur…"
+          style={{flex:1,padding:"10px 16px",border:"1px solid #e5e7eb",borderRadius:10,
+                  fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+        <span style={{fontSize:13,color:"#6b7280",whiteSpace:"nowrap",flexShrink:0}}>
+          {filtered.length} résultat{filtered.length!==1?"s":""}
+        </span>
+      </div>
 
       {/* Tableau */}
       <div style={{background:"#fff",borderRadius:16,border:"1px solid #e5e7eb",overflow:"hidden"}}>
-        {filtered.length===0 ? (
+        {filtered.length === 0 ? (
           <div style={{padding:40,textAlign:"center",color:"#9ca3af"}}>
             <div style={{fontSize:40,marginBottom:10}}>🚜</div>
             <div style={{fontWeight:700,color:"#374151"}}>
-              {search||filterAff!=="tous" ? "Aucun résultat" : "Parc vide"}
+              {search||filterAff!=="tous" ? "Aucun résultat pour ces filtres" : "Aucun engin dans cette catégorie"}
             </div>
           </div>
         ) : (
@@ -171,41 +295,38 @@ export default function ParcVehicules({ parc, setParc, user }) {
             </div>
 
             <div style={{display:"flex",flexDirection:"column",gap:12}}>
-              {/* N° + Désignation */}
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                 <div>
-                  <label style={f()}>N° parc</label>
-                  <input value={form.num} onChange={e=>setForm(p=>({...p,num:e.target.value}))} placeholder="Ex : CH 01"
+                  <label style={lbl}>N° parc</label>
+                  <input value={form.num} onChange={e=>setForm(p=>({...p,num:e.target.value}))} placeholder="Ex : VU01"
                     style={{width:"100%",padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                 </div>
                 <div style={{gridColumn:"1/3"}}>
-                  <label style={f()}>Désignation *</label>
+                  <label style={lbl}>Désignation *</label>
                   <input value={form.name} onChange={e=>setForm(p=>({...p,name:e.target.value}))} placeholder="Nom complet de l'engin"
                     style={{width:"100%",padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                 </div>
               </div>
 
-              {/* Autres champs */}
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                 {[
-                  {l:"Marque",k:"marque",ph:"Ex : MATISA"},
-                  {l:"Modèle",k:"modele",ph:"Ex : B66"},
+                  {l:"Marque",k:"marque",ph:"Ex : RENAULT"},
+                  {l:"Modèle",k:"modele",ph:"Ex : MASTER"},
                   {l:"Immatriculation",k:"immat",ph:"Ex : AB-123-CD"},
                   {l:"Chauffeur",k:"chauffeur",ph:"Prénom NOM"},
-                  {l:"Année",k:"annee",ph:"Ex : 2018"},
+                  {l:"Année",k:"annee",ph:"Ex : 2020"},
                   {l:"N° série",k:"serie",ph:"Numéro de série"},
                 ].map(field => (
                   <div key={field.k}>
-                    <label style={f()}>{field.l}</label>
+                    <label style={lbl}>{field.l}</label>
                     <input value={form[field.k]} onChange={e=>setForm(p=>({...p,[field.k]:e.target.value}))} placeholder={field.ph}
                       style={{width:"100%",padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                   </div>
                 ))}
               </div>
 
-              {/* Affectation */}
               <div>
-                <label style={f()}>Affectation</label>
+                <label style={lbl}>Affectation</label>
                 <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                   {["CLMTP","CLAISSE RAIL","STMF",""].map(a => (
                     <button key={a||"aucune"} onClick={()=>setForm(p=>({...p,affectation:a}))}
@@ -220,7 +341,6 @@ export default function ParcVehicules({ parc, setParc, user }) {
                 </div>
               </div>
 
-              {/* Actions */}
               <div style={{display:"flex",gap:10,marginTop:6}}>
                 <button onClick={()=>setShowForm(false)}
                   style={{flex:1,padding:"11px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer"}}>
