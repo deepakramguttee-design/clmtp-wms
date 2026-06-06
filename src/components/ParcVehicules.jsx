@@ -5,7 +5,7 @@ import {
 } from "../db.js";
 
 const AFFECTATIONS = ["CLMTP", "CLAISSE RAIL", "STMF", ""];
-const FORM_EMPTY     = { num:"", name:"", modele:"", marque:"", immat:"", affectation:"CLMTP", chauffeur:"", annee:"", serie:"" };
+const FORM_EMPTY     = { num:"", name:"", modele:"", marque:"", immat:"", affectation:"CLMTP", chauffeur:"", annee:"", serie:"", categorie_id:"" };
 const CAT_FORM_EMPTY = { nom:"", icone:"🔧", mots_cles:"" };
 
 const CAT_TOUS = { id:"tous", label:"📋 Tous", match:() => true };
@@ -70,7 +70,8 @@ export default function ParcVehicules({ parc, setParc, user }) {
     setEditItem(v);
     setForm({ num:v.num||"", name:v.name||"", modele:v.modele||"", marque:v.marque||"",
               immat:v.immat||"", affectation:v.affectation||"CLMTP",
-              chauffeur:v.chauffeur||"", annee:v.annee||"", serie:v.serie||"" });
+              chauffeur:v.chauffeur||"", annee:v.annee||"", serie:v.serie||"",
+              categorie_id:v.categorie_id||"" });
     setShowForm(true);
   };
   const handleSave = async () => {
@@ -81,6 +82,7 @@ export default function ParcVehicules({ parc, setParc, user }) {
       marque:form.marque||null, immat:form.immat||null,
       affectation:form.affectation||null, chauffeur:form.chauffeur||null,
       annee:form.annee||null, serie:form.serie||null,
+      categorie_id:form.categorie_id||null,
     };
     if (editItem) {
       await updateParcVehicule(editItem.id, payload);
@@ -382,6 +384,17 @@ export default function ParcVehicules({ parc, setParc, user }) {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div>
+                <label style={lbl}>Catégorie</label>
+                <select value={form.categorie_id} onChange={e => setForm(p=>({...p,categorie_id:e.target.value}))}
+                  style={{...inp,cursor:"pointer"}}>
+                  <option value="">— Non classé</option>
+                  {[...dbCats].sort((a,b)=>a.ordre-b.ordre).map(c => (
+                    <option key={c.id} value={c.id}>{c.icone} {c.nom}</option>
+                  ))}
+                </select>
               </div>
 
               <div style={{display:"flex",gap:10,marginTop:6}}>
