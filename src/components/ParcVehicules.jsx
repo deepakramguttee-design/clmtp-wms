@@ -130,6 +130,13 @@ export default function ParcVehicules({ parc, setParc, user }) {
   };
   const closeCatModal = () => { setShowCatModal(false); setCatEditItem(null); setCatForm(CAT_FORM_EMPTY); };
 
+  // ── Changement de catégorie inline ──────────────────────────────────────────
+  const handleCatChange = async (v, categorie_id) => {
+    const val = categorie_id || null;
+    await updateParcVehicule(v.id, { categorie_id: val });
+    setParc(prev => prev.map(x => x.id === v.id ? { ...x, categorie_id: val } : x));
+  };
+
   // ── Styles partagés ──────────────────────────────────────────────────────────
   const lbl = { fontSize:11, fontWeight:600, color:"#374151", display:"block", marginBottom:4 };
   const inp = { width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:9, fontSize:13, outline:"none", boxSizing:"border-box" };
@@ -233,10 +240,12 @@ export default function ParcVehicules({ parc, setParc, user }) {
           </div>
         ) : (
           <div style={{overflowX:"auto"}}>
-            <table style={{width:"100%",borderCollapse:"collapse",minWidth:800}}>
+            <table style={{width:"100%",borderCollapse:"collapse",minWidth: activeTab==="tous" ? 1000 : 800}}>
               <thead>
                 <tr style={{background:"#111827"}}>
-                  {["N°","Désignation","Marque / Modèle","Immat.","Affectation","Chauffeur","Année","Actions"].map(h => (
+                  {["N°","Désignation","Marque / Modèle","Immat.","Affectation",
+                    ...(activeTab==="tous" ? ["Catégorie"] : []),
+                    "Chauffeur","Année","Actions"].map(h => (
                     <th key={h} style={{padding:"10px 12px",textAlign:"left",fontSize:11,fontWeight:700,
                                         color:"#9ca3af",textTransform:"uppercase",letterSpacing:0.5,whiteSpace:"nowrap"}}>{h}</th>
                   ))}
@@ -257,6 +266,21 @@ export default function ParcVehicules({ parc, setParc, user }) {
                         ? <span style={{background:"#dbeafe",color:"#1e40af",padding:"2px 8px",borderRadius:99,fontSize:11,fontWeight:700,whiteSpace:"nowrap"}}>{v.affectation}</span>
                         : <span style={{color:"#d1d5db",fontSize:11}}>—</span>}
                     </td>
+                    {activeTab === "tous" && (
+                      <td style={{padding:"6px 12px"}}>
+                        <select
+                          value={v.categorie_id || ""}
+                          onChange={e => handleCatChange(v, e.target.value)}
+                          style={{fontSize:12,border:"1px solid #e5e7eb",borderRadius:7,
+                                  padding:"5px 8px",background:"#fff",cursor:"pointer",
+                                  maxWidth:190,width:"100%"}}>
+                          <option value="">— Non classé</option>
+                          {[...dbCats].sort((a,b)=>a.ordre-b.ordre).map(c => (
+                            <option key={c.id} value={c.id}>{c.icone} {c.nom}</option>
+                          ))}
+                        </select>
+                      </td>
+                    )}
                     <td style={{padding:"10px 12px",fontSize:12,color:"#374151"}}>{v.chauffeur||"—"}</td>
                     <td style={{padding:"10px 12px",fontSize:12,color:"#374151"}}>{v.annee||"—"}</td>
                     <td style={{padding:"10px 12px"}}>
