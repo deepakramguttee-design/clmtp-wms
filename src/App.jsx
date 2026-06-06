@@ -5,11 +5,12 @@ import VueEclatee from "./VueEclatee.jsx";
 import ReferenceFiltres from "./ReferenceFiltres.jsx";
 import Chantiers from "./components/Chantiers.jsx";
 import InventaireOutillage from "./components/InventaireOutillage.jsx";
-import { PARC_VEHICULES } from "./parc.js";
+// parc.js supprimé — données migrées vers Supabase (table parc_vehicules)
 import { supabase } from "./supabase.js";
 import {
   loginUser, loginUserMultiSite,
   getUtilisateurs, getUtilisateursSite, createUtilisateur, createUtilisateurSite, updateUtilisateur, updateUtilisateurPermissions, deleteUtilisateur,
+  getParcVehicules, createParcVehicule, updateParcVehicule, deleteParcVehicule,
   getCatalogue, importCatalogue,
   addCatalogueArticle, updateCatalogueArticle, deleteCatalogueArticle,
   getMouvements, getMouvementsSite, addMouvement, addMouvementSite, deleteMouvement,
@@ -1922,7 +1923,7 @@ const FILTRE_OR_LABELS = [
   { key:'courroie',       label:'Courroie' },
 ];
 
-function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockOverrides, setStockOverrides, user, siteId, products, equivalences={} }) {
+function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockOverrides, setStockOverrides, user, siteId, products, equivalences={}, parc=[] }) {
   const [showForm,setShowForm]=useState(false);
   const [ficheOrdre,setFicheOrdre]=useState(null);
   const [filterStatut,setFilterStatut]=useState("tous");
@@ -1963,10 +1964,10 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
     if(v.length<2){setParcSugg([]);setParcDropOpen(false);return;}
     setParcDropOpen(true);
     const s=v.toLowerCase();
-    const parc=PARC_VEHICULES.filter(p=>[p.num,p.name,p.marque,p.modele,p.immat].filter(Boolean).join(" ").toLowerCase().includes(s)).map(p=>({...p,_type:"parc",_label:p.name,_code:p.num||""}));
+    const parcItems=parc.filter(p=>[p.num,p.name,p.marque,p.modele,p.immat].filter(Boolean).join(" ").toLowerCase().includes(s)).map(p=>({...p,_type:"parc",_label:p.name,_code:p.num||""}));
     const veh=refVehicules.filter(p=>(p.designation||"").toLowerCase().includes(s)).map(p=>({...p,_type:"vehicule",_label:p.designation,_code:""}));
     const eng=refEngins.filter(p=>{const full=[(p.code||""),(p.engin||"")].filter(Boolean).join(" ").toLowerCase();return full.includes(s);}).map(p=>({...p,_type:"engin",_label:p.engin,_code:p.code||""}));
-    setParcSugg([...parc,...veh,...eng].slice(0,8));
+    setParcSugg([...parcItems,...veh,...eng].slice(0,8));
   };
 
   const selectVehicle = v => {
@@ -3862,7 +3863,7 @@ const STATUTS_LOC = {
   annule:    { label:"Annulé",    color:"#6b7280", bg:"#f3f4f6", icon:"❌" },
 };
 
-function LocationMateriel({ locations, setLocations, siteId, products }) {
+function LocationMateriel({ locations, setLocations, siteId, products, parc=[] }) {
   const [showForm, setShowForm] = useState(false);
   const [editLoc, setEditLoc] = useState(null);
   const [filterStatut, setFilterStatut] = useState("tous");
@@ -4113,7 +4114,7 @@ function LocationMateriel({ locations, setLocations, siteId, products }) {
               </label>
               {form.type==="vehicule" ? (
                 <>
-                  <input value={parcSearch||form.materiel_nom} onChange={e=>{setParcSearch(e.target.value);setParcSugg(PARC_VEHICULES.filter(v=>(v.immat||v.designation||"").toLowerCase().includes(e.target.value.toLowerCase())&&e.target.value).slice(0,6));}} placeholder="Rechercher immatriculation, désignation…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  <input value={parcSearch||form.materiel_nom} onChange={e=>{setParcSearch(e.target.value);setParcSugg(parc.filter(v=>(v.immat||v.name||v.designation||"").toLowerCase().includes(e.target.value.toLowerCase())&&e.target.value).slice(0,6));}} placeholder="Rechercher immatriculation, désignation…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                   {parcSugg.length>0&&<div style={{border:"1px solid #e5e7eb",borderRadius:10,overflow:"hidden",marginTop:4}}>
                     {parcSugg.map((v,i)=><div key={i} onClick={()=>{setForm(f=>({...f,materiel_id:v.immat||v.id||"",materiel_nom:(v.designation||v.immat||"")}));setParcSearch("");setParcSugg([]);}} style={{padding:"10px 14px",cursor:"pointer",fontSize:13,borderBottom:"1px solid #f3f4f6",background:"#fff"}} onMouseEnter={e=>e.target.style.background="#f9fafb"} onMouseLeave={e=>e.target.style.background="#fff"}>
                       <div style={{fontWeight:600}}>{v.designation||v.immat}</div>
@@ -4204,7 +4205,7 @@ const STATUTS_PRET = {
   en_retard: { label:"En retard", color:"#dc2626", bg:"#fee2e2", icon:"⚠️" },
 };
 
-function PretMateriel({ prets, setPrets, siteId, products }) {
+function PretMateriel({ prets, setPrets, siteId, products, parc=[] }) {
   const [showForm, setShowForm] = useState(false);
   const [editPret, setEditPret] = useState(null);
   const [filterStatut, setFilterStatut] = useState("tous");
@@ -4437,7 +4438,7 @@ function PretMateriel({ prets, setPrets, siteId, products }) {
               </label>
               {form.type==="vehicule" ? (
                 <>
-                  <input value={parcSearch||form.materiel_nom} onChange={e=>{setParcSearch(e.target.value);setParcSugg(PARC_VEHICULES.filter(v=>(v.immat||v.designation||"").toLowerCase().includes(e.target.value.toLowerCase())&&e.target.value).slice(0,6));}} placeholder="Rechercher…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  <input value={parcSearch||form.materiel_nom} onChange={e=>{setParcSearch(e.target.value);setParcSugg(parc.filter(v=>(v.immat||v.name||v.designation||"").toLowerCase().includes(e.target.value.toLowerCase())&&e.target.value).slice(0,6));}} placeholder="Rechercher…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                   {parcSugg.length>0&&<div style={{border:"1px solid #e5e7eb",borderRadius:10,overflow:"hidden",marginTop:4}}>
                     {parcSugg.map((v,i)=><div key={i} onClick={()=>{setForm(f=>({...f,materiel_id:v.immat||v.id||"",materiel_nom:(v.designation||v.immat||"")}));setParcSearch("");setParcSugg([]);}} style={{padding:"10px 14px",cursor:"pointer",fontSize:13,borderBottom:"1px solid #f3f4f6",background:"#fff"}}><div style={{fontWeight:600}}>{v.designation||v.immat}</div><div style={{fontSize:11,color:"#9ca3af"}}>{v.immat}</div></div>)}
                   </div>}
@@ -4714,6 +4715,7 @@ const NAV_ALL = [
   { id:"vue_eclatee",  label:"Vue éclatée",           icon:"🔍", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"ref_filtres",  label:"Références filtres",    icon:"🔩", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"catalogue",    label:"Catalogue articles",   icon:"📋", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
+  { id:"parc",          label:"Parc engins",           icon:"🚜", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"utilisateurs", label:"Utilisateurs",         icon:"👥", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"admin",        label:"Administration",        icon:"🛡️", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
 ];
@@ -5291,6 +5293,174 @@ function GestionUtilisateurs({ currentUser, siteId }) {
   );
 }
 
+// ── PARC ENGINS / VÉHICULES ───────────────────────────────────────────────────
+const PARC_AFFECTATIONS=["CLMTP","CLAISSE RAIL","STMF",""];
+const PARC_FORM_EMPTY={num:"",name:"",modele:"",marque:"",immat:"",affectation:"CLMTP",chauffeur:"",annee:"",serie:""};
+
+function GestionParc({ parc, setParc, user }) {
+  const [search,setSearch]=useState("");
+  const [filterAff,setFilterAff]=useState("tous");
+  const [showForm,setShowForm]=useState(false);
+  const [editItem,setEditItem]=useState(null);
+  const [form,setForm]=useState(PARC_FORM_EMPTY);
+  const [saving,setSaving]=useState(false);
+
+  const canEdit=user&&["admin","magasinier","magasinier_preparateur"].includes(user.role);
+
+  const filtered=parc.filter(v=>{
+    const okAff=filterAff==="tous"||v.affectation===filterAff;
+    const s=search.toLowerCase();
+    const okS=!s||[v.num,v.name,v.marque,v.modele,v.immat,v.chauffeur].filter(Boolean).join(" ").toLowerCase().includes(s);
+    return okAff&&okS;
+  });
+
+  const openAdd=()=>{setEditItem(null);setForm(PARC_FORM_EMPTY);setShowForm(true);};
+  const openEdit=v=>{setEditItem(v);setForm({num:v.num||"",name:v.name||"",modele:v.modele||"",marque:v.marque||"",immat:v.immat||"",affectation:v.affectation||"CLMTP",chauffeur:v.chauffeur||"",annee:v.annee||"",serie:v.serie||""});setShowForm(true);};
+
+  const handleSave=async()=>{
+    if(!form.name.trim()){return;}
+    setSaving(true);
+    const payload={num:form.num||null,name:form.name,modele:form.modele||null,marque:form.marque||null,immat:form.immat||null,affectation:form.affectation||null,chauffeur:form.chauffeur||null,annee:form.annee||null,serie:form.serie||null};
+    if(editItem){
+      await updateParcVehicule(editItem.id,payload);
+      setParc(prev=>prev.map(v=>v.id===editItem.id?{...v,...payload}:v));
+    }else{
+      const saved=await createParcVehicule(payload);
+      if(saved) setParc(prev=>[saved,...prev]);
+    }
+    setSaving(false);setShowForm(false);
+  };
+
+  const handleDelete=async v=>{
+    if(!confirm(`Supprimer "${v.name}" ?`)) return;
+    await deleteParcVehicule(v.id);
+    setParc(prev=>prev.filter(x=>x.id!==v.id));
+  };
+
+  const affCounts={};
+  parc.forEach(v=>{const k=v.affectation||"";affCounts[k]=(affCounts[k]||0)+1;});
+
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:20}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
+        <div>
+          <h1 style={{fontSize:22,fontWeight:900,color:"#111827",margin:0}}>🚜 Parc engins & véhicules</h1>
+          <p style={{color:"#6b7280",fontSize:13,margin:"4px 0 0"}}>{parc.length} engins · synchronisé Supabase</p>
+        </div>
+        {canEdit&&<button onClick={openAdd} style={{background:"#111827",color:"#fff",border:"none",borderRadius:10,padding:"10px 18px",fontWeight:700,cursor:"pointer",fontSize:13}}>+ Ajouter un engin</button>}
+      </div>
+
+      {/* KPIs affectation */}
+      <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+        {[{k:"tous",l:"Tous",n:parc.length},...PARC_AFFECTATIONS.filter(a=>a).map(a=>({k:a,l:a,n:affCounts[a]||0}))].map(f=>(
+          <button key={f.k} onClick={()=>setFilterAff(f.k)}
+            style={{padding:"8px 16px",borderRadius:10,border:`2px solid ${filterAff===f.k?"#111827":"#e5e7eb"}`,background:filterAff===f.k?"#111827":"#fff",color:filterAff===f.k?"#fff":"#374151",fontWeight:600,cursor:"pointer",fontSize:13}}>
+            {f.l} <span style={{fontSize:11,opacity:0.7}}>({f.n})</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Recherche */}
+      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍  Rechercher numéro, nom, marque, immat, chauffeur…"
+        style={{width:"100%",padding:"10px 16px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+
+      {/* Tableau */}
+      <div style={{background:"#fff",borderRadius:16,border:"1px solid #e5e7eb",overflow:"hidden"}}>
+        {filtered.length===0?(
+          <div style={{padding:40,textAlign:"center",color:"#9ca3af"}}>
+            <div style={{fontSize:36,marginBottom:10}}>🚜</div>
+            <div style={{fontWeight:700,color:"#374151"}}>{search||filterAff!=="tous"?"Aucun résultat":"Parc vide — ajoutez un engin"}</div>
+          </div>
+        ):(
+          <div style={{overflowX:"auto"}}>
+            <table style={{width:"100%",borderCollapse:"collapse",minWidth:800}}>
+              <thead><tr style={{background:"#111827"}}>
+                {["N°","Désignation","Marque / Modèle","Immat.","Affectation","Chauffeur","Année","Actions"].map(h=>(
+                  <th key={h} style={{padding:"10px 12px",textAlign:"left",fontSize:11,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:0.5,whiteSpace:"nowrap"}}>{h}</th>
+                ))}
+              </tr></thead>
+              <tbody>
+                {filtered.map((v,i)=>(
+                  <tr key={v.id} style={{borderBottom:"1px solid #f3f4f6",background:i%2===0?"#fff":"#fafafa"}}>
+                    <td style={{padding:"10px 12px",fontSize:12,fontFamily:"monospace",fontWeight:700,color:"#374151",whiteSpace:"nowrap"}}>{v.num||"—"}</td>
+                    <td style={{padding:"10px 12px"}}>
+                      <div style={{fontWeight:700,fontSize:13,color:"#111827"}}>{v.name}</div>
+                      {v.serie&&<div style={{fontSize:10,color:"#9ca3af",fontFamily:"monospace",marginTop:1}}>{v.serie}</div>}
+                    </td>
+                    <td style={{padding:"10px 12px",fontSize:12,color:"#374151"}}>{[v.marque,v.modele].filter(Boolean).join(" / ")||"—"}</td>
+                    <td style={{padding:"10px 12px",fontSize:12,fontFamily:"monospace",color:"#374151"}}>{v.immat||"—"}</td>
+                    <td style={{padding:"10px 12px"}}>
+                      {v.affectation?<span style={{background:"#dbeafe",color:"#1e40af",padding:"2px 8px",borderRadius:99,fontSize:11,fontWeight:700,whiteSpace:"nowrap"}}>{v.affectation}</span>:<span style={{color:"#d1d5db",fontSize:11}}>—</span>}
+                    </td>
+                    <td style={{padding:"10px 12px",fontSize:12,color:"#374151"}}>{v.chauffeur||"—"}</td>
+                    <td style={{padding:"10px 12px",fontSize:12,color:"#374151"}}>{v.annee||"—"}</td>
+                    <td style={{padding:"10px 12px"}}>
+                      {canEdit&&<div style={{display:"flex",gap:6}}>
+                        <button onClick={()=>openEdit(v)} style={{padding:"5px 10px",background:"#f3f4f6",border:"none",borderRadius:7,cursor:"pointer",fontSize:12}}>✏️</button>
+                        <button onClick={()=>handleDelete(v)} style={{padding:"5px 10px",background:"#fee2e2",border:"none",borderRadius:7,cursor:"pointer",fontSize:12,color:"#dc2626"}}>🗑</button>
+                      </div>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Modal ajout/modification */}
+      {showForm&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(2px)"}}>
+          <div style={{background:"#fff",borderRadius:20,padding:28,width:"min(96vw,560px)",maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+              <h2 style={{fontSize:17,fontWeight:800,color:"#111827",margin:0}}>{editItem?"✏️ Modifier l'engin":"➕ Nouvel engin"}</h2>
+              <button onClick={()=>setShowForm(false)} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:15}}>✕</button>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:12}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                {[{l:"N° parc",k:"num",ph:"Ex : CH 01"},{l:"Désignation *",k:"name",ph:"Nom complet de l'engin"}].map(f=>(
+                  <div key={f.k} style={{gridColumn:f.k==="name"?"1/3":"auto"}}>
+                    <label style={{fontSize:11,fontWeight:600,color:"#374151",display:"block",marginBottom:4}}>{f.l}</label>
+                    <input value={form[f.k]} onChange={e=>setForm(p=>({...p,[f.k]:e.target.value}))} placeholder={f.ph}
+                      style={{width:"100%",padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  </div>
+                ))}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                {[{l:"Marque",k:"marque",ph:"Ex : MATISA"},{l:"Modèle",k:"modele",ph:"Ex : B66"},{l:"Immatriculation",k:"immat",ph:"Ex : AB-123-CD"},{l:"Chauffeur",k:"chauffeur",ph:"Prénom NOM"},{l:"Année",k:"annee",ph:"Ex : 2018"},{l:"N° série",k:"serie",ph:"Numéro de série"}].map(f=>(
+                  <div key={f.k}>
+                    <label style={{fontSize:11,fontWeight:600,color:"#374151",display:"block",marginBottom:4}}>{f.l}</label>
+                    <input value={form[f.k]} onChange={e=>setForm(p=>({...p,[f.k]:e.target.value}))} placeholder={f.ph}
+                      style={{width:"100%",padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <label style={{fontSize:11,fontWeight:600,color:"#374151",display:"block",marginBottom:6}}>Affectation</label>
+                <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                  {["CLMTP","CLAISSE RAIL","STMF",""].map(a=>(
+                    <button key={a||"aucune"} onClick={()=>setForm(p=>({...p,affectation:a}))}
+                      style={{padding:"7px 14px",borderRadius:9,border:`2px solid ${form.affectation===a?"#111827":"#e5e7eb"}`,background:form.affectation===a?"#111827":"#fff",color:form.affectation===a?"#fff":"#374151",fontWeight:600,cursor:"pointer",fontSize:12}}>
+                      {a||"Non affecté"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{display:"flex",gap:10,marginTop:6}}>
+                <button onClick={()=>setShowForm(false)} style={{flex:1,padding:"11px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer"}}>Annuler</button>
+                <button onClick={handleSave} disabled={saving||!form.name.trim()}
+                  style={{flex:2,padding:"11px",background:form.name.trim()?"#111827":"#e5e7eb",color:form.name.trim()?"#fff":"#9ca3af",border:"none",borderRadius:10,fontWeight:700,cursor:form.name.trim()?"pointer":"not-allowed",fontSize:14}}>
+                  {saving?"⏳…":editItem?"💾 Modifier":"➕ Ajouter"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── CHANGER MOT DE PASSE ──────────────────────────────────────────────────────
 function ChangerMotDePasse({ user, onClose, onSuccess }) {
   const [actuel, setActuel] = useState("");
@@ -5373,6 +5543,7 @@ export default function App() {
   const [autoOpenNewArticle,setAutoOpenNewArticle]=useState(null); // pré-remplir form Stock
   const [locations,setLocations]=useState([]);
   const [prets,setPrets]=useState([]);
+  const [parcVehicules,setParcVehicules]=useState([]);
   const [showInstall, setShowInstall] = useState(false);
 
   // PWA Install prompt
@@ -5435,13 +5606,14 @@ export default function App() {
     if(!user) return;
     async function loadAll(){
       setLoading(true);
-      const [movs,stock,ords,eqs,prix,histPrix]=await Promise.all([
+      const [movs,stock,ords,eqs,prix,histPrix,parc]=await Promise.all([
         getMouvementsSite(siteId),
         getStockOverridesSite(siteId),
         getOrdresSite(siteId),
         getEquivalences(),
         getPrixFournisseurs(),
         getHistoriquePrix(),
+        getParcVehicules(),
       ]);
       setMouvements(movs);
       setStockOverrides(stock);
@@ -5449,6 +5621,7 @@ export default function App() {
       setEquivalences(eqs);
       setPrixFournisseurs(prix);
       setHistoriquePrix(histPrix);
+      setParcVehicules(parc);
       // Charger articles custom pour CLMTP SABLÉ
       if(siteId === "clmtp_sable") {
         const custom = await getCatalogue(siteId);
@@ -5493,7 +5666,8 @@ export default function App() {
     if(page==="mouvements") return <EntreesSorties mouvements={mouvements.filter(m=>!m.site_id||m.site_id===siteId)} setMouvements={setMouvements} stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} siteId={siteId} products={ALL_SITE_PRODUCTS} user={user} navigateTo={setPage} setAutoOpenNewArticle={setAutoOpenNewArticle}/>;
     if(page==="chantiers") return <Chantiers user={user} siteId={siteId} mouvements={mouvements}/>;
     if(page==="outillage") return <InventaireOutillage user={user} siteId={siteId}/>;
-    if(page==="ordres")    return <OrdresReparation ordres={ordres.filter(o=>!o.site_id||o.site_id===siteId)} setOrdres={setOrdres} mouvements={mouvements} setMouvements={setMouvements} stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} siteId={siteId} products={ALL_SITE_PRODUCTS} user={user} equivalences={equivalences}/>;
+    if(page==="ordres")    return <OrdresReparation ordres={ordres.filter(o=>!o.site_id||o.site_id===siteId)} setOrdres={setOrdres} mouvements={mouvements} setMouvements={setMouvements} stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} siteId={siteId} products={ALL_SITE_PRODUCTS} user={user} equivalences={equivalences} parc={parcVehicules}/>;
+    if(page==="parc")      return <GestionParc parc={parcVehicules} setParc={setParcVehicules} user={user}/>;
     if(page==="prix")      return <GestionPrix prixFournisseurs={prixFournisseurs} setPrixFournisseurs={setPrixFournisseurs} historiquePrix={historiquePrix} setHistoriquePrix={setHistoriquePrix} products={ALL_SITE_PRODUCTS}/>;
     if(page==="vue_eclatee") return <VueEclatee user={user} siteId={siteId}/>;
     if(page==="ref_filtres") return <ReferenceFiltres user={user}/>;
@@ -5502,8 +5676,8 @@ export default function App() {
     if(page==="utilisateurs") return <GestionUtilisateurs currentUser={user} siteId={siteId}/>;
     if(page==="scanner")   return <ScannerArticles products={ALL_SITE_PRODUCTS} stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} mouvements={mouvements} setMouvements={setMouvements} siteId={siteId}/>;
     if(page==="barcodes")  return <GenerateurCodebarres products={PRODUCTS} stockOverrides={stockOverrides}/>;
-    if(page==="location")  return <LocationMateriel locations={locations} setLocations={setLocations} siteId={siteId} products={ALL_SITE_PRODUCTS}/>;
-    if(page==="pret")      return <PretMateriel prets={prets} setPrets={setPrets} siteId={siteId} products={ALL_SITE_PRODUCTS}/>;
+    if(page==="location")  return <LocationMateriel locations={locations} setLocations={setLocations} siteId={siteId} products={ALL_SITE_PRODUCTS} parc={parcVehicules}/>;
+    if(page==="pret")      return <PretMateriel prets={prets} setPrets={setPrets} siteId={siteId} products={ALL_SITE_PRODUCTS} parc={parcVehicules}/>;
     if(page==="catalogue") return <GestionCatalogue siteId={siteId} catalogue={catalogue} setCatalogue={setCatalogue}/>;
     if(page==="admin")     return <AdminDashboard user={user} navigateTo={setPage}/>;
   };
