@@ -4778,9 +4778,14 @@ const NAV_SECTIONS = [
     id:"chantiers-section", label:"Chantiers", icon:"🏗️", defaultOpen:false,
     items:[
       { id:"chantiers",  label:"Chantiers",          icon:"🏗️", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
-      { id:"parc",       label:"Parc véhicules",     icon:"🚜", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
       { id:"location",   label:"Location matériel",  icon:"🔑", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur"], sites:["clmtp_sable","stmf"] },
       { id:"pret",       label:"Prêt matériels",     icon:"🤝", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur"], sites:["clmtp_sable","stmf"] },
+    ]
+  },
+  {
+    id:"parc-section", label:"Parc & Engins", icon:"🚛", defaultOpen:false,
+    items:[
+      { id:"parc", label:"Parc véhicules & engins", icon:"🚛", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
     ]
   },
   {
