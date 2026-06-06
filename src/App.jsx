@@ -2323,6 +2323,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
   const [elapsed,setElapsed]=useState(0);
   const [sessionOp,setSessionOp]=useState(false);
   const [chronoError,setChronoError]=useState("");
+  const [tarifsMap,setTarifsMap]=useState({});
   const [showManualForm,setShowManualForm]=useState(false);
   const [manualForm,setManualForm]=useState({
     date:new Date().toISOString().split("T")[0],
@@ -2335,12 +2336,17 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
 
   useEffect(()=>{
     setLoadingSessions(true);
-    supabase.from("or_temps_passe").select("*").eq("or_id",String(ordre.id||ordre.numero)).order("started_at",{ascending:false})
-      .then(({data,error})=>{
-        if(error) console.error("[chrono] fetch sessions:",error);
-        setSessions(data||[]);
-        setLoadingSessions(false);
-      });
+    Promise.all([
+      supabase.from("or_temps_passe").select("*").eq("or_id",String(ordre.id||ordre.numero)).order("started_at",{ascending:false}),
+      supabase.from("tarifs_techniciens").select("technicien,taux_horaire"),
+    ]).then(([{data:sessData,error:sessErr},{data:tarifData}])=>{
+      if(sessErr) console.error("[chrono] fetch sessions:",sessErr);
+      setSessions(sessData||[]);
+      const tm={};
+      (tarifData||[]).forEach(t=>{tm[t.technicien]=Number(t.taux_horaire);});
+      setTarifsMap(tm);
+      setLoadingSessions(false);
+    });
   },[]);
 
   const activeSession=sessions.find(s=>s.statut==="en_cours")||null;
@@ -2890,13 +2896,17 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
               {activeSession?(
                 <button onClick={pauseChronometer} disabled={sessionOp}
                   style={{padding:"10px 28px",background:"#fef3c7",color:"#92400e",border:"1px solid #fcd34d",borderRadius:10,fontWeight:700,cursor:sessionOp?"not-allowed":"pointer",fontSize:14}}>
-                  ⏸ Pause
+                  {sessionOp?"…":"⏸ Pause"}
                 </button>
-              ):(
-                <button onClick={startChronometer} disabled={sessionOp||ordre.statut==="termine"}
-                  style={{padding:"10px 28px",background:sessionOp||ordre.statut==="termine"?"#e5e7eb":"#111827",color:sessionOp||ordre.statut==="termine"?"#9ca3af":"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:sessionOp||ordre.statut==="termine"?"not-allowed":"pointer",fontSize:14}}>
-                  {sessionOp?"…":sessions.length>0?"▶ Reprendre":"▶ Démarrer"}
+              ):sessions.some(s=>s.statut==="pause")?(
+                <button onClick={startChronometer} disabled={sessionOp}
+                  style={{padding:"10px 28px",background:sessionOp?"#e5e7eb":"#111827",color:sessionOp?"#9ca3af":"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:sessionOp?"not-allowed":"pointer",fontSize:14}}>
+                  {sessionOp?"…":"▶ Reprendre"}
                 </button>
+              ):!activeSession&&(
+                <div style={{fontSize:12,color:"#9ca3af"}}>
+                  {ordre.statut==="termine"?"OR terminé — chrono arrêté":"Démarre automatiquement quand l'OR passe En cours"}
+                </div>
               )}
             </div>
             {activeSession&&<div style={{marginTop:10,fontSize:11,color:"#6b7280"}}>Démarré à {new Date(activeSession.started_at).toLocaleTimeString("fr-FR")}</div>}
@@ -3016,7 +3026,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                         <div style={{fontSize:12,color:"#6b7280",marginTop:2}}>
                           {isActive
                             ?<span style={{color:"#92400e",fontWeight:700}}>⏱ En cours…</span>
-                            :<><strong>{dur.toFixed(2)} h</strong>{s.ended_at&&<span style={{marginLeft:6}}>→ {new Date(s.ended_at).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</span>}</>}
+                            :<><strong>{dur.toFixed(2)} h</strong>{s.ended_at&&<span style={{marginLeft:6}}>→ {new Date(s.ended_at).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</span>}{tarifsMap[s.technicien]&&dur>0&&<span style={{marginLeft:8,color:"#059669",fontWeight:700}}>= {(dur*tarifsMap[s.technicien]).toFixed(2)} €</span>}</>}
                         </div>
                         {s.description&&<div style={{fontSize:11,color:"#9ca3af",marginTop:1}}>{s.description}</div>}
                       </div>
@@ -3025,8 +3035,16 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                     </div>
                   );
                 })}
-                <div style={{fontSize:13,fontWeight:700,color:"#111827",textAlign:"right",paddingTop:8,borderTop:"1px solid #e5e7eb"}}>
-                  Total : {sessions.reduce((a,s)=>a+(s.statut==="en_cours"?elapsed/3600:Number(s.duree_heures)||0),0).toFixed(2)} h
+                <div style={{fontSize:13,fontWeight:700,color:"#111827",textAlign:"right",paddingTop:8,borderTop:"1px solid #e5e7eb",display:"flex",justifyContent:"flex-end",gap:16,flexWrap:"wrap"}}>
+                  <span>Total : {sessions.reduce((a,s)=>a+(s.statut==="en_cours"?elapsed/3600:Number(s.duree_heures)||0),0).toFixed(2)} h</span>
+                  {sessions.some(s=>tarifsMap[s.technicien])&&(
+                    <span style={{color:"#059669"}}>
+                      = {sessions.reduce((a,s)=>{
+                        const dur=s.statut==="en_cours"?elapsed/3600:Number(s.duree_heures)||0;
+                        return a+dur*(tarifsMap[s.technicien]||0);
+                      },0).toFixed(2)} €
+                    </span>
+                  )}
                 </div>
               </div>
             )}
@@ -4746,45 +4764,46 @@ function ShowPasswordBtn({ pwd }) {
 
 function GestionUtilisateurs({ currentUser, siteId }) {
   const [users,setUsers]=useState([]);
+  const [tarifs,setTarifs]=useState({}); // { "Prénom NOM": taux_horaire }
   const [loading,setLoading]=useState(true);
   const [showForm,setShowForm]=useState(false);
   const [showPerms,setShowPerms]=useState(null); // utilisateur dont on édite les perms
   const [editUser,setEditUser]=useState(null);
   const [saving,setSaving]=useState(false);
   const [showPwd,setShowPwd]=useState(false);
-  const [form,setForm]=useState({nom:"",prenom:"",email:"",motDePasse:"",role:"technicien",site:siteId});
+  const [form,setForm]=useState({nom:"",prenom:"",email:"",motDePasse:"",role:"technicien",site:siteId,tauxHoraire:""});
   const [customPerms,setCustomPerms]=useState([]);
 
   const site = SITES[siteId] || SITES.clmtp_sable;
 
   useEffect(()=>{
-    // Admin voit tous les utilisateurs de tous les sites
-    getUtilisateurs().then(async data=>{
-      // Charger les permissions depuis la table user_permissions
-      const { data: permsData } = await supabase
-        .from('user_permissions')
-        .select('user_id, modules');
-      const permsMap = {};
-      (permsData||[]).forEach(p => { permsMap[p.user_id] = p.modules; });
-      // Fusionner permissions avec utilisateurs
-      const usersWithPerms = data.map(u => ({
-        ...u,
-        permissions: permsMap[u.id] || u.permissions || null
-      }));
+    Promise.all([
+      getUtilisateurs(),
+      supabase.from('user_permissions').select('user_id, modules'),
+      supabase.from('tarifs_techniciens').select('technicien, taux_horaire'),
+    ]).then(([data, {data:permsData}, {data:tarifsData}])=>{
+      const permsMap={};
+      (permsData||[]).forEach(p=>{permsMap[p.user_id]=p.modules;});
+      const usersWithPerms=data.map(u=>({...u,permissions:permsMap[u.id]||u.permissions||null}));
       setUsers(usersWithPerms);
+      const tm={};
+      (tarifsData||[]).forEach(t=>{tm[t.technicien]=t.taux_horaire;});
+      setTarifs(tm);
       setLoading(false);
     });
   },[]);
 
   const openAdd = () => {
     setEditUser(null);
-    setForm({nom:"",prenom:"",email:"",motDePasse:"",role:"technicien",site:siteId});
+    setForm({nom:"",prenom:"",email:"",motDePasse:"",role:"technicien",site:siteId,tauxHoraire:""});
     setShowForm(true);
   };
 
   const openEdit = u => {
     setEditUser(u);
-    setForm({nom:u.nom,prenom:u.prenom,email:u.email,motDePasse:"",role:u.role,site:u.site_id||siteId});
+    const fullName=`${u.prenom} ${u.nom}`;
+    setForm({nom:u.nom,prenom:u.prenom,email:u.email,motDePasse:"",role:u.role,site:u.site_id||siteId,
+      tauxHoraire:tarifs[fullName]!==undefined?String(tarifs[fullName]):""});
     setShowForm(true);
   };
 
@@ -4861,6 +4880,13 @@ function GestionUtilisateurs({ currentUser, siteId }) {
       const saved = await createUtilisateurSite(form, form.site);
       if(saved) setUsers(prev=>[saved,...prev]);
     }
+    const fullName=`${form.prenom} ${form.nom}`;
+    if(form.tauxHoraire!==""&&!isNaN(parseFloat(form.tauxHoraire))){
+      const taux=parseFloat(form.tauxHoraire);
+      await supabase.from('tarifs_techniciens')
+        .upsert([{technicien:fullName,taux_horaire:taux,updated_at:new Date().toISOString()}],{onConflict:'technicien'});
+      setTarifs(prev=>({...prev,[fullName]:taux}));
+    }
     setShowForm(false); setSaving(false);
   };
 
@@ -4913,7 +4939,7 @@ function GestionUtilisateurs({ currentUser, siteId }) {
         ) : (
           <table style={{width:"100%",borderCollapse:"collapse"}}>
             <thead><tr style={{background:"#111827"}}>
-              {["Utilisateur","Email","Site","Rôle","Accès","Statut","Dernière connexion","Actions"].map(h=>(
+              {["Utilisateur","Email","Site","Rôle","Accès","Taux horaire","Statut","Dernière connexion","Actions"].map(h=>(
                 <th key={h} style={{padding:"11px 14px",textAlign:"left",fontSize:11,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:0.5,whiteSpace:"nowrap"}}>{h}</th>
               ))}
             </tr></thead>
@@ -4948,6 +4974,13 @@ function GestionUtilisateurs({ currentUser, siteId }) {
                         🔑 {u.role==="admin"?"Tous":`${nbAcces} module${nbAcces>1?"s":""}`}
                         {hasCustomPerms&&<span style={{background:"#7c3aed",color:"#fff",fontSize:9,padding:"1px 5px",borderRadius:99}}>Perso</span>}
                       </button>
+                    </td>
+                    <td style={{padding:"12px 14px"}}>
+                      {(()=>{const fn=`${u.prenom} ${u.nom}`;const t=tarifs[fn];
+                        return t!==undefined
+                          ?<span style={{background:"#dbeafe",color:"#1e40af",padding:"3px 10px",borderRadius:99,fontSize:11,fontWeight:700,whiteSpace:"nowrap"}}>{Number(t).toFixed(2)} €/h</span>
+                          :<span style={{background:"#fff7ed",color:"#d97706",padding:"3px 10px",borderRadius:99,fontSize:11,fontWeight:600,whiteSpace:"nowrap"}}>Tarif non défini</span>;
+                      })()}
                     </td>
                     <td style={{padding:"12px 14px"}}>
                       <span style={{background:u.actif?"#d1fae5":"#f3f4f6",color:u.actif?"#065f46":"#9ca3af",padding:"3px 10px",borderRadius:99,fontSize:11,fontWeight:700}}>
@@ -5077,6 +5110,14 @@ function GestionUtilisateurs({ currentUser, siteId }) {
                     </button>
                   ))}
                 </div>
+              </div>
+              <div>
+                <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Taux horaire (€/h)</label>
+                <input type="number" min="0" step="0.5" value={form.tauxHoraire}
+                  onChange={e=>setForm(p=>({...p,tauxHoraire:e.target.value}))}
+                  placeholder="Ex : 35.00"
+                  style={{width:"100%",padding:"10px 13px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                <div style={{fontSize:11,color:"#9ca3af",marginTop:4}}>Utilisé pour calculer le coût des sessions de travail dans les ORs</div>
               </div>
               <div style={{padding:"10px 14px",background:"#f9fafb",borderRadius:10,fontSize:12,color:"#6b7280"}}>
                 <strong>Accès par défaut :</strong> {form.role==="admin"?"Tous les modules":
