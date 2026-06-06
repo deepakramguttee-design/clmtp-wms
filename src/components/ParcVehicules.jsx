@@ -83,6 +83,18 @@ const CATEGORIES = [
     }
   },
   {
+    id: "pm",
+    label: "🔧 PM - Petit Matériel",
+    shortLabel: "PM",
+    match: v => {
+      const p = pfx(v), n = nom(v);
+      return p === "PM" || n.includes("COMPRESSEUR") || n.includes("GROUPE") ||
+             n.includes("POMPE") || n.includes("GENERATRICE") || n.includes("GÉNÉRATRICE") ||
+             n.includes("MOTOPOMPE") || n.includes("VIBREUR") || n.includes("AIGUILLE") ||
+             n.includes("MARTEAU") || n.includes("PERFORATEUR");
+    }
+  },
+  {
     id: "tous",
     label: "📋 Tous",
     shortLabel: "Tous",
