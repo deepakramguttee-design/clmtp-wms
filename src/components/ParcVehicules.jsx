@@ -39,11 +39,13 @@ const CATEGORIES = [
     shortLabel: "PRR",
     match: v => {
       const n = nom(v);
-      return n.includes("PRR")     || n.includes("PORTIQUE") || n.includes("RAIL")    ||
-             n.includes("VOIE")    || n.includes("LORRY")    || n.includes("ROBEL")   ||
-             n.includes("GEISMAR") || n.includes("PANDROL")  || n.includes("ROTAMP")  ||
-             n.includes("ROCLIP")  || n.includes("ROLIFT")   || n.includes("CEMBRE")  ||
-             n.includes("TRACTEL") || n.includes("HOSALC");
+      return n.includes("PRR")              || n.includes("PORTIQUE")        || n.includes("TRONCONNEUSE A RAIL") ||
+             n.includes("PORTIQUE A RAIL")  || n.includes("LEVE RAIL")       || n.includes("DAME VOIE")          ||
+             n.includes("COMPACTEUR VOIE")  || n.includes("BOURREUSE")       || n.includes("BOURROIR")           ||
+             n.includes("REGALEUSE")        || n.includes("VOIE")            || n.includes("LORRY")              ||
+             n.includes("ROBEL")            || n.includes("GEISMAR")         || n.includes("PANDROL")            ||
+             n.includes("ROTAMP")           || n.includes("ROCLIP")          || n.includes("ROLIFT")             ||
+             n.includes("CEMBRE")           || n.includes("TRACTEL")         || n.includes("HOSALC");
     }
   },
   {
@@ -102,11 +104,11 @@ const CATEGORIES = [
       const n = (v.name||"").toUpperCase() + " " + (v.marque||"").toUpperCase();
       if (p === "PM") return true;
       const kw = [
-        "ROBEL","GEISMAR","LORRY","PANDROL","ROTAMP","CRIC","VISEUR","BOOSTER",
+        "ROBEL","GEISMAR","PANDROL","ROTAMP","CRIC","VISEUR","BOOSTER",
         "MILWAUKEE","CHENILLARD","COMPRESSEUR","BOULONNEUSE","STIHL","DECALAMINEUSE",
         "MEULEUSE","ECLAIRAGE","ENFONCE PIEUX","FRAPPEUR","GROUPE ELECTROGENE",
         "GROUPE DE BOURRAGE","GROUPE DE LIBE","GROUPE DE LIBERATION","BIPALE",
-        "CONNEXION","LEVE RAIL","MAT ECLAIRAGE","POMPE A GRAISSE","POMPE HYDRAULIQUE",
+        "CONNEXION","MAT ECLAIRAGE","POMPE A GRAISSE","POMPE HYDRAULIQUE",
         "PILONNEUSE","CEMBRE","PLAQUE VIBRANTE","PERCEUSE","VISSEUSE","RABOT",
       ];
       return kw.some(k => n.includes(k));
