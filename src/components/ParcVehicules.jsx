@@ -92,17 +92,18 @@ const CATEGORIES = [
     label: "🔧 PM - Petit Matériel",
     shortLabel: "PM",
     match: v => {
-      const p = pfx(v), n = nom(v);
-      return p === "PM"               ||
-             n.includes("COMPRESSEUR")|| n.includes("GROUPE")       || n.includes("POMPE")       ||
-             n.includes("GENERATRICE")|| n.includes("GÉNÉRATRICE")  || n.includes("GENERATEUR")  ||
-             n.includes("MOTOPOMPE")  || n.includes("VIBREUR")      || n.includes("AIGUILLE")    ||
-             n.includes("MARTEAU")    || n.includes("PERFORATEUR")  || n.includes("BOULONNEUSE") ||
-             n.includes("MEULEUSE")   || n.includes("PERCEUSE")     || n.includes("VISSEUSE")    ||
-             n.includes("TRONCONNEUSE")||n.includes("TRONÇONNEUSE") || n.includes("SOUFFLEUR")   ||
-             n.includes("SCIE ")      || n.includes("GERBEUR")      || n.includes("SDMO")        ||
-             n.includes("STIHL")      || n.includes("MAKITA")       || n.includes("HILTI")       ||
-             n.includes("BOSCH");
+      const p = pfx(v);
+      const n = (v.name||"").toUpperCase() + " " + (v.marque||"").toUpperCase();
+      if (p === "PM") return true;
+      const kw = [
+        "ROBEL","GEISMAR","LORRY","PANDROL","ROTAMP","CRIC","VISEUR","BOOSTER",
+        "MILWAUKEE","CHENILLARD","COMPRESSEUR","BOULONNEUSE","STIHL","DECALAMINEUSE",
+        "MEULEUSE","ECLAIRAGE","ENFONCE PIEUX","FRAPPEUR","GROUPE ELECTROGENE",
+        "GROUPE DE BOURRAGE","GROUPE DE LIBE","GROUPE DE LIBERATION","BIPALE",
+        "CONNEXION","LEVE RAIL","MAT ECLAIRAGE","POMPE A GRAISSE","POMPE HYDRAULIQUE",
+        "PILONNEUSE","CEMBRE","PLAQUE VIBRANTE","PERCEUSE","VISSEUSE","RABOT",
+      ];
+      return kw.some(k => n.includes(k));
     }
   },
   {
