@@ -2351,13 +2351,20 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
 
   const activeSession=sessions.find(s=>s.statut==="en_cours")||null;
 
+  const orClos=ordre.statut==="termine"||ordre.statut==="annule";
+
   useEffect(()=>{
-    if(!activeSession){setElapsed(0);return;}
+    if(!activeSession||orClos){setElapsed(0);return;}
     const tick=()=>setElapsed(Math.floor((Date.now()-new Date(activeSession.started_at))/1000));
     tick();
     const id=setInterval(tick,1000);
     return ()=>clearInterval(id);
-  },[activeSession?.id]);
+  },[activeSession?.id,orClos]);
+
+  useEffect(()=>{
+    if(!orClos) return;
+    endCurrentSession();
+  },[orClos]);
 
   const fmtElapsed=s=>{const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;};
 
@@ -2839,18 +2846,71 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
             </div>
           </div>
 
+          {(()=>{
+            const sessTerminees=sessions.filter(s=>s.statut!=="en_cours"&&Number(s.duree_heures)>0);
+            if(sessTerminees.length===0) return null;
+            const totalMO=sessTerminees.reduce((a,s)=>a+Number(s.duree_heures)*(tarifsMap[s.technicien]||0),0);
+            return(
+              <div>
+                <h3 style={{fontWeight:800,fontSize:15,color:"#111827",margin:"0 0 10px"}}>👷 Main d'œuvre</h3>
+                <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                  {sessTerminees.map(s=>{
+                    const dur=Number(s.duree_heures)||0;
+                    const taux=tarifsMap[s.technicien];
+                    const cout=taux!=null?dur*taux:null;
+                    return(
+                      <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",background:"#f9fafb",borderRadius:9,border:"1px solid #e5e7eb",fontSize:13}}>
+                        <div>
+                          <strong style={{color:"#111827"}}>{s.technicien||"—"}</strong>
+                          <span style={{color:"#6b7280",marginLeft:6}}>{dur.toFixed(2)} h</span>
+                          {taux!=null&&<span style={{color:"#6b7280",marginLeft:4}}>× {Number(taux).toFixed(2)} €/h</span>}
+                        </div>
+                        {cout!=null
+                          ?<span style={{fontWeight:700,color:"#111827"}}>{cout.toFixed(2)} €</span>
+                          :<span style={{color:"#9ca3af",fontSize:11}}>tarif non défini</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+                {totalMO>0&&(
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:13,fontWeight:700,color:"#374151",marginTop:8,padding:"6px 12px",background:"#f1f5f9",borderRadius:8}}>
+                    <span>Total MO</span><span>{totalMO.toFixed(2)} €</span>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
           <div>
             <h3 style={{fontWeight:800,fontSize:15,color:"#111827",margin:"0 0 8px"}}>📝 Notes technicien</h3>
             <textarea value={note} onChange={e=>setNote(e.target.value)} rows={3} placeholder="Observations, travaux effectués…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box",fontFamily:"inherit"}}/>
             <button onClick={()=>onUpdate({...ordre,notes:note})} style={{marginTop:7,padding:"7px 16px",background:"#f3f4f6",border:"none",borderRadius:8,cursor:"pointer",fontWeight:600,fontSize:13}}>💾 Sauvegarder</button>
           </div>
 
-          {totalCout>0&&(
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 16px",background:"#f8fafc",borderRadius:12,border:"1px solid #e2e8f0"}}>
-              <div style={{fontSize:13,color:"#374151",fontWeight:600}}>💶 Coût total de l'OR</div>
-              <div style={{fontSize:20,fontWeight:900,color:"#111827"}}>{totalCout.toFixed(2)} €</div>
-            </div>
-          )}
+          {(()=>{
+            const sessTerminees=sessions.filter(s=>s.statut!=="en_cours"&&Number(s.duree_heures)>0);
+            const totalMO=sessTerminees.reduce((a,s)=>a+Number(s.duree_heures)*(tarifsMap[s.technicien]||0),0);
+            const totalOR=totalCout+totalMO;
+            if(totalOR<=0) return null;
+            return(
+              <div style={{background:"#f8fafc",borderRadius:12,border:"1px solid #e2e8f0",padding:"12px 16px",display:"flex",flexDirection:"column",gap:6}}>
+                {totalCout>0&&(
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:"#6b7280"}}>
+                    <span>🔩 Total Pièces</span><span>{totalCout.toFixed(2)} €</span>
+                  </div>
+                )}
+                {totalMO>0&&(
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:"#6b7280"}}>
+                    <span>👷 Total MO</span><span>{totalMO.toFixed(2)} €</span>
+                  </div>
+                )}
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:6,borderTop:"1px solid #e2e8f0",marginTop:2}}>
+                  <div style={{fontSize:14,color:"#374151",fontWeight:700}}>💶 TOTAL OR</div>
+                  <div style={{fontSize:22,fontWeight:900,color:"#111827"}}>{totalOR.toFixed(2)} €</div>
+                </div>
+              </div>
+            );
+          })()}
 
           <div style={{display:"flex",gap:8,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid #e5e7eb"}}>
             <div style={{fontSize:13,fontWeight:600,color:"#374151",alignSelf:"center"}}>Statut :</div>
@@ -2887,31 +2947,45 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
         <div style={{padding:"22px 26px",display:tabFiche==="temps"?"flex":"none",flexDirection:"column",gap:20}}>
 
           {/* ── Chronomètre ── */}
-          <div style={{textAlign:"center",padding:"28px 0",background:"#f9fafb",borderRadius:16,border:`2px solid ${activeSession?"#fcd34d":"#e5e7eb"}`}}>
-            <div style={{fontSize:11,color:"#6b7280",fontWeight:600,marginBottom:8,letterSpacing:"0.08em"}}>TEMPS EN COURS</div>
-            <div style={{fontFamily:"monospace",fontSize:52,fontWeight:900,color:activeSession?"#111827":"#d1d5db",letterSpacing:"0.04em",lineHeight:1}}>
-              {fmtElapsed(elapsed)}
-            </div>
-            <div style={{marginTop:18,display:"flex",gap:10,justifyContent:"center"}}>
-              {activeSession?(
-                <button onClick={pauseChronometer} disabled={sessionOp}
-                  style={{padding:"10px 28px",background:"#fef3c7",color:"#92400e",border:"1px solid #fcd34d",borderRadius:10,fontWeight:700,cursor:sessionOp?"not-allowed":"pointer",fontSize:14}}>
-                  {sessionOp?"…":"⏸ Pause"}
-                </button>
-              ):sessions.some(s=>s.statut==="pause")?(
-                <button onClick={startChronometer} disabled={sessionOp}
-                  style={{padding:"10px 28px",background:sessionOp?"#e5e7eb":"#111827",color:sessionOp?"#9ca3af":"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:sessionOp?"not-allowed":"pointer",fontSize:14}}>
-                  {sessionOp?"…":"▶ Reprendre"}
-                </button>
-              ):!activeSession&&(
-                <div style={{fontSize:12,color:"#9ca3af"}}>
-                  {ordre.statut==="termine"?"OR terminé — chrono arrêté":"Démarre automatiquement quand l'OR passe En cours"}
+          {(()=>{
+            const totalH=sessions.reduce((a,s)=>a+(Number(s.duree_heures)||0),0);
+            const totalCout=sessions.reduce((a,s)=>a+(Number(s.duree_heures)||0)*(tarifsMap[s.technicien]||0),0);
+            if(orClos) return(
+              <div style={{textAlign:"center",padding:"28px 0",background:"#f0fdf4",borderRadius:16,border:"2px solid #bbf7d0"}}>
+                <div style={{fontSize:11,color:"#065f46",fontWeight:600,marginBottom:8,letterSpacing:"0.08em"}}>OR CLÔTURÉ</div>
+                <div style={{fontFamily:"monospace",fontSize:40,fontWeight:900,color:"#059669",letterSpacing:"0.04em",lineHeight:1}}>
+                  {totalH.toFixed(2)} h
                 </div>
-              )}
-            </div>
-            {activeSession&&<div style={{marginTop:10,fontSize:11,color:"#6b7280"}}>Démarré à {new Date(activeSession.started_at).toLocaleTimeString("fr-FR")}</div>}
-            {chronoError&&<div style={{marginTop:10,fontSize:12,color:"#dc2626",padding:"6px 12px",background:"#fef2f2",borderRadius:8,display:"inline-block"}}>{chronoError}</div>}
-          </div>
+                {totalCout>0&&<div style={{marginTop:8,fontSize:16,fontWeight:800,color:"#065f46"}}>{totalCout.toFixed(2)} €</div>}
+                <div style={{marginTop:10,fontSize:12,color:"#6b7280"}}>{sessions.length} session{sessions.length>1?"s":""} · {ordre.statut==="annule"?"Annulé":"Terminé"}</div>
+              </div>
+            );
+            return(
+              <div style={{textAlign:"center",padding:"28px 0",background:"#f9fafb",borderRadius:16,border:`2px solid ${activeSession?"#fcd34d":"#e5e7eb"}`}}>
+                <div style={{fontSize:11,color:"#6b7280",fontWeight:600,marginBottom:8,letterSpacing:"0.08em"}}>TEMPS EN COURS</div>
+                <div style={{fontFamily:"monospace",fontSize:52,fontWeight:900,color:activeSession?"#111827":"#d1d5db",letterSpacing:"0.04em",lineHeight:1}}>
+                  {fmtElapsed(elapsed)}
+                </div>
+                <div style={{marginTop:18,display:"flex",gap:10,justifyContent:"center"}}>
+                  {activeSession?(
+                    <button onClick={pauseChronometer} disabled={sessionOp}
+                      style={{padding:"10px 28px",background:"#fef3c7",color:"#92400e",border:"1px solid #fcd34d",borderRadius:10,fontWeight:700,cursor:sessionOp?"not-allowed":"pointer",fontSize:14}}>
+                      {sessionOp?"…":"⏸ Pause"}
+                    </button>
+                  ):sessions.some(s=>s.statut==="pause")?(
+                    <button onClick={startChronometer} disabled={sessionOp}
+                      style={{padding:"10px 28px",background:sessionOp?"#e5e7eb":"#111827",color:sessionOp?"#9ca3af":"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:sessionOp?"not-allowed":"pointer",fontSize:14}}>
+                      {sessionOp?"…":"▶ Reprendre"}
+                    </button>
+                  ):(
+                    <div style={{fontSize:12,color:"#9ca3af"}}>Démarre automatiquement quand l'OR passe En cours</div>
+                  )}
+                </div>
+                {activeSession&&<div style={{marginTop:10,fontSize:11,color:"#6b7280"}}>Démarré à {new Date(activeSession.started_at).toLocaleTimeString("fr-FR")}</div>}
+                {chronoError&&<div style={{marginTop:10,fontSize:12,color:"#dc2626",padding:"6px 12px",background:"#fef2f2",borderRadius:8,display:"inline-block"}}>{chronoError}</div>}
+              </div>
+            );
+          })()}
 
           {/* ── Ajout manuel ── */}
           <div>
