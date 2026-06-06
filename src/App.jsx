@@ -2590,6 +2590,76 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
   const allSorties=ordre.pieces.length>0&&ordre.pieces.every(p=>p.sortie);
   const totalCout=ordre.pieces.reduce((a,p)=>a+(p.prix||0)*p.qte,0);
 
+  const _fileName=(ext)=>{
+    const d=new Date().toLocaleDateString("fr-FR").replace(/\//g,"-");
+    const im=(ordre.immat||"").replace(/[^a-zA-Z0-9]/g,"_")||"SANSIMMAT";
+    return `OR_${ordre.numero}_${im}_${d}.${ext}`;
+  };
+
+  const exportFichePDF=async()=>{
+    const [{default:jsPDF},{default:autoTable}]=await Promise.all([import("jspdf"),import("jspdf-autotable")]);
+    const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+    const now=new Date();
+    const dateStr=now.toLocaleDateString("fr-FR");
+    let logoData=null;
+    try{const r=await fetch("/icon-192.png");const b=await r.blob();logoData=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b);});}catch(_){}
+    if(logoData) doc.addImage(logoData,"PNG",14,10,18,18);
+    const tx=logoData?36:14;
+    doc.setFont("helvetica","bold");doc.setFontSize(18);doc.setTextColor(17,24,39);doc.text("CLMTP SABLÉ",tx,17);
+    doc.setFont("helvetica","normal");doc.setFontSize(10);doc.setTextColor(75,85,99);doc.text("Ordre de Réparation",tx,23);
+    doc.setFont("helvetica","bold");doc.setFontSize(26);doc.setTextColor(17,24,39);doc.text(ordre.numero,196,17,{align:"right"});
+    doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(107,114,128);doc.text(`Généré le ${dateStr} à ${now.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}`,196,24,{align:"right"});
+    doc.setDrawColor(229,231,235);doc.line(14,32,196,32);
+    let y=38;
+    const infos=[["Machine",ordre.machine||"—"],["Immatriculation",ordre.immat||"—"],["Technicien",ordre.technicien||"—"],["Statut",OR_STATUTS[ordre.statut]?.label||ordre.statut],["Priorité",ordre.priorite?ordre.priorite.charAt(0).toUpperCase()+ordre.priorite.slice(1):"—"],["Ouvert le",new Date(ordre.dateOuverture).toLocaleDateString("fr-FR")],...(ordre.dateCloture?[["Clôturé le",new Date(ordre.dateCloture).toLocaleDateString("fr-FR")]]:[])]
+    const half=Math.ceil(infos.length/2);
+    const drawCol=(items,x)=>{let cy=y;items.forEach(([l,v])=>{doc.setFont("helvetica","normal");doc.setFontSize(7);doc.setTextColor(107,114,128);doc.text(l,x,cy);doc.setFont("helvetica","bold");doc.setFontSize(10);doc.setTextColor(17,24,39);doc.text(String(v),x,cy+5);cy+=13;});return cy;};
+    y=Math.max(drawCol(infos.slice(0,half),14),drawCol(infos.slice(half),110))+4;
+    if(ordre.typePanne){doc.setFont("helvetica","bold");doc.setFontSize(11);doc.setTextColor(17,24,39);doc.text("Type de panne",14,y);y+=5;doc.setFont("helvetica","normal");doc.setFontSize(10);doc.setTextColor(55,65,81);doc.text(ordre.typePanne,14,y);y+=8;}
+    if(ordre.description){doc.setFont("helvetica","bold");doc.setFontSize(11);doc.setTextColor(17,24,39);doc.text("Description",14,y);y+=5;doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(75,85,99);const ls=doc.splitTextToSize(ordre.description,180);doc.text(ls,14,y);y+=ls.length*5+6;}
+    if(ordre.pieces.length>0){doc.setFont("helvetica","bold");doc.setFontSize(11);doc.setTextColor(17,24,39);doc.text("Pièces nécessaires",14,y);y+=2;autoTable(doc,{head:[["Désignation","Réf.","Fournisseur","Qté","Prix unit.","Total"]],body:ordre.pieces.map(p=>[p.name||"—",p.id||"—",p.fournisseur||"—",p.qte||1,p.prix>0?p.prix.toFixed(2)+" €":"—",p.prix>0?((p.prix||0)*(p.qte||1)).toFixed(2)+" €":"—"]),startY:y,styles:{fontSize:8,cellPadding:2},headStyles:{fillColor:[17,24,39],textColor:255,fontStyle:"bold",fontSize:8},alternateRowStyles:{fillColor:[249,250,251]},columnStyles:{0:{cellWidth:55},1:{cellWidth:28},2:{cellWidth:28},3:{cellWidth:12,halign:"center"},4:{cellWidth:22,halign:"right"},5:{cellWidth:22,halign:"right"}},margin:{left:14,right:14}});y=doc.lastAutoTable.finalY+2;if(totalCout>0){doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(17,24,39);doc.text(`Total Pièces : ${totalCout.toFixed(2)} €`,196,y,{align:"right"});y+=6;}}
+    const sessTerminees=sessions.filter(s=>s.statut!=="en_cours"&&Number(s.duree_heures)>0);
+    const totalMO=sessTerminees.reduce((a,s)=>a+Number(s.duree_heures)*(tarifsMap[s.technicien]||0),0);
+    if(sessTerminees.length>0){if(y>230){doc.addPage();y=20;}doc.setFont("helvetica","bold");doc.setFontSize(11);doc.setTextColor(17,24,39);doc.text("Main d'œuvre",14,y);y+=2;autoTable(doc,{head:[["Technicien","Date","Durée (h)","Taux (€/h)","Coût (€)"]],body:sessTerminees.map(s=>{const dur=Number(s.duree_heures)||0;const taux=tarifsMap[s.technicien];return[s.technicien||"—",s.started_at?new Date(s.started_at).toLocaleDateString("fr-FR"):"—",dur.toFixed(2),taux!=null?Number(taux).toFixed(2):"Non défini",taux!=null?(dur*taux).toFixed(2):"—"];}),startY:y,styles:{fontSize:8,cellPadding:2},headStyles:{fillColor:[17,24,39],textColor:255,fontStyle:"bold",fontSize:8},alternateRowStyles:{fillColor:[249,250,251]},columnStyles:{2:{halign:"right"},3:{halign:"right"},4:{halign:"right"}},margin:{left:14,right:14}});y=doc.lastAutoTable.finalY+2;if(totalMO>0){doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(17,24,39);doc.text(`Total MO : ${totalMO.toFixed(2)} €`,196,y,{align:"right"});y+=6;}}
+    const totalOR=totalCout+totalMO;
+    if(totalOR>0){if(y>252){doc.addPage();y=20;}doc.setFillColor(17,24,39);doc.roundedRect(14,y,182,13,2,2,"F");doc.setFont("helvetica","bold");doc.setFontSize(12);doc.setTextColor(255,255,255);doc.text("TOTAL OR",20,y+8.5);doc.text(`${totalOR.toFixed(2)} €`,190,y+8.5,{align:"right"});y+=19;}
+    if(ordre.notes){if(y>240){doc.addPage();y=20;}doc.setFont("helvetica","bold");doc.setFontSize(11);doc.setTextColor(17,24,39);doc.text("Notes technicien",14,y);y+=5;doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(75,85,99);const ls=doc.splitTextToSize(ordre.notes,180);doc.text(ls,14,y);}
+    const pages=doc.getNumberOfPages();
+    for(let i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(7);doc.setTextColor(156,163,175);doc.text(`Page ${i}/${pages} — CLMTP Sablé — LogiWMS — ${ordre.numero}`,105,292,{align:"center"});}
+    doc.save(_fileName("pdf"));
+  };
+
+  const exportFicheExcel=async()=>{
+    const XLSX=await import("xlsx");
+    const sessTerminees=sessions.filter(s=>s.statut!=="en_cours"&&Number(s.duree_heures)>0);
+    const totalMO=sessTerminees.reduce((a,s)=>a+Number(s.duree_heures)*(tarifsMap[s.technicien]||0),0);
+    const totalOR=totalCout+totalMO;
+    const rows=[
+      ["ORDRE DE RÉPARATION",ordre.numero],[],
+      ["INFORMATIONS GÉNÉRALES"],[
+        "Numéro OR","Machine","Immatriculation","Type de panne","Technicien","Statut","Priorité","Ouvert le",...(ordre.dateCloture?["Clôturé le"]:[])
+      ],[
+        ordre.numero,ordre.machine||"—",ordre.immat||"—",ordre.typePanne||"—",ordre.technicien||"—",OR_STATUTS[ordre.statut]?.label||ordre.statut,ordre.priorite||"—",new Date(ordre.dateOuverture).toLocaleDateString("fr-FR"),...(ordre.dateCloture?[new Date(ordre.dateCloture).toLocaleDateString("fr-FR")]:[])
+      ],
+      ["Description",ordre.description||""],["Notes",ordre.notes||""],[],
+      ["PIÈCES NÉCESSAIRES"],
+      ["Désignation","Référence","Fournisseur","Qté","Prix unit. (€)","Total (€)"],
+      ...ordre.pieces.map(p=>[p.name||"—",p.id||"—",p.fournisseur||"—",p.qte||1,p.prix||0,((p.prix||0)*(p.qte||1))]),
+      ["","","","","Total Pièces (€)",totalCout],[],
+      ["MAIN D'ŒUVRE"],
+      ["Technicien","Date","Durée (h)","Taux (€/h)","Coût (€)"],
+      ...sessTerminees.map(s=>{const dur=Number(s.duree_heures)||0;const taux=tarifsMap[s.technicien];return[s.technicien||"—",s.started_at?new Date(s.started_at).toLocaleDateString("fr-FR"):"—",dur,taux!=null?Number(taux):"",taux!=null?dur*taux:""];}),
+      ["","","","Total MO (€)",totalMO],[],
+      ["RÉCAPITULATIF"],
+      ["Total Pièces (€)",totalCout],["Total Main d'œuvre (€)",totalMO],["TOTAL OR (€)",totalOR],
+    ];
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws["!cols"]=[{wch:32},{wch:24},{wch:18},{wch:10},{wch:16},{wch:16}];
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,"OR "+ordre.numero);
+    XLSX.writeFile(wb,_fileName("xlsx"));
+  };
+
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(2px)"}}>
       <div style={{background:"#fff",borderRadius:20,width:"min(98vw,760px)",maxHeight:"92vh",overflowY:"auto",boxShadow:"0 24px 64px rgba(0,0,0,0.25)"}}>
@@ -2606,7 +2676,12 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
               {ordre.priorite&&(()=>{const p=OR_PRIORITES[ordre.priorite];return <span style={{background:p?.bg,color:p?.text,padding:"1px 8px",borderRadius:99,fontSize:11,fontWeight:700}}>{ordre.priorite.charAt(0).toUpperCase()+ordre.priorite.slice(1)}</span>;})()}
             </div>
           </div>
-          <div style={{display:"flex",gap:10,alignItems:"center",flexShrink:0}}><Badge status={ordre.statut} map={OR_STATUTS}/><button onClick={onClose} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:16,color:"#fff"}}>✕</button></div>
+          <div style={{display:"flex",gap:8,alignItems:"center",flexShrink:0}}>
+            <Badge status={ordre.statut} map={OR_STATUTS}/>
+            <button onClick={exportFichePDF} title="Exporter en PDF" style={{background:"rgba(255,255,255,0.12)",border:"1px solid rgba(255,255,255,0.2)",borderRadius:8,padding:"5px 11px",cursor:"pointer",fontSize:12,fontWeight:600,color:"#fff"}}>💾 PDF</button>
+            <button onClick={exportFicheExcel} title="Exporter en Excel" style={{background:"rgba(255,255,255,0.12)",border:"1px solid rgba(255,255,255,0.2)",borderRadius:8,padding:"5px 11px",cursor:"pointer",fontSize:12,fontWeight:600,color:"#fff"}}>📊 Excel</button>
+            <button onClick={onClose} style={{background:"rgba(255,255,255,0.1)",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:16,color:"#fff"}}>✕</button>
+          </div>
         </div>
 
         {/* Onglets */}
