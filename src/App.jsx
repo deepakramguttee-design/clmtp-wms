@@ -2039,12 +2039,90 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
 
   const stats={total:ordres.length,ouvert:ordres.filter(o=>o.statut==="ouvert").length,en_cours:ordres.filter(o=>o.statut==="en_cours").length,en_attente:ordres.filter(o=>o.statut==="en_attente").length,termine:ordres.filter(o=>o.statut==="termine").length};
 
+  const orCost=o=>o.pieces.reduce((a,p)=>a+(p.prix||0)*p.qte,0);
+  const orRows=()=>filtered.map(o=>{
+    const cost=orCost(o);
+    const statLabel=OR_STATUTS[o.statut]?.label||o.statut;
+    const prioLabel=o.priorite?o.priorite.charAt(0).toUpperCase()+o.priorite.slice(1):"—";
+    return{numero:o.numero,machine:o.machine,immat:o.immat||"",typePanne:o.typePanne||"",technicien:o.technicien||"",statut:statLabel,priorite:prioLabel,cout:cost,dateOuverture:new Date(o.dateOuverture).toLocaleDateString("fr-FR"),dateCloture:o.dateCloture?new Date(o.dateCloture).toLocaleDateString("fr-FR"):"",pieces:o.pieces.length,description:o.description||""};
+  });
+
+  const exportPDF=async()=>{
+    const [{default:jsPDF},{default:autoTable}]=await Promise.all([import("jspdf"),import("jspdf-autotable")]);
+    const doc=new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
+    const now=new Date();
+    const dateStr=now.toLocaleDateString("fr-FR");
+    const timeStr=now.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+
+    let logoData=null;
+    try{const r=await fetch("/icon-192.png");const b=await r.blob();logoData=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b);});}catch(_){}
+
+    if(logoData) doc.addImage(logoData,"PNG",10,8,18,18);
+    const tx=logoData?32:10;
+    doc.setFont("helvetica","bold");doc.setFontSize(16);doc.setTextColor(17,24,39);doc.text("CLMTP SABLÉ",tx,15);
+    doc.setFont("helvetica","normal");doc.setFontSize(11);doc.setTextColor(75,85,99);doc.text("Ordres de Réparation",tx,22);
+    doc.setFontSize(8);doc.setTextColor(107,114,128);
+    doc.text(`Exporté le ${dateStr} à ${timeStr}`,287,10,{align:"right"});
+    const filtreLabel=`Filtre : ${filterStatut==="tous"?"Tous":OR_STATUTS[filterStatut]?.label||filterStatut}${filterSearch?` · "${filterSearch}"`:""}`;
+    doc.text(filtreLabel,287,16,{align:"right"});
+    doc.setTextColor(0);
+
+    const statsBlocs=[
+      {l:"Total",v:filtered.length},
+      {l:"Ouverts",v:filtered.filter(o=>o.statut==="ouvert").length},
+      {l:"En cours",v:filtered.filter(o=>o.statut==="en_cours").length},
+      {l:"En attente",v:filtered.filter(o=>o.statut==="en_attente").length},
+      {l:"Terminés",v:filtered.filter(o=>o.statut==="termine").length},
+      {l:"Coût total",v:filtered.reduce((a,o)=>a+orCost(o),0).toFixed(2)+" €"},
+    ];
+    let sx=10;
+    statsBlocs.forEach(s=>{
+      doc.setFillColor(243,244,246);doc.roundedRect(sx,29,44,14,2,2,"F");
+      doc.setFont("helvetica","bold");doc.setFontSize(13);doc.setTextColor(17,24,39);doc.text(String(s.v),sx+22,37,{align:"center"});
+      doc.setFont("helvetica","normal");doc.setFontSize(7);doc.setTextColor(107,114,128);doc.text(s.l,sx+22,42,{align:"center"});
+      sx+=47;
+    });
+    doc.setTextColor(0);
+
+    const rows=orRows();
+    autoTable(doc,{
+      head:[["Numéro","Machine","Immat.","Type de panne","Technicien","Statut","Priorité","Coût","Ouvert le"]],
+      body:rows.map(r=>[r.numero,r.machine,r.immat||"—",r.typePanne||"—",r.technicien||"—",r.statut,r.priorite,r.cout>0?r.cout.toFixed(2)+" €":"—",r.dateOuverture]),
+      startY:47,
+      styles:{fontSize:8,cellPadding:2.5},
+      headStyles:{fillColor:[17,24,39],textColor:255,fontStyle:"bold",fontSize:8},
+      alternateRowStyles:{fillColor:[249,250,251]},
+      columnStyles:{0:{cellWidth:28,fontStyle:"bold"},1:{cellWidth:42},2:{cellWidth:20},3:{cellWidth:52},4:{cellWidth:28},5:{cellWidth:24},6:{cellWidth:18},7:{cellWidth:22,halign:"right"},8:{cellWidth:22}},
+      margin:{left:10,right:10},
+    });
+
+    const pages=doc.getNumberOfPages();
+    for(let i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(7);doc.setTextColor(156,163,175);doc.text(`Page ${i}/${pages} — CLMTP Sablé — LogiWMS`,148.5,205,{align:"center"});}
+    doc.save(`OR_CLMTP_${dateStr.replace(/\//g,"-")}.pdf`);
+  };
+
+  const exportExcel=async()=>{
+    const XLSX=await import("xlsx");
+    const headers=["Numéro","Machine","Immatriculation","Type de panne","Technicien","Statut","Priorité","Coût (€)","Date ouverture","Date clôture","Nb pièces","Description"];
+    const rows=orRows().map(r=>[r.numero,r.machine,r.immat,r.typePanne,r.technicien,r.statut,r.priorite,r.cout||"",r.dateOuverture,r.dateCloture,r.pieces,r.description]);
+    const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
+    ws["!cols"]=[{wch:18},{wch:30},{wch:16},{wch:35},{wch:20},{wch:16},{wch:12},{wch:12},{wch:16},{wch:16},{wch:10},{wch:40}];
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,"Ordres de Réparation");
+    const dateStr=new Date().toLocaleDateString("fr-FR").replace(/\//g,"-");
+    XLSX.writeFile(wb,`OR_CLMTP_${dateStr}.xlsx`);
+  };
+
   return (
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
         <div><h1 style={{fontSize:22,fontWeight:900,color:"#111827",margin:0}}>Ordres de réparation</h1>
           <p style={{color:"#6b7280",fontSize:13,margin:"4px 0 0"}}>{ordres.length} OR · synchronisé en temps réel 🔄</p></div>
-        <button onClick={()=>setShowForm(true)} style={{background:"#111827",color:"#fff",border:"none",borderRadius:10,padding:"11px 20px",fontWeight:700,cursor:"pointer",fontSize:14}}>+ Nouvel OR</button>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <button onClick={exportPDF} title="Exporter en PDF" style={{background:"#fff",color:"#374151",border:"1px solid #e5e7eb",borderRadius:10,padding:"10px 16px",fontWeight:600,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:6}}>📄 PDF</button>
+          <button onClick={exportExcel} title="Exporter en Excel" style={{background:"#fff",color:"#374151",border:"1px solid #e5e7eb",borderRadius:10,padding:"10px 16px",fontWeight:600,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:6}}>📊 Excel</button>
+          <button onClick={()=>setShowForm(true)} style={{background:"#111827",color:"#fff",border:"none",borderRadius:10,padding:"11px 20px",fontWeight:700,cursor:"pointer",fontSize:14}}>+ Nouvel OR</button>
+        </div>
       </div>
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:12}}>
@@ -2240,41 +2318,132 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
   const [editTechnicien,setEditTechnicien]=useState(ordre.technicien||"");
 
   const [tabFiche,setTabFiche]=useState("fiche");
-  const [tempsPasses,setTempsPasses]=useState([]);
-  const [loadingTemps,setLoadingTemps]=useState(false);
-  const [savingTemps,setSavingTemps]=useState(false);
-  const [formTemps,setFormTemps]=useState({
-    type:"Révision", technicien:ordre.technicien||"",
-    date:new Date().toISOString().split("T")[0], duree_heures:"", description:""
+  const [sessions,setSessions]=useState([]);
+  const [loadingSessions,setLoadingSessions]=useState(false);
+  const [elapsed,setElapsed]=useState(0);
+  const [sessionOp,setSessionOp]=useState(false);
+  const [chronoError,setChronoError]=useState("");
+  const [showManualForm,setShowManualForm]=useState(false);
+  const [manualForm,setManualForm]=useState({
+    date:new Date().toISOString().split("T")[0],
+    heure_debut:"",heure_fin:"",duree_mode:"fin",duree_h:"0",duree_m:"0",
+    type:"Révision",technicien:ordre.technicien||"",description:""
   });
+  const [savingManual,setSavingManual]=useState(false);
+
+  const TEMPS_TYPES=["Révision","Panne","Remplacement pneu","Autre"];
 
   useEffect(()=>{
-    if(tabFiche!=="temps") return;
-    setLoadingTemps(true);
-    supabase.from("or_temps_passe").select("*").eq("or_id",String(ordre.id||ordre.numero)).order("date",{ascending:false})
-      .then(({data})=>{ setTempsPasses(data||[]); setLoadingTemps(false); });
-  },[tabFiche, ordre.id, ordre.numero]);
+    setLoadingSessions(true);
+    supabase.from("or_temps_passe").select("*").eq("or_id",String(ordre.id||ordre.numero)).order("started_at",{ascending:false})
+      .then(({data,error})=>{
+        if(error) console.error("[chrono] fetch sessions:",error);
+        setSessions(data||[]);
+        setLoadingSessions(false);
+      });
+  },[]);
 
-  const handleAddTemps = async () => {
-    if(!formTemps.duree_heures||!formTemps.technicien) return;
-    setSavingTemps(true);
-    const payload = {
-      or_id: String(ordre.id||ordre.numero),
-      type: formTemps.type, technicien: formTemps.technicien,
-      date: formTemps.date||null,
-      duree_heures: parseFloat(formTemps.duree_heures),
-      description: formTemps.description||null,
-    };
-    const {data,error} = await supabase.from("or_temps_passe").insert([payload]).select();
-    setSavingTemps(false);
-    if(error){ console.error(error); return; }
-    if(data?.[0]) setTempsPasses(prev=>[data[0],...prev]);
-    setFormTemps(f=>({...f, duree_heures:"", description:""}));
+  const activeSession=sessions.find(s=>s.statut==="en_cours")||null;
+
+  useEffect(()=>{
+    if(!activeSession){setElapsed(0);return;}
+    const tick=()=>setElapsed(Math.floor((Date.now()-new Date(activeSession.started_at))/1000));
+    tick();
+    const id=setInterval(tick,1000);
+    return ()=>clearInterval(id);
+  },[activeSession?.id]);
+
+  const fmtElapsed=s=>{const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(sec).padStart(2,"0")}`;};
+
+  const startChronometer=async()=>{
+    setChronoError("");
+    setSessionOp(true);
+    const {data:rows,error}=await supabase.from("or_temps_passe").insert([{
+      or_id:String(ordre.id||ordre.numero),
+      type:"Révision",
+      started_at:new Date().toISOString(),
+      statut:"en_cours",
+      technicien:ordre.technicien||"",
+    }]).select();
+    if(error){
+      console.error("[chrono] INSERT failed:",error);
+      setChronoError(error.message||"Erreur INSERT — voir console");
+      setSessionOp(false);
+      return;
+    }
+    const inserted=rows?.[0];
+    if(inserted) setSessions(prev=>[inserted,...prev]);
+    setSessionOp(false);
   };
 
-  const handleDelTemps = async (id) => {
+  const pauseChronometer=async()=>{
+    if(!activeSession) return;
+    setSessionOp(true);
+    const now=new Date().toISOString();
+    const duree=Math.round((Date.now()-new Date(activeSession.started_at))/36000)/100;
+    await supabase.from("or_temps_passe").update({ended_at:now,statut:"pause",duree_heures:duree}).eq("id",activeSession.id);
+    setSessions(prev=>prev.map(s=>s.id===activeSession.id?{...s,ended_at:now,statut:"pause",duree_heures:duree}:s));
+    setSessionOp(false);
+  };
+
+  const endCurrentSession=async()=>{
+    const active=sessions.find(s=>s.statut==="en_cours");
+    if(!active) return;
+    const now=new Date().toISOString();
+    const duree=Math.round((Date.now()-new Date(active.started_at))/36000)/100;
+    await supabase.from("or_temps_passe").update({ended_at:now,statut:"termine",duree_heures:duree}).eq("id",active.id);
+    setSessions(prev=>prev.map(s=>s.id===active.id?{...s,ended_at:now,statut:"termine",duree_heures:duree}:s));
+  };
+
+  const handleChangeStatut=async newStatut=>{
+    const now=new Date().toISOString();
+    if(newStatut==="en_cours"&&ordre.statut!=="en_cours") startChronometer();
+    if(newStatut==="termine"&&ordre.statut!=="termine") await endCurrentSession();
+    onUpdate({...ordre,statut:newStatut,dateCloture:newStatut==="termine"?now:ordre.dateCloture});
+  };
+
+  const handleDelSession=async id=>{
     await supabase.from("or_temps_passe").delete().eq("id",id);
-    setTempsPasses(prev=>prev.filter(t=>t.id!==id));
+    setSessions(prev=>prev.filter(s=>s.id!==id));
+  };
+
+  const handleSaveManual=async()=>{
+    setSavingManual(true);
+    const {date,heure_debut,heure_fin,duree_mode,duree_h,duree_m,type,technicien,description}=manualForm;
+    let started_at=null,ended_at=null,duree_heures=0;
+    if(duree_mode==="fin"&&heure_debut&&heure_fin){
+      const s=new Date(`${date}T${heure_debut}:00`);
+      let e=new Date(`${date}T${heure_fin}:00`);
+      if(e<=s) e=new Date(e.getTime()+86400000);
+      duree_heures=Math.round((e-s)/36000)/100;
+      started_at=s.toISOString();
+      ended_at=e.toISOString();
+    }else{
+      const h=parseInt(duree_h)||0;const m=parseInt(duree_m)||0;
+      duree_heures=Math.round((h+m/60)*100)/100;
+      if(heure_debut){
+        const s=new Date(`${date}T${heure_debut}:00`);
+        started_at=s.toISOString();
+        ended_at=new Date(s.getTime()+duree_heures*3600000).toISOString();
+      }
+    }
+    if(!duree_heures||duree_heures<=0){setSavingManual(false);return;}
+    const {data:rows,error}=await supabase.from("or_temps_passe").insert([{
+      or_id:String(ordre.id||ordre.numero),
+      type:type||"Révision",
+      technicien:technicien||null,
+      description:description||null,
+      duree_heures,
+      started_at:started_at||null,
+      ended_at:ended_at||null,
+      statut:"termine",
+    }]).select();
+    setSavingManual(false);
+    if(error){console.error("[manual temps] INSERT failed:",error);return;}
+    const inserted=rows?.[0];
+    if(inserted) setSessions(prev=>[inserted,...prev]);
+    setShowManualForm(false);
+    setManualForm(f=>({...f,heure_debut:"",heure_fin:"",duree_h:"0",duree_m:"0",description:""}));
   };
 
   const filtresEngin=(()=>{
@@ -2680,7 +2849,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
           <div style={{display:"flex",gap:8,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid #e5e7eb"}}>
             <div style={{fontSize:13,fontWeight:600,color:"#374151",alignSelf:"center"}}>Statut :</div>
             {Object.entries(OR_STATUTS).map(([k,v])=>(
-              <button key={k} onClick={()=>onUpdate({...ordre,statut:k,dateCloture:k==="termine"?new Date().toISOString():ordre.dateCloture})} style={{padding:"7px 14px",borderRadius:9,border:`2px solid ${ordre.statut===k?"#111827":"#e5e7eb"}`,background:ordre.statut===k?v.bg:"#fff",color:ordre.statut===k?v.text:"#6b7280",fontWeight:600,cursor:"pointer",fontSize:12}}>{v.label}</button>
+              <button key={k} onClick={()=>handleChangeStatut(k)} style={{padding:"7px 14px",borderRadius:9,border:`2px solid ${ordre.statut===k?"#111827":"#e5e7eb"}`,background:ordre.statut===k?v.bg:"#fff",color:ordre.statut===k?v.text:"#6b7280",fontWeight:600,cursor:"pointer",fontSize:12}}>{v.label}</button>
             ))}
           </div>
 
@@ -2704,9 +2873,164 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
           {allSorties&&ordre.statut!=="termine"&&(
             <div style={{background:"#d1fae5",borderRadius:10,padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div style={{fontSize:13,color:"#065f46",fontWeight:600}}>✅ Toutes les pièces ont été sorties du stock !</div>
-              <button onClick={()=>onUpdate({...ordre,statut:"termine",dateCloture:new Date().toISOString()})} style={{padding:"8px 16px",background:"#059669",color:"#fff",border:"none",borderRadius:9,fontWeight:700,cursor:"pointer",fontSize:13}}>Clôturer l'OR</button>
+              <button onClick={()=>handleChangeStatut("termine")} style={{padding:"8px 16px",background:"#059669",color:"#fff",border:"none",borderRadius:9,fontWeight:700,cursor:"pointer",fontSize:13}}>Clôturer l'OR</button>
             </div>
           )}
+        </div>
+
+        <div style={{padding:"22px 26px",display:tabFiche==="temps"?"flex":"none",flexDirection:"column",gap:20}}>
+
+          {/* ── Chronomètre ── */}
+          <div style={{textAlign:"center",padding:"28px 0",background:"#f9fafb",borderRadius:16,border:`2px solid ${activeSession?"#fcd34d":"#e5e7eb"}`}}>
+            <div style={{fontSize:11,color:"#6b7280",fontWeight:600,marginBottom:8,letterSpacing:"0.08em"}}>TEMPS EN COURS</div>
+            <div style={{fontFamily:"monospace",fontSize:52,fontWeight:900,color:activeSession?"#111827":"#d1d5db",letterSpacing:"0.04em",lineHeight:1}}>
+              {fmtElapsed(elapsed)}
+            </div>
+            <div style={{marginTop:18,display:"flex",gap:10,justifyContent:"center"}}>
+              {activeSession?(
+                <button onClick={pauseChronometer} disabled={sessionOp}
+                  style={{padding:"10px 28px",background:"#fef3c7",color:"#92400e",border:"1px solid #fcd34d",borderRadius:10,fontWeight:700,cursor:sessionOp?"not-allowed":"pointer",fontSize:14}}>
+                  ⏸ Pause
+                </button>
+              ):(
+                <button onClick={startChronometer} disabled={sessionOp||ordre.statut==="termine"}
+                  style={{padding:"10px 28px",background:sessionOp||ordre.statut==="termine"?"#e5e7eb":"#111827",color:sessionOp||ordre.statut==="termine"?"#9ca3af":"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:sessionOp||ordre.statut==="termine"?"not-allowed":"pointer",fontSize:14}}>
+                  {sessionOp?"…":sessions.length>0?"▶ Reprendre":"▶ Démarrer"}
+                </button>
+              )}
+            </div>
+            {activeSession&&<div style={{marginTop:10,fontSize:11,color:"#6b7280"}}>Démarré à {new Date(activeSession.started_at).toLocaleTimeString("fr-FR")}</div>}
+            {chronoError&&<div style={{marginTop:10,fontSize:12,color:"#dc2626",padding:"6px 12px",background:"#fef2f2",borderRadius:8,display:"inline-block"}}>{chronoError}</div>}
+          </div>
+
+          {/* ── Ajout manuel ── */}
+          <div>
+            <button onClick={()=>setShowManualForm(v=>!v)}
+              style={{padding:"8px 16px",background:showManualForm?"#f3f4f6":"#fff",border:"1px solid #e5e7eb",borderRadius:9,fontWeight:600,cursor:"pointer",fontSize:13,color:"#374151"}}>
+              ✏️ {showManualForm?"Annuler":"Ajouter temps manuellement"}
+            </button>
+
+            {showManualForm&&(
+              <div style={{marginTop:12,background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:12,padding:"16px"}}>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+                  <div>
+                    <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Date</div>
+                    <input type="date" value={manualForm.date} onChange={e=>setManualForm(f=>({...f,date:e.target.value}))}
+                      style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  </div>
+                  <div>
+                    <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Type</div>
+                    <select value={manualForm.type} onChange={e=>setManualForm(f=>({...f,type:e.target.value}))}
+                      style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",background:"#fff"}}>
+                      {TEMPS_TYPES.map(t=><option key={t}>{t}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{display:"flex",gap:8,marginBottom:10}}>
+                  {["fin","duree"].map(m=>(
+                    <button key={m} onClick={()=>setManualForm(f=>({...f,duree_mode:m}))}
+                      style={{padding:"6px 14px",borderRadius:8,border:`1px solid ${manualForm.duree_mode===m?"#111827":"#e5e7eb"}`,background:manualForm.duree_mode===m?"#111827":"#fff",color:manualForm.duree_mode===m?"#fff":"#6b7280",fontWeight:600,cursor:"pointer",fontSize:12}}>
+                      {m==="fin"?"Heure début → fin":"Durée directe"}
+                    </button>
+                  ))}
+                </div>
+
+                {manualForm.duree_mode==="fin"?(
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+                    <div>
+                      <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Heure début</div>
+                      <input type="time" value={manualForm.heure_debut} onChange={e=>setManualForm(f=>({...f,heure_debut:e.target.value}))}
+                        style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                    </div>
+                    <div>
+                      <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Heure fin</div>
+                      <input type="time" value={manualForm.heure_fin} onChange={e=>setManualForm(f=>({...f,heure_fin:e.target.value}))}
+                        style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                    </div>
+                  </div>
+                ):(
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:10}}>
+                    <div>
+                      <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Heure début (opt.)</div>
+                      <input type="time" value={manualForm.heure_debut} onChange={e=>setManualForm(f=>({...f,heure_debut:e.target.value}))}
+                        style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                    </div>
+                    <div>
+                      <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Heures</div>
+                      <input type="number" min="0" value={manualForm.duree_h} onChange={e=>setManualForm(f=>({...f,duree_h:e.target.value}))}
+                        style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                    </div>
+                    <div>
+                      <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Minutes</div>
+                      <input type="number" min="0" max="59" value={manualForm.duree_m} onChange={e=>setManualForm(f=>({...f,duree_m:e.target.value}))}
+                        style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
+                  <div>
+                    <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Technicien</div>
+                    <input value={manualForm.technicien} onChange={e=>setManualForm(f=>({...f,technicien:e.target.value}))}
+                      placeholder="Nom du technicien"
+                      style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  </div>
+                  <div>
+                    <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Description (optionnel)</div>
+                    <input value={manualForm.description} onChange={e=>setManualForm(f=>({...f,description:e.target.value}))}
+                      placeholder="Travaux effectués…"
+                      style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  </div>
+                </div>
+
+                <button onClick={handleSaveManual} disabled={savingManual}
+                  style={{padding:"9px 20px",background:savingManual?"#e5e7eb":"#111827",color:savingManual?"#9ca3af":"#fff",border:"none",borderRadius:9,fontWeight:700,cursor:savingManual?"not-allowed":"pointer",fontSize:13}}>
+                  {savingManual?"Enregistrement…":"💾 Enregistrer"}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* ── Historique des sessions ── */}
+          <div>
+            <h3 style={{fontWeight:800,fontSize:15,color:"#111827",margin:"0 0 12px"}}>📋 Sessions</h3>
+            {loadingSessions?(
+              <div style={{color:"#6b7280",fontSize:13}}>Chargement…</div>
+            ):sessions.length===0?(
+              <div style={{color:"#9ca3af",fontSize:13,textAlign:"center",padding:"20px 0"}}>Aucune session enregistrée</div>
+            ):(
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {sessions.map(s=>{
+                  const isActive=s.statut==="en_cours";
+                  const dur=isActive?elapsed/3600:Number(s.duree_heures)||0;
+                  const started=s.started_at?new Date(s.started_at):null;
+                  return(
+                    <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:isActive?"#fefce8":"#f9fafb",borderRadius:10,border:`1px solid ${isActive?"#fcd34d":"#e5e7eb"}`}}>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontSize:12,color:"#374151",fontWeight:600,display:"flex",gap:6,flexWrap:"wrap"}}>
+                          <span>{s.type||"—"}</span>
+                          {started&&<span style={{color:"#6b7280"}}>· {started.toLocaleDateString("fr-FR")} {started.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</span>}
+                          {s.technicien&&<span style={{color:"#6b7280"}}>· {s.technicien}</span>}
+                        </div>
+                        <div style={{fontSize:12,color:"#6b7280",marginTop:2}}>
+                          {isActive
+                            ?<span style={{color:"#92400e",fontWeight:700}}>⏱ En cours…</span>
+                            :<><strong>{dur.toFixed(2)} h</strong>{s.ended_at&&<span style={{marginLeft:6}}>→ {new Date(s.ended_at).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</span>}</>}
+                        </div>
+                        {s.description&&<div style={{fontSize:11,color:"#9ca3af",marginTop:1}}>{s.description}</div>}
+                      </div>
+                      {!isActive&&<button onClick={()=>handleDelSession(s.id)}
+                        style={{background:"none",border:"none",cursor:"pointer",color:"#dc2626",fontSize:16,padding:"4px 8px",flexShrink:0}}>🗑️</button>}
+                    </div>
+                  );
+                })}
+                <div style={{fontSize:13,fontWeight:700,color:"#111827",textAlign:"right",paddingTop:8,borderTop:"1px solid #e5e7eb"}}>
+                  Total : {sessions.reduce((a,s)=>a+(s.statut==="en_cours"?elapsed/3600:Number(s.duree_heures)||0),0).toFixed(2)} h
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
