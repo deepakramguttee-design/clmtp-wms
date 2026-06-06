@@ -150,87 +150,110 @@ export default function ParcVehicules({ parc, setParc, user }) {
           <h1 style={{fontSize:22,fontWeight:900,color:"#111827",margin:0}}>🚜 Parc véhicules & engins</h1>
           <p style={{color:"#6b7280",fontSize:13,margin:"4px 0 0"}}>{parc.length} engin{parc.length>1?"s":""} · données Supabase</p>
         </div>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          {isAdmin && (
-            <button onClick={() => setShowCatModal(true)}
-              style={{background:"#f3f4f6",color:"#374151",border:"1px solid #e5e7eb",borderRadius:10,
-                      padding:"10px 16px",fontWeight:600,cursor:"pointer",fontSize:13}}>
-              ⚙️ Gérer les catégories
-            </button>
-          )}
-          {canEdit && (
-            <button onClick={openAdd}
-              style={{background:"#111827",color:"#fff",border:"none",borderRadius:10,
-                      padding:"10px 18px",fontWeight:700,cursor:"pointer",fontSize:13}}>
-              + Ajouter un engin
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Pills catégories */}
-      <div style={{overflowX:"auto",WebkitOverflowScrolling:"touch",msOverflowStyle:"none",scrollbarWidth:"none"}}>
-        <div style={{display:"flex",gap:6,minWidth:"max-content",padding:"2px 0 6px"}}>
-          {!catsLoaded ? (
-            <span style={{fontSize:13,color:"#9ca3af",padding:"7px 14px"}}>Chargement…</span>
-          ) : categories.map(cat => {
-            const count  = catCount(cat);
-            const active = activeTab === cat.id;
-            return (
-              <button key={cat.id}
-                onClick={() => { setActiveTab(cat.id); setSearch(""); setFilterAff("tous"); }}
-                style={{
-                  display:"inline-flex",alignItems:"center",gap:6,padding:"7px 14px",
-                  background: active ? "#111827" : "#f3f4f6",
-                  color:      active ? "#fff"     : "#374151",
-                  border:     active ? "1.5px solid #111827" : "1.5px solid #e5e7eb",
-                  borderRadius:99,cursor:"pointer",whiteSpace:"nowrap",
-                  fontWeight: active ? 700 : 500, fontSize:13, transition:"all 0.15s",
-                }}>
-                <span>{cat.label}</span>
-                <span style={{
-                  fontSize:11, fontWeight:700,
-                  background: active ? "rgba(255,255,255,0.2)" : "#e5e7eb",
-                  color:      active ? "#fff" : "#6b7280",
-                  padding:"1px 7px", borderRadius:99, minWidth:20, textAlign:"center",
-                }}>
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Filtres affectation */}
-      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-        {[{k:"tous",l:"Tous",n:inCat.length},
-          ...AFFECTATIONS.filter(a=>a).map(a=>({k:a,l:a,n:affCounts[a]||0}))
-        ].map(btn => (
-          <button key={btn.k} onClick={() => setFilterAff(btn.k)}
-            style={{padding:"6px 14px",borderRadius:99,
-                    border:`1px solid ${filterAff===btn.k?"#111827":"#e5e7eb"}`,
-                    background:filterAff===btn.k?"#111827":"#fff",
-                    color:filterAff===btn.k?"#fff":"#374151",
-                    fontWeight:600,cursor:"pointer",fontSize:12}}>
-            {btn.l} <span style={{opacity:0.65}}>({btn.n})</span>
+        {canEdit && (
+          <button onClick={openAdd}
+            style={{background:"#111827",color:"#fff",border:"none",borderRadius:10,
+                    padding:"10px 18px",fontWeight:700,cursor:"pointer",fontSize:13}}>
+            + Ajouter un engin
           </button>
-        ))}
+        )}
       </div>
 
-      {/* Recherche + compteur */}
-      <div style={{display:"flex",gap:10,alignItems:"center"}}>
-        <input value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="🔍  Rechercher numéro, désignation, marque, immat, chauffeur…"
-          style={{flex:1,padding:"10px 16px",border:"1px solid #e5e7eb",borderRadius:10,
-                  fontSize:13,outline:"none",boxSizing:"border-box"}}/>
-        <span style={{fontSize:13,color:"#6b7280",whiteSpace:"nowrap",flexShrink:0}}>
-          {filtered.length} résultat{filtered.length!==1?"s":""}
-        </span>
-      </div>
+      {/* Body : sidebar gauche + contenu principal */}
+      <div style={{display:"flex",gap:0,alignItems:"flex-start"}}>
 
-      {/* Tableau */}
-      <div style={{background:"#fff",borderRadius:16,border:"1px solid #e5e7eb",overflow:"hidden"}}>
+        {/* ── Sidebar catégories ── */}
+        <div style={{
+          width:210, flexShrink:0,
+          background:"#f8f9fa", borderRight:"1px solid #e5e7eb",
+          borderRadius:"12px 0 0 12px", display:"flex", flexDirection:"column",
+          minHeight:400,
+        }}>
+          {/* Items */}
+          <div style={{flex:1, overflowY:"auto", padding:"8px 0"}}>
+            {!catsLoaded ? (
+              <div style={{padding:"12px 16px",fontSize:12,color:"#9ca3af"}}>Chargement…</div>
+            ) : categories.map(cat => {
+              const count  = catCount(cat);
+              const active = activeTab === cat.id;
+              return (
+                <button key={cat.id}
+                  onClick={() => { setActiveTab(cat.id); setSearch(""); setFilterAff("tous"); }}
+                  style={{
+                    display:"flex", alignItems:"center", justifyContent:"space-between",
+                    width:"100%", padding:"9px 14px", border:"none", cursor:"pointer",
+                    background: active ? "#4472C4" : "transparent",
+                    color:      active ? "#fff"    : "#374151",
+                    fontWeight: active ? 700 : 500, fontSize:13,
+                    textAlign:"left", transition:"background 0.12s",
+                    borderLeft: active ? "3px solid #2d5aaa" : "3px solid transparent",
+                  }}>
+                  <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>
+                    {cat.label}
+                  </span>
+                  <span style={{
+                    fontSize:11, fontWeight:700, flexShrink:0, marginLeft:6,
+                    background: active ? "rgba(255,255,255,0.25)" : "#e5e7eb",
+                    color:      active ? "#fff" : "#6b7280",
+                    padding:"1px 7px", borderRadius:99, minWidth:22, textAlign:"center",
+                  }}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Bouton gérer en bas */}
+          {isAdmin && (
+            <div style={{borderTop:"1px solid #e5e7eb", padding:10}}>
+              <button onClick={() => setShowCatModal(true)}
+                style={{
+                  width:"100%", padding:"8px 10px", background:"#fff",
+                  border:"1px solid #e5e7eb", borderRadius:8,
+                  fontSize:12, fontWeight:600, color:"#374151",
+                  cursor:"pointer", textAlign:"left",
+                }}>
+                ⚙️ Gérer les catégories
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* ── Contenu principal ── */}
+        <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:12,
+                     paddingLeft:16,background:"#fff",borderRadius:"0 12px 12px 0",
+                     border:"1px solid #e5e7eb",borderLeft:"none",padding:16}}>
+
+          {/* Filtres affectation */}
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            {[{k:"tous",l:"Tous",n:inCat.length},
+              ...AFFECTATIONS.filter(a=>a).map(a=>({k:a,l:a,n:affCounts[a]||0}))
+            ].map(btn => (
+              <button key={btn.k} onClick={() => setFilterAff(btn.k)}
+                style={{padding:"5px 12px",borderRadius:99,
+                        border:`1px solid ${filterAff===btn.k?"#4472C4":"#e5e7eb"}`,
+                        background:filterAff===btn.k?"#4472C4":"#fff",
+                        color:filterAff===btn.k?"#fff":"#374151",
+                        fontWeight:600,cursor:"pointer",fontSize:12}}>
+                {btn.l} <span style={{opacity:0.7}}>({btn.n})</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Recherche + compteur */}
+          <div style={{display:"flex",gap:10,alignItems:"center"}}>
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="🔍  Rechercher numéro, désignation, marque, immat, chauffeur…"
+              style={{flex:1,padding:"9px 14px",border:"1px solid #e5e7eb",borderRadius:10,
+                      fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+            <span style={{fontSize:13,color:"#6b7280",whiteSpace:"nowrap",flexShrink:0}}>
+              {filtered.length} résultat{filtered.length!==1?"s":""}
+            </span>
+          </div>
+
+          {/* Tableau */}
+          <div style={{background:"#fff",borderRadius:10,border:"1px solid #f3f4f6",overflow:"hidden"}}>
         {filtered.length === 0 ? (
           <div style={{padding:40,textAlign:"center",color:"#9ca3af"}}>
             <div style={{fontSize:40,marginBottom:10}}>🚜</div>
@@ -299,7 +322,9 @@ export default function ParcVehicules({ parc, setParc, user }) {
             </table>
           </div>
         )}
-      </div>
+        </div>{/* fin tableau */}
+        </div>{/* fin contenu principal */}
+      </div>{/* fin body sidebar+main */}
 
       {/* ── Modal ajout / modification engin ─────────────────────────────────── */}
       {showForm && (
