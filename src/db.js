@@ -99,6 +99,9 @@ export async function getOrdres() {
     description: r.description,
     pieces: r.pieces || [],
     notes: r.notes || '',
+    kilometrage: r.kilometrage ?? null,
+    heures_moteur: r.heures_moteur ?? null,
+    type_compteur: r.type_compteur || 'km',
   }))
 }
 
@@ -133,6 +136,9 @@ export async function createOrdre(ordre) {
       description: ordre.description || '',
       pieces: Array.isArray(ordre.pieces) ? ordre.pieces : [],
       notes: ordre.notes || '',
+      kilometrage: ordre.kilometrage ?? null,
+      heures_moteur: ordre.heures_moteur ?? null,
+      type_compteur: ordre.type_compteur || 'km',
     }])
     .select()
   if (error) {
@@ -157,6 +163,9 @@ export async function updateOrdre(ordre) {
       pieces: ordre.pieces,
       notes: ordre.notes || '',
       date_cloture: ordre.dateCloture,
+      kilometrage: ordre.kilometrage ?? null,
+      heures_moteur: ordre.heures_moteur ?? null,
+      type_compteur: ordre.type_compteur || 'km',
     })
     .eq('id', ordre.id)
   if (error) console.error(error)
@@ -589,6 +598,7 @@ export async function getOrdresSite(siteId) {
     dateCloture: r.date_cloture, statut: r.statut, machine: r.machine,
     immat: r.immat, typePanne: r.type_panne, technicien: r.technicien,
     priorite: r.priorite, description: r.description, pieces: r.pieces||[], notes: r.notes||'',
+    kilometrage: r.kilometrage ?? null, heures_moteur: r.heures_moteur ?? null, type_compteur: r.type_compteur||'km',
   }))
 }
 
@@ -602,6 +612,7 @@ export async function createOrdreSite(ordre, siteId) {
       technicien: ordre.technicien||'', priorite: ordre.priorite||'normale',
       description: ordre.description||'', pieces: ordre.pieces||[], notes: ordre.notes||'',
       site_id: siteId,
+      kilometrage: ordre.kilometrage??null, heures_moteur: ordre.heures_moteur??null, type_compteur: ordre.type_compteur||'km',
     }])
     .select()
   if (error) { console.error('createOrdreSite:', error); return null; }

@@ -2169,7 +2169,7 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
                       <Badge status={o.statut} map={OR_STATUTS}/><Badge status={o.priorite} map={OR_PRIORITES}/>
                     </div>
                     <div style={{fontWeight:700,fontSize:15,color:"#111827",marginBottom:3}}>🚗 {o.machine}{o.immat?` — ${o.immat}`:""}</div>
-                    <div style={{fontSize:13,color:"#6b7280"}}>🔧 {o.typePanne}{o.technicien?` · 👤 ${o.technicien}`:""}</div>
+                    <div style={{fontSize:13,color:"#6b7280"}}>🔧 {o.typePanne}{o.technicien?` · 👤 ${o.technicien}`:""}{(o.kilometrage||o.heures_moteur)&&<span style={{marginLeft:8,fontSize:12,color:"#9ca3af"}}>{o.type_compteur==="h"?`⏱ ${o.heures_moteur} h`:`📏 ${(o.kilometrage||0).toLocaleString("fr-FR")} km`}</span>}</div>
                     {o.description&&<div style={{fontSize:12,color:"#9ca3af",marginTop:3,fontStyle:"italic"}}>{o.description.slice(0,80)}{o.description.length>80?"…":""}</div>}
                   </div>
                   <div style={{display:"flex",gap:14,alignItems:"center",flexWrap:"wrap"}}>
@@ -2305,6 +2305,9 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
   );
 }
 
+// Arrondi au quart d'heure supérieur : chaque tranche de 15 min commencée = 15 min facturées
+const bill15 = h => Math.ceil((Number(h)||0)*4)/4;
+
 function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEngins=[], refVehicules=[], equivalences={} }) {
   const [searchPiece,setSearchPiece]=useState("");
   const [suggPieces,setSuggPieces]=useState([]);
@@ -2312,6 +2315,9 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
   const [editDesc,setEditDesc]=useState(ordre.description||"");
   const [editMachine,setEditMachine]=useState(ordre.machine||"");
   const [editImmat,setEditImmat]=useState(ordre.immat||"");
+  const [editCompteurType,setEditCompteurType]=useState(ordre.type_compteur||(/^v[puc]\b/i.test((ordre.machine||'').trim())?"km":"h"));
+  const [editKm,setEditKm]=useState(ordre.kilometrage!=null?String(ordre.kilometrage):"");
+  const [editHm,setEditHm]=useState(ordre.heures_moteur!=null?String(ordre.heures_moteur):"");
   const [editPanneSelect,setEditPanneSelect]=useState(PANNE_OPTIONS.includes(ordre.typePanne)?ordre.typePanne:ordre.typePanne?"Autre":"");
   const [editTypePanne,setEditTypePanne]=useState(ordre.typePanne||"");
   const [showFiltresMenu,setShowFiltresMenu]=useState(false);
@@ -2613,7 +2619,9 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
     doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(107,114,128);doc.text(`Généré le ${dateStr} à ${now.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}`,196,24,{align:"right"});
     doc.setDrawColor(229,231,235);doc.line(14,32,196,32);
     let y=38;
-    const infos=[["Machine",ordre.machine||"—"],["Immatriculation",ordre.immat||"—"],["Technicien",ordre.technicien||"—"],["Statut",OR_STATUTS[ordre.statut]?.label||ordre.statut],["Priorité",ordre.priorite?ordre.priorite.charAt(0).toUpperCase()+ordre.priorite.slice(1):"—"],["Ouvert le",new Date(ordre.dateOuverture).toLocaleDateString("fr-FR")],...(ordre.dateCloture?[["Clôturé le",new Date(ordre.dateCloture).toLocaleDateString("fr-FR")]]:[])]
+    const compteurLabel=ordre.type_compteur==="h"?"Heures moteur":"Kilométrage";
+    const compteurVal=ordre.type_compteur==="h"?(ordre.heures_moteur!=null?`${ordre.heures_moteur} h`:"—"):(ordre.kilometrage!=null?`${ordre.kilometrage.toLocaleString("fr-FR")} km`:"—");
+    const infos=[["Machine",ordre.machine||"—"],["Immatriculation",ordre.immat||"—"],[compteurLabel,compteurVal],["Technicien",ordre.technicien||"—"],["Statut",OR_STATUTS[ordre.statut]?.label||ordre.statut],["Priorité",ordre.priorite?ordre.priorite.charAt(0).toUpperCase()+ordre.priorite.slice(1):"—"],["Ouvert le",new Date(ordre.dateOuverture).toLocaleDateString("fr-FR")],...(ordre.dateCloture?[["Clôturé le",new Date(ordre.dateCloture).toLocaleDateString("fr-FR")]]:[])]
     const half=Math.ceil(infos.length/2);
     const drawCol=(items,x)=>{let cy=y;items.forEach(([l,v])=>{doc.setFont("helvetica","normal");doc.setFontSize(7);doc.setTextColor(107,114,128);doc.text(l,x,cy);doc.setFont("helvetica","bold");doc.setFontSize(10);doc.setTextColor(17,24,39);doc.text(String(v),x,cy+5);cy+=13;});return cy;};
     y=Math.max(drawCol(infos.slice(0,half),14),drawCol(infos.slice(half),110))+4;
@@ -2621,8 +2629,8 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
     if(ordre.description){doc.setFont("helvetica","bold");doc.setFontSize(11);doc.setTextColor(17,24,39);doc.text("Description",14,y);y+=5;doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(75,85,99);const ls=doc.splitTextToSize(ordre.description,180);doc.text(ls,14,y);y+=ls.length*5+6;}
     if(ordre.pieces.length>0){doc.setFont("helvetica","bold");doc.setFontSize(11);doc.setTextColor(17,24,39);doc.text("Pièces nécessaires",14,y);y+=2;autoTable(doc,{head:[["Désignation","Réf.","Fournisseur","Qté","Prix unit.","Total"]],body:ordre.pieces.map(p=>[p.name||"—",p.id||"—",p.fournisseur||"—",p.qte||1,p.prix>0?p.prix.toFixed(2)+" €":"—",p.prix>0?((p.prix||0)*(p.qte||1)).toFixed(2)+" €":"—"]),startY:y,styles:{fontSize:8,cellPadding:2},headStyles:{fillColor:[17,24,39],textColor:255,fontStyle:"bold",fontSize:8},alternateRowStyles:{fillColor:[249,250,251]},columnStyles:{0:{cellWidth:55},1:{cellWidth:28},2:{cellWidth:28},3:{cellWidth:12,halign:"center"},4:{cellWidth:22,halign:"right"},5:{cellWidth:22,halign:"right"}},margin:{left:14,right:14}});y=doc.lastAutoTable.finalY+2;if(totalCout>0){doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(17,24,39);doc.text(`Total Pièces : ${totalCout.toFixed(2)} €`,196,y,{align:"right"});y+=6;}}
     const sessTerminees=sessions.filter(s=>s.statut!=="en_cours"&&Number(s.duree_heures)>0);
-    const totalMO=sessTerminees.reduce((a,s)=>a+Number(s.duree_heures)*(tarifsMap[s.technicien]||0),0);
-    if(sessTerminees.length>0){if(y>230){doc.addPage();y=20;}doc.setFont("helvetica","bold");doc.setFontSize(11);doc.setTextColor(17,24,39);doc.text("Main d'œuvre",14,y);y+=2;autoTable(doc,{head:[["Technicien","Date","Durée (h)","Taux (€/h)","Coût (€)"]],body:sessTerminees.map(s=>{const dur=Number(s.duree_heures)||0;const taux=tarifsMap[s.technicien];return[s.technicien||"—",s.started_at?new Date(s.started_at).toLocaleDateString("fr-FR"):"—",dur.toFixed(2),taux!=null?Number(taux).toFixed(2):"Non défini",taux!=null?(dur*taux).toFixed(2):"—"];}),startY:y,styles:{fontSize:8,cellPadding:2},headStyles:{fillColor:[17,24,39],textColor:255,fontStyle:"bold",fontSize:8},alternateRowStyles:{fillColor:[249,250,251]},columnStyles:{2:{halign:"right"},3:{halign:"right"},4:{halign:"right"}},margin:{left:14,right:14}});y=doc.lastAutoTable.finalY+2;if(totalMO>0){doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(17,24,39);doc.text(`Total MO : ${totalMO.toFixed(2)} €`,196,y,{align:"right"});y+=6;}}
+    const totalMO=sessTerminees.reduce((a,s)=>a+bill15(s.duree_heures)*(tarifsMap[s.technicien]||0),0);
+    if(sessTerminees.length>0){if(y>230){doc.addPage();y=20;}doc.setFont("helvetica","bold");doc.setFontSize(11);doc.setTextColor(17,24,39);doc.text("Main d'œuvre",14,y);y+=2;autoTable(doc,{head:[["Technicien","Date","Durée réelle","Durée fact.","Taux (€/h)","Coût (€)"]],body:sessTerminees.map(s=>{const dur=Number(s.duree_heures)||0;const durB=bill15(dur);const taux=tarifsMap[s.technicien];return[s.technicien||"—",s.started_at?new Date(s.started_at).toLocaleDateString("fr-FR"):"—",dur.toFixed(2)+" h",durB.toFixed(2)+" h",taux!=null?Number(taux).toFixed(2):"Non défini",taux!=null?(durB*taux).toFixed(2):"—"];}),startY:y,styles:{fontSize:8,cellPadding:2},headStyles:{fillColor:[17,24,39],textColor:255,fontStyle:"bold",fontSize:8},alternateRowStyles:{fillColor:[249,250,251]},columnStyles:{2:{halign:"right"},3:{halign:"right",fontStyle:"bold"},4:{halign:"right"},5:{halign:"right"}},margin:{left:14,right:14}});y=doc.lastAutoTable.finalY+2;if(totalMO>0){doc.setFont("helvetica","bold");doc.setFontSize(9);doc.setTextColor(17,24,39);doc.text(`Total MO : ${totalMO.toFixed(2)} €`,196,y,{align:"right"});y+=6;}}
     const totalOR=totalCout+totalMO;
     if(totalOR>0){if(y>252){doc.addPage();y=20;}doc.setFillColor(17,24,39);doc.roundedRect(14,y,182,13,2,2,"F");doc.setFont("helvetica","bold");doc.setFontSize(12);doc.setTextColor(255,255,255);doc.text("TOTAL OR",20,y+8.5);doc.text(`${totalOR.toFixed(2)} €`,190,y+8.5,{align:"right"});y+=19;}
     if(ordre.notes){if(y>240){doc.addPage();y=20;}doc.setFont("helvetica","bold");doc.setFontSize(11);doc.setTextColor(17,24,39);doc.text("Notes technicien",14,y);y+=5;doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(75,85,99);const ls=doc.splitTextToSize(ordre.notes,180);doc.text(ls,14,y);}
@@ -2634,7 +2642,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
   const exportFicheExcel=async()=>{
     const XLSX=await import("xlsx");
     const sessTerminees=sessions.filter(s=>s.statut!=="en_cours"&&Number(s.duree_heures)>0);
-    const totalMO=sessTerminees.reduce((a,s)=>a+Number(s.duree_heures)*(tarifsMap[s.technicien]||0),0);
+    const totalMO=sessTerminees.reduce((a,s)=>a+bill15(s.duree_heures)*(tarifsMap[s.technicien]||0),0);
     const totalOR=totalCout+totalMO;
     const rows=[
       ["ORDRE DE RÉPARATION",ordre.numero],[],
@@ -2649,9 +2657,9 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
       ...ordre.pieces.map(p=>[p.name||"—",p.id||"—",p.fournisseur||"—",p.qte||1,p.prix||0,((p.prix||0)*(p.qte||1))]),
       ["","","","","Total Pièces (€)",totalCout],[],
       ["MAIN D'ŒUVRE"],
-      ["Technicien","Date","Durée (h)","Taux (€/h)","Coût (€)"],
-      ...sessTerminees.map(s=>{const dur=Number(s.duree_heures)||0;const taux=tarifsMap[s.technicien];return[s.technicien||"—",s.started_at?new Date(s.started_at).toLocaleDateString("fr-FR"):"—",dur,taux!=null?Number(taux):"",taux!=null?dur*taux:""];}),
-      ["","","","Total MO (€)",totalMO],[],
+      ["Technicien","Date","Durée réelle (h)","Durée facturée (h)","Taux (€/h)","Coût (€)"],
+      ...sessTerminees.map(s=>{const dur=Number(s.duree_heures)||0;const durB=bill15(dur);const taux=tarifsMap[s.technicien];return[s.technicien||"—",s.started_at?new Date(s.started_at).toLocaleDateString("fr-FR"):"—",dur,durB,taux!=null?Number(taux):"",taux!=null?durB*taux:""];}),
+      ["","","","Total MO (€)","",totalMO],[],
       ["RÉCAPITULATIF"],
       ["Total Pièces (€)",totalCout],["Total Main d'œuvre (€)",totalMO],["TOTAL OR (€)",totalOR],
     ];
@@ -2697,7 +2705,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
         </div>
         <div style={{padding:"22px 26px",display:tabFiche==="fiche"?"flex":"none",flexDirection:"column",gap:20}}>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))",gap:10}}>
-            {[{l:"Machine",v:ordre.machine},{l:"Immat.",v:ordre.immat||"—"},{l:"Panne",v:ordre.typePanne},{l:"Technicien",v:ordre.technicien||"—"},{l:"Ouvert le",v:new Date(ordre.dateOuverture).toLocaleDateString("fr-FR")},{l:"Priorité",v:<Badge status={ordre.priorite} map={OR_PRIORITES}/>},...(ordre.statut==="termine"&&ordre.dateCloture?[{l:"Clôturé le",v:new Date(ordre.dateCloture).toLocaleDateString("fr-FR")}]:[])].map(r=>(
+            {[{l:"Machine",v:ordre.machine},{l:"Immat.",v:ordre.immat||"—"},...(ordre.type_compteur==="h"?[{l:"Heures moteur",v:ordre.heures_moteur!=null?`${ordre.heures_moteur} h`:"—"}]:[{l:"Kilométrage",v:ordre.kilometrage!=null?`${ordre.kilometrage.toLocaleString("fr-FR")} km`:"—"}]),{l:"Panne",v:ordre.typePanne},{l:"Technicien",v:ordre.technicien||"—"},{l:"Ouvert le",v:new Date(ordre.dateOuverture).toLocaleDateString("fr-FR")},{l:"Priorité",v:<Badge status={ordre.priorite} map={OR_PRIORITES}/>},...(ordre.statut==="termine"&&ordre.dateCloture?[{l:"Clôturé le",v:new Date(ordre.dateCloture).toLocaleDateString("fr-FR")}]:[])].map(r=>(
               <div key={r.l} style={{background:"#f9fafb",borderRadius:10,padding:"10px 14px"}}>
                 <div style={{fontSize:11,color:"#9ca3af",marginBottom:3}}>{r.l}</div>
                 <div style={{fontWeight:700,fontSize:13,color:"#111827"}}>{r.v}</div>
@@ -2706,11 +2714,28 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
           </div>
           <div>
             <h3 style={{fontWeight:800,fontSize:15,color:"#111827",margin:"0 0 8px"}}>🚗 Machine / Immatriculation</h3>
-            <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:8}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:8,marginBottom:8}}>
               <input value={editMachine} onChange={e=>setEditMachine(e.target.value)} placeholder="Désignation de la machine" style={{padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none"}}/>
               <input value={editImmat} onChange={e=>setEditImmat(e.target.value)} placeholder="Immat." style={{padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none",width:120,fontFamily:"monospace"}}/>
             </div>
-            <button onClick={()=>onUpdate({...ordre,machine:editMachine,immat:editImmat})} style={{marginTop:7,padding:"7px 16px",background:"#f3f4f6",border:"none",borderRadius:8,cursor:"pointer",fontWeight:600,fontSize:13}}>💾 Sauvegarder</button>
+            <div style={{display:"flex",gap:8,alignItems:"center"}}>
+              <div style={{display:"flex",borderRadius:8,overflow:"hidden",border:"1px solid #e5e7eb",flexShrink:0}}>
+                {[{v:"km",l:"📏 km"},{v:"h",l:"⏱ h moteur"}].map(opt=>(
+                  <button key={opt.v} onClick={()=>setEditCompteurType(opt.v)}
+                    style={{padding:"8px 12px",border:"none",background:editCompteurType===opt.v?"#111827":"#fff",color:editCompteurType===opt.v?"#fff":"#374151",fontWeight:600,cursor:"pointer",fontSize:12}}>
+                    {opt.l}
+                  </button>
+                ))}
+              </div>
+              {editCompteurType==="km"
+                ?<input type="number" min="0" value={editKm} onChange={e=>setEditKm(e.target.value)} placeholder="Ex : 45000"
+                    style={{flex:1,padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none"}}/>
+                :<input type="number" min="0" step="0.1" value={editHm} onChange={e=>setEditHm(e.target.value)} placeholder="Ex : 1234.5"
+                    style={{flex:1,padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none"}}/>
+              }
+            </div>
+            <button onClick={()=>onUpdate({...ordre,machine:editMachine,immat:editImmat,type_compteur:editCompteurType,kilometrage:editKm?parseInt(editKm):null,heures_moteur:editHm?parseFloat(editHm):null})}
+              style={{marginTop:7,padding:"7px 16px",background:"#f3f4f6",border:"none",borderRadius:8,cursor:"pointer",fontWeight:600,fontSize:13}}>💾 Sauvegarder</button>
           </div>
 
           <div>
@@ -2933,13 +2958,15 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                 <div style={{display:"flex",flexDirection:"column",gap:6}}>
                   {sessTerminees.map(s=>{
                     const dur=Number(s.duree_heures)||0;
+                    const durB=bill15(dur);
                     const taux=tarifsMap[s.technicien];
-                    const cout=taux!=null?dur*taux:null;
+                    const cout=taux!=null?durB*taux:null;
                     return(
                       <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",background:"#f9fafb",borderRadius:9,border:"1px solid #e5e7eb",fontSize:13}}>
                         <div>
                           <strong style={{color:"#111827"}}>{s.technicien||"—"}</strong>
                           <span style={{color:"#6b7280",marginLeft:6}}>{dur.toFixed(2)} h</span>
+                          {durB!==dur&&<span style={{color:"#d97706",marginLeft:4,fontSize:11}}>→ {durB.toFixed(2)} h fact.</span>}
                           {taux!=null&&<span style={{color:"#6b7280",marginLeft:4}}>× {Number(taux).toFixed(2)} €/h</span>}
                         </div>
                         {cout!=null
@@ -2966,7 +2993,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
 
           {(()=>{
             const sessTerminees=sessions.filter(s=>s.statut!=="en_cours"&&Number(s.duree_heures)>0);
-            const totalMO=sessTerminees.reduce((a,s)=>a+Number(s.duree_heures)*(tarifsMap[s.technicien]||0),0);
+            const totalMO=sessTerminees.reduce((a,s)=>a+bill15(s.duree_heures)*(tarifsMap[s.technicien]||0),0);
             const totalOR=totalCout+totalMO;
             if(totalOR<=0) return null;
             return(
@@ -3026,7 +3053,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
           {/* ── Chronomètre ── */}
           {(()=>{
             const totalH=sessions.reduce((a,s)=>a+(Number(s.duree_heures)||0),0);
-            const totalCout=sessions.reduce((a,s)=>a+(Number(s.duree_heures)||0)*(tarifsMap[s.technicien]||0),0);
+            const totalCout=sessions.reduce((a,s)=>a+bill15(s.duree_heures)*(tarifsMap[s.technicien]||0),0);
             if(orClos) return(
               <div style={{textAlign:"center",padding:"28px 0",background:"#f0fdf4",borderRadius:16,border:"2px solid #bbf7d0"}}>
                 <div style={{fontSize:11,color:"#065f46",fontWeight:600,marginBottom:8,letterSpacing:"0.08em"}}>OR CLÔTURÉ</div>
@@ -3177,7 +3204,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                         <div style={{fontSize:12,color:"#6b7280",marginTop:2}}>
                           {isActive
                             ?<span style={{color:"#92400e",fontWeight:700}}>⏱ En cours…</span>
-                            :<><strong>{dur.toFixed(2)} h</strong>{s.ended_at&&<span style={{marginLeft:6}}>→ {new Date(s.ended_at).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</span>}{tarifsMap[s.technicien]&&dur>0&&<span style={{marginLeft:8,color:"#059669",fontWeight:700}}>= {(dur*tarifsMap[s.technicien]).toFixed(2)} €</span>}</>}
+                            :<><strong>{dur.toFixed(2)} h</strong>{s.ended_at&&<span style={{marginLeft:6}}>→ {new Date(s.ended_at).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</span>}{tarifsMap[s.technicien]&&dur>0&&<span style={{marginLeft:8,color:"#059669",fontWeight:700}}>= {(bill15(dur)*tarifsMap[s.technicien]).toFixed(2)} €</span>}</>}
                         </div>
                         {s.description&&<div style={{fontSize:11,color:"#9ca3af",marginTop:1}}>{s.description}</div>}
                       </div>
@@ -3192,7 +3219,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                     <span style={{color:"#059669"}}>
                       = {sessions.reduce((a,s)=>{
                         const dur=s.statut==="en_cours"?elapsed/3600:Number(s.duree_heures)||0;
-                        return a+dur*(tarifsMap[s.technicien]||0);
+                        return a+bill15(dur)*(tarifsMap[s.technicien]||0);
                       },0).toFixed(2)} €
                     </span>
                   )}
