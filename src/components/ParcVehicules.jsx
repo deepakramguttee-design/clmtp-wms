@@ -195,9 +195,10 @@ export default function ParcVehicules({ parc, setParc, user }) {
         )}
       </div>
 
-      {/* Onglets catégories */}
-      <div style={{overflowX:"auto",WebkitOverflowScrolling:"touch"}}>
-        <div style={{display:"flex",gap:4,borderBottom:"2px solid #e5e7eb",minWidth:"max-content",paddingBottom:0}}>
+      {/* Pills catégories */}
+      <div style={{overflowX:"auto",WebkitOverflowScrolling:"touch",
+                   msOverflowStyle:"none",scrollbarWidth:"none"}}>
+        <div style={{display:"flex",gap:6,minWidth:"max-content",padding:"2px 0 6px"}}>
           {CATEGORIES.map(cat => {
             const count = catCount(cat);
             const active = activeTab === cat.id;
@@ -205,16 +206,22 @@ export default function ParcVehicules({ parc, setParc, user }) {
               <button key={cat.id}
                 onClick={() => { setActiveTab(cat.id); setSearch(""); setFilterAff("tous"); }}
                 style={{
-                  padding:"10px 14px",background:"none",border:"none",cursor:"pointer",
-                  borderBottom:`3px solid ${active?"#111827":"transparent"}`,
-                  marginBottom:-2,fontWeight:active?700:500,fontSize:13,
-                  color:active?"#111827":"#6b7280",whiteSpace:"nowrap",
-                  display:"flex",flexDirection:"column",alignItems:"center",gap:2,
+                  display:"inline-flex",alignItems:"center",gap:6,
+                  padding:"7px 14px",
+                  background: active ? "#111827" : "#f3f4f6",
+                  color: active ? "#fff" : "#374151",
+                  border: active ? "1.5px solid #111827" : "1.5px solid #e5e7eb",
+                  borderRadius:99,cursor:"pointer",whiteSpace:"nowrap",
+                  fontWeight: active ? 700 : 500,fontSize:13,
+                  transition:"all 0.15s",
                 }}>
                 <span>{cat.label}</span>
-                <span style={{fontSize:10,fontWeight:700,color:active?"#111827":"#9ca3af",
-                              background:active?"#f3f4f6":"transparent",
-                              padding:"1px 6px",borderRadius:99}}>
+                <span style={{
+                  fontSize:11,fontWeight:700,
+                  background: active ? "rgba(255,255,255,0.2)" : "#e5e7eb",
+                  color: active ? "#fff" : "#6b7280",
+                  padding:"1px 7px",borderRadius:99,minWidth:20,textAlign:"center",
+                }}>
                   {count}
                 </span>
               </button>
