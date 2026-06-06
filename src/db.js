@@ -878,3 +878,24 @@ export async function deleteParcVehicule(id) {
   const { error } = await supabase.from('parc_vehicules').delete().eq('id', id)
   if (error) console.error(error);
 }
+
+// ── PARC CATÉGORIES ───────────────────────────────────────────────────────────
+export async function getParcCategories() {
+  const { data, error } = await supabase.from('parc_categories').select('*').order('ordre')
+  if (error) { console.error(error); return []; }
+  return data || [];
+}
+export async function createParcCategorie(c) {
+  const { data, error } = await supabase.from('parc_categories').insert([c]).select().single()
+  if (error) { console.error(error); return null; }
+  return data;
+}
+export async function updateParcCategorie(id, c) {
+  const { error } = await supabase.from('parc_categories').update(c).eq('id', id)
+  if (error) { console.error(error); return false; }
+  return true;
+}
+export async function deleteParcCategorie(id) {
+  const { error } = await supabase.from('parc_categories').delete().eq('id', id)
+  if (error) console.error(error);
+}
