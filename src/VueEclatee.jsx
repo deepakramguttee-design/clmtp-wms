@@ -37,7 +37,7 @@ function isPdfUrl(url) {
 function Spinner() {
   return (
     <div style={{display:'flex',justifyContent:'center',padding:60}}>
-      <div style={{width:32,height:32,border:'3px solid #e5e7eb',borderTop:'3px solid #111827',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/>
+      <div style={{width:32,height:32,border:'3px solid #e0e0d8',borderTop:'3px solid #1e2330',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/>
     </div>
   );
 }
@@ -166,11 +166,11 @@ export default function VueEclatee({ user, siteId }) {
       {/* Header */}
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
         <div>
-          <h1 style={{fontSize:22,fontWeight:900,color:'#111827',margin:0}}>Vue éclatée</h1>
+          <h1 style={{fontSize:22,fontWeight:900,color:'#1e2330',margin:0}}>Vue éclatée</h1>
           <p style={{color:'#6b7280',fontSize:13,margin:'4px 0 0'}}>{total} équipement{total!==1?'s':''} · 3 sites</p>
         </div>
         {canEdit&&(
-          <button onClick={()=>openAdd(siteId)} style={{background:'#111827',color:'#fff',border:'none',borderRadius:10,padding:'9px 18px',fontWeight:700,cursor:'pointer',fontSize:13}}>
+          <button onClick={()=>openAdd(siteId)} style={{background:'#1e2330',color:'#fff',border:'none',borderRadius:10,padding:'9px 18px',fontWeight:700,cursor:'pointer',fontSize:13}}>
             + Ajouter équipement
           </button>
         )}
@@ -187,7 +187,7 @@ export default function VueEclatee({ user, siteId }) {
             {items.length===0?(
               <div style={{background:'#fff',borderRadius:14,border:'1px dashed #e5e7eb',padding:'32px 24px',textAlign:'center',color:'#9ca3af',fontSize:13}}>
                 {canEdit
-                  ?<><div style={{marginBottom:10}}>Aucun équipement pour ce site.</div><button onClick={()=>openAdd(site.id)} style={{padding:'8px 18px',background:'#f3f4f6',border:'none',borderRadius:9,fontWeight:600,cursor:'pointer',fontSize:13,color:'#374151'}}>+ Ajouter le premier équipement</button></>
+                  ?<><div style={{marginBottom:10}}>Aucun équipement pour ce site.</div><button onClick={()=>openAdd(site.id)} style={{padding:'8px 18px',background:'#f3f4f6',border:'none',borderRadius:9,fontWeight:600,cursor:'pointer',fontSize:13,color:'#555'}}>+ Ajouter le premier équipement</button></>
                   :'Aucun équipement enregistré pour ce site.'}
               </div>
             ):(
@@ -213,7 +213,7 @@ export default function VueEclatee({ user, siteId }) {
                       </div>
                       <div style={{padding:'10px 14px'}}>
                         <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}>
-                          <div style={{fontWeight:700,fontSize:13,color:'#111827',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{eq.nom_equipement}</div>
+                          <div style={{fontWeight:700,fontSize:13,color:'#1e2330',flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{eq.nom_equipement}</div>
                           {eq.static&&<span style={{fontSize:9,background:'#f3e8ff',color:'#7c3aed',padding:'1px 5px',borderRadius:99,fontWeight:700,flexShrink:0}}>📎</span>}
                         </div>
                         {eq.description&&<div style={{fontSize:11,color:'#6b7280',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{eq.description}</div>}
@@ -244,7 +244,7 @@ export default function VueEclatee({ user, siteId }) {
               {lightbox.description&&<div style={{fontSize:13,color:'#9ca3af',marginTop:4}}>{lightbox.description}</div>}
               {canEdit&&(
                 <div style={{display:'flex',gap:10,marginTop:12,justifyContent:'center'}}>
-                  <button onClick={()=>{setLightbox(null);openEdit(lightbox);}} style={{padding:'8px 16px',background:'#374151',border:'none',borderRadius:9,color:'#fff',cursor:'pointer',fontWeight:600,fontSize:13}}>✏️ Modifier</button>
+                  <button onClick={()=>{setLightbox(null);openEdit(lightbox);}} style={{padding:'8px 16px',background:'#555',border:'none',borderRadius:9,color:'#fff',cursor:'pointer',fontWeight:600,fontSize:13}}>✏️ Modifier</button>
                   {isAdmin&&<button onClick={()=>handleDelete(lightbox)} style={{padding:'8px 16px',background:'#dc2626',border:'none',borderRadius:9,color:'#fff',cursor:'pointer',fontWeight:600,fontSize:13}}>🗑 Supprimer</button>}
                 </div>
               )}
@@ -258,19 +258,19 @@ export default function VueEclatee({ user, siteId }) {
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000,backdropFilter:'blur(2px)',padding:16}}>
           <div style={{background:'#fff',borderRadius:20,padding:32,width:'min(96vw,480px)',maxHeight:'90vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:22}}>
-              <h2 style={{fontSize:18,fontWeight:800,color:'#111827',margin:0}}>{editTarget?'✏️ Modifier':'➕ Ajouter'} un équipement</h2>
+              <h2 style={{fontSize:18,fontWeight:800,color:'#1e2330',margin:0}}>{editTarget?'✏️ Modifier':'➕ Ajouter'} un équipement</h2>
               <button onClick={()=>setShowForm(false)} style={{background:'#f3f4f6',border:'none',borderRadius:8,padding:'6px 12px',cursor:'pointer',fontSize:16}}>✕</button>
             </div>
 
             <div style={{display:'flex',flexDirection:'column',gap:14}}>
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:5}}>Nom *</label>
+                <label style={{fontSize:12,fontWeight:600,color:'#555',display:'block',marginBottom:5}}>Nom *</label>
                 <input value={form.nom} onChange={e=>setForm(f=>({...f,nom:e.target.value}))} placeholder="Ex: Moteur DEUTZ 2013"
                   style={{width:'100%',padding:'10px 14px',border:'1px solid #e5e7eb',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box'}}/>
               </div>
 
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:5}}>Site *</label>
+                <label style={{fontSize:12,fontWeight:600,color:'#555',display:'block',marginBottom:5}}>Site *</label>
                 <select value={form.site_id} onChange={e=>setForm(f=>({...f,site_id:e.target.value}))}
                   style={{width:'100%',padding:'10px 14px',border:'1px solid #e5e7eb',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box'}}>
                   {SITES_CONFIG.map(s=><option key={s.id} value={s.id}>{s.icon} {s.label}</option>)}
@@ -278,13 +278,13 @@ export default function VueEclatee({ user, siteId }) {
               </div>
 
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:5}}>Description</label>
+                <label style={{fontSize:12,fontWeight:600,color:'#555',display:'block',marginBottom:5}}>Description</label>
                 <textarea value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder="Référence, modèle, notes…" rows={3}
                   style={{width:'100%',padding:'10px 14px',border:'1px solid #e5e7eb',borderRadius:10,fontSize:13,outline:'none',boxSizing:'border-box',resize:'vertical',fontFamily:'inherit'}}/>
               </div>
 
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:5}}>
+                <label style={{fontSize:12,fontWeight:600,color:'#555',display:'block',marginBottom:5}}>
                   Fichier PDF ou PNG {editTarget?'(laisser vide pour conserver l\'existant)':'*'}
                 </label>
                 <label style={{display:'block',padding:'14px',background:'#f9fafb',border:'2px dashed #e5e7eb',borderRadius:10,textAlign:'center',cursor:'pointer',fontSize:13,color:'#6b7280'}}>
@@ -314,7 +314,7 @@ export default function VueEclatee({ user, siteId }) {
               <div style={{display:'flex',gap:10,marginTop:6}}>
                 <button onClick={()=>setShowForm(false)} style={{flex:1,padding:'12px',background:'#f3f4f6',border:'none',borderRadius:10,fontWeight:600,cursor:'pointer'}}>Annuler</button>
                 <button onClick={handleSave} disabled={!form.nom||(!editTarget&&!form.file)||saving}
-                  style={{flex:2,padding:'12px',background:!form.nom||(!editTarget&&!form.file)||saving?'#e5e7eb':'#111827',color:!form.nom||(!editTarget&&!form.file)||saving?'#9ca3af':'#fff',border:'none',borderRadius:10,fontWeight:700,cursor:'pointer',fontSize:14}}>
+                  style={{flex:2,padding:'12px',background:!form.nom||(!editTarget&&!form.file)||saving?'#e0e0d8':'#1e2330',color:!form.nom||(!editTarget&&!form.file)||saving?'#9ca3af':'#fff',border:'none',borderRadius:10,fontWeight:700,cursor:'pointer',fontSize:14}}>
                   {saving?'⏳ Enregistrement…':editTarget?'💾 Enregistrer':'➕ Ajouter'}
                 </button>
               </div>

@@ -135,7 +135,7 @@ export default function ParcVehicules({ parc, setParc, user }) {
   };
 
   // ── Styles partagés ──────────────────────────────────────────────────────────
-  const lbl = { fontSize:11, fontWeight:600, color:"#374151", display:"block", marginBottom:4 };
+  const lbl = { fontSize:11, fontWeight:600, color:"#555", display:"block", marginBottom:4 };
   const inp = { width:"100%", padding:"9px 12px", border:"1px solid #e5e7eb", borderRadius:9, fontSize:13, outline:"none", boxSizing:"border-box" };
 
   return (
@@ -144,12 +144,12 @@ export default function ParcVehicules({ parc, setParc, user }) {
       {/* En-tête */}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
         <div>
-          <h1 style={{fontSize:22,fontWeight:900,color:"#111827",margin:0}}>🚜 Parc véhicules & engins</h1>
+          <h1 style={{fontSize:22,fontWeight:900,color:"#1e2330",margin:0}}>🚜 Parc véhicules & engins</h1>
           <p style={{color:"#6b7280",fontSize:13,margin:"4px 0 0"}}>{parc.length} engin{parc.length>1?"s":""} · données Supabase</p>
         </div>
         {canEdit && (
           <button onClick={openAdd}
-            style={{background:"#111827",color:"#fff",border:"none",borderRadius:10,
+            style={{background:"#1e2330",color:"#fff",border:"none",borderRadius:10,
                     padding:"10px 18px",fontWeight:700,cursor:"pointer",fontSize:13}}>
             + Ajouter un engin
           </button>
@@ -169,7 +169,7 @@ export default function ParcVehicules({ parc, setParc, user }) {
           {/* Items */}
           <div style={{flex:1, overflowY:"auto", padding:"8px 0"}}>
             {!catsLoaded ? (
-              <div style={{padding:"12px 16px",fontSize:12,color:"#9ca3af"}}>Chargement…</div>
+              <div style={{padding:"12px 16px",fontSize:12,color:"#8a9ab8"}}>Chargement…</div>
             ) : categories.map(cat => {
               const count  = catCount(cat);
               const active = activeTab === cat.id;
@@ -180,7 +180,7 @@ export default function ParcVehicules({ parc, setParc, user }) {
                     display:"flex", alignItems:"center", justifyContent:"space-between",
                     width:"100%", padding:"9px 14px", border:"none", cursor:"pointer",
                     background: active ? "#4472C4" : "transparent",
-                    color:      active ? "#fff"    : "#374151",
+                    color:      active ? "#fff"    : "#555",
                     fontWeight: active ? 700 : 500, fontSize:13,
                     textAlign:"left", transition:"background 0.12s",
                     borderLeft: active ? "3px solid #2d5aaa" : "3px solid transparent",
@@ -190,7 +190,7 @@ export default function ParcVehicules({ parc, setParc, user }) {
                   </span>
                   <span style={{
                     fontSize:11, fontWeight:700, flexShrink:0, marginLeft:6,
-                    background: active ? "rgba(255,255,255,0.25)" : "#e5e7eb",
+                    background: active ? "rgba(255,255,255,0.25)" : "#e0e0d8",
                     color:      active ? "#fff" : "#6b7280",
                     padding:"1px 7px", borderRadius:99, minWidth:22, textAlign:"center",
                   }}>
@@ -208,7 +208,7 @@ export default function ParcVehicules({ parc, setParc, user }) {
                 style={{
                   width:"100%", padding:"8px 10px", background:"#fff",
                   border:"1px solid #e5e7eb", borderRadius:8,
-                  fontSize:12, fontWeight:600, color:"#374151",
+                  fontSize:12, fontWeight:600, color:"#555",
                   cursor:"pointer", textAlign:"left",
                 }}>
                 ⚙️ Gérer les catégories
@@ -229,9 +229,9 @@ export default function ParcVehicules({ parc, setParc, user }) {
             ].map(btn => (
               <button key={btn.k} onClick={() => setFilterAff(btn.k)}
                 style={{padding:"5px 12px",borderRadius:99,
-                        border:`1px solid ${filterAff===btn.k?"#4472C4":"#e5e7eb"}`,
+                        border:`1px solid ${filterAff===btn.k?"#4472C4":"#e0e0d8"}`,
                         background:filterAff===btn.k?"#4472C4":"#fff",
-                        color:filterAff===btn.k?"#fff":"#374151",
+                        color:filterAff===btn.k?"#fff":"#555",
                         fontWeight:600,cursor:"pointer",fontSize:12}}>
                 {btn.l} <span style={{opacity:0.7}}>({btn.n})</span>
               </button>
@@ -252,9 +252,9 @@ export default function ParcVehicules({ parc, setParc, user }) {
           {/* Tableau */}
           <div style={{background:"#fff",borderRadius:10,border:"1px solid #f3f4f6",overflow:"hidden"}}>
         {filtered.length === 0 ? (
-          <div style={{padding:40,textAlign:"center",color:"#9ca3af"}}>
+          <div style={{padding:40,textAlign:"center",color:"#8a9ab8"}}>
             <div style={{fontSize:40,marginBottom:10}}>🚜</div>
-            <div style={{fontWeight:700,color:"#374151"}}>
+            <div style={{fontWeight:700,color:"#555"}}>
               {search||filterAff!=="tous" ? "Aucun résultat pour ces filtres" : "Aucun engin dans cette catégorie"}
             </div>
           </div>
@@ -262,25 +262,25 @@ export default function ParcVehicules({ parc, setParc, user }) {
           <div style={{overflowX:"auto"}}>
             <table style={{width:"100%",borderCollapse:"collapse",minWidth: activeTab==="tous" ? 1000 : 800}}>
               <thead>
-                <tr style={{background:"#111827"}}>
+                <tr style={{background:"#1e2330"}}>
                   {["N°","Désignation","Marque / Modèle","Immat.","Affectation",
                     ...(activeTab==="tous" ? ["Catégorie"] : []),
                     "Chauffeur","Année","Actions"].map(h => (
                     <th key={h} style={{padding:"10px 12px",textAlign:"left",fontSize:11,fontWeight:700,
-                                        color:"#9ca3af",textTransform:"uppercase",letterSpacing:0.5,whiteSpace:"nowrap"}}>{h}</th>
+                                        color:"#8a9ab8",textTransform:"uppercase",letterSpacing:0.5,whiteSpace:"nowrap"}}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((v,i) => (
                   <tr key={v.id} style={{borderBottom:"1px solid #f3f4f6",background:i%2===0?"#fff":"#fafafa"}}>
-                    <td style={{padding:"10px 12px",fontSize:12,fontFamily:"monospace",fontWeight:700,color:"#374151",whiteSpace:"nowrap"}}>{v.num||"—"}</td>
+                    <td style={{padding:"10px 12px",fontSize:12,fontFamily:"monospace",fontWeight:700,color:"#555",whiteSpace:"nowrap"}}>{v.num||"—"}</td>
                     <td style={{padding:"10px 12px"}}>
-                      <div style={{fontWeight:700,fontSize:13,color:"#111827"}}>{v.name}</div>
-                      {v.serie && <div style={{fontSize:10,color:"#9ca3af",fontFamily:"monospace",marginTop:1}}>{v.serie}</div>}
+                      <div style={{fontWeight:700,fontSize:13,color:"#1e2330"}}>{v.name}</div>
+                      {v.serie && <div style={{fontSize:10,color:"#8a9ab8",fontFamily:"monospace",marginTop:1}}>{v.serie}</div>}
                     </td>
-                    <td style={{padding:"10px 12px",fontSize:12,color:"#374151"}}>{[v.marque,v.modele].filter(Boolean).join(" / ")||"—"}</td>
-                    <td style={{padding:"10px 12px",fontSize:12,fontFamily:"monospace",color:"#374151"}}>{v.immat||"—"}</td>
+                    <td style={{padding:"10px 12px",fontSize:12,color:"#555"}}>{[v.marque,v.modele].filter(Boolean).join(" / ")||"—"}</td>
+                    <td style={{padding:"10px 12px",fontSize:12,fontFamily:"monospace",color:"#555"}}>{v.immat||"—"}</td>
                     <td style={{padding:"10px 12px"}}>
                       {v.affectation
                         ? <span style={{background:"#dbeafe",color:"#1e40af",padding:"2px 8px",borderRadius:99,fontSize:11,fontWeight:700,whiteSpace:"nowrap"}}>{v.affectation}</span>
@@ -301,8 +301,8 @@ export default function ParcVehicules({ parc, setParc, user }) {
                         </select>
                       </td>
                     )}
-                    <td style={{padding:"10px 12px",fontSize:12,color:"#374151"}}>{v.chauffeur||"—"}</td>
-                    <td style={{padding:"10px 12px",fontSize:12,color:"#374151"}}>{v.annee||"—"}</td>
+                    <td style={{padding:"10px 12px",fontSize:12,color:"#555"}}>{v.chauffeur||"—"}</td>
+                    <td style={{padding:"10px 12px",fontSize:12,color:"#555"}}>{v.annee||"—"}</td>
                     <td style={{padding:"10px 12px"}}>
                       {canEdit && (
                         <div style={{display:"flex",gap:6}}>
@@ -330,7 +330,7 @@ export default function ParcVehicules({ parc, setParc, user }) {
           <div style={{background:"#fff",borderRadius:20,padding:28,width:"min(96vw,560px)",
                        maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-              <h2 style={{fontSize:17,fontWeight:800,color:"#111827",margin:0}}>
+              <h2 style={{fontSize:17,fontWeight:800,color:"#1e2330",margin:0}}>
                 {editItem ? "✏️ Modifier l'engin" : "➕ Nouvel engin"}
               </h2>
               <button onClick={() => setShowForm(false)}
@@ -371,9 +371,9 @@ export default function ParcVehicules({ parc, setParc, user }) {
                   {["CLMTP","CLAISSE RAIL","STMF",""].map(a => (
                     <button key={a||"aucune"} onClick={() => setForm(p=>({...p,affectation:a}))}
                       style={{padding:"7px 14px",borderRadius:9,
-                              border:`2px solid ${form.affectation===a?"#111827":"#e5e7eb"}`,
-                              background:form.affectation===a?"#111827":"#fff",
-                              color:form.affectation===a?"#fff":"#374151",
+                              border:`2px solid ${form.affectation===a?"#1e2330":"#e0e0d8"}`,
+                              background:form.affectation===a?"#1e2330":"#fff",
+                              color:form.affectation===a?"#fff":"#555",
                               fontWeight:600,cursor:"pointer",fontSize:12}}>
                       {a||"Non affecté"}
                     </button>
@@ -399,8 +399,8 @@ export default function ParcVehicules({ parc, setParc, user }) {
                 </button>
                 <button onClick={handleSave} disabled={saving||!form.name.trim()}
                   style={{flex:2,padding:"11px",
-                          background:form.name.trim()?"#111827":"#e5e7eb",
-                          color:form.name.trim()?"#fff":"#9ca3af",
+                          background:form.name.trim()?"#1e2330":"#e0e0d8",
+                          color:form.name.trim()?"#fff":"#8a9ab8",
                           border:"none",borderRadius:10,fontWeight:700,
                           cursor:form.name.trim()?"pointer":"not-allowed",fontSize:14}}>
                   {saving ? "⏳…" : editItem ? "💾 Modifier" : "➕ Ajouter"}
@@ -419,7 +419,7 @@ export default function ParcVehicules({ parc, setParc, user }) {
                        maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
 
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-              <h2 style={{fontSize:17,fontWeight:800,color:"#111827",margin:0}}>⚙️ Gérer les catégories</h2>
+              <h2 style={{fontSize:17,fontWeight:800,color:"#1e2330",margin:0}}>⚙️ Gérer les catégories</h2>
               <button onClick={closeCatModal}
                 style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:15}}>✕</button>
             </div>
@@ -431,15 +431,15 @@ export default function ParcVehicules({ parc, setParc, user }) {
                                         background:"#f9fafb",borderRadius:12,border:"1px solid #e5e7eb"}}>
                   <span style={{fontSize:22,flexShrink:0,lineHeight:1}}>{c.icone}</span>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontWeight:700,fontSize:13,color:"#111827"}}>{c.nom}</div>
-                    <div style={{fontSize:11,color:"#9ca3af",marginTop:2,
+                    <div style={{fontWeight:700,fontSize:13,color:"#1e2330"}}>{c.nom}</div>
+                    <div style={{fontSize:11,color:"#8a9ab8",marginTop:2,
                                  overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
                       {(c.mots_cles||[]).length > 0
                         ? (c.mots_cles||[]).join(" · ")
                         : <em>Aucun mot-clé</em>}
                     </div>
                   </div>
-                  <span style={{fontSize:11,color:"#9ca3af",flexShrink:0}}>
+                  <span style={{fontSize:11,color:"#8a9ab8",flexShrink:0}}>
                     {parc.filter(v => v.categorie_id === c.id).length} engins
                   </span>
                   <div style={{display:"flex",gap:6,flexShrink:0}}>
@@ -451,7 +451,7 @@ export default function ParcVehicules({ parc, setParc, user }) {
                 </div>
               ))}
               {dbCats.length === 0 && (
-                <div style={{textAlign:"center",padding:24,color:"#9ca3af",fontSize:13}}>
+                <div style={{textAlign:"center",padding:24,color:"#8a9ab8",fontSize:13}}>
                   Aucune catégorie — ajoutez-en une ci-dessous.
                 </div>
               )}
@@ -460,7 +460,7 @@ export default function ParcVehicules({ parc, setParc, user }) {
             {/* Formulaire ajout / modification */}
             <div style={{background:"#f9fafb",borderRadius:14,padding:20,border:"1px solid #e5e7eb"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-                <h3 style={{fontSize:14,fontWeight:700,color:"#111827",margin:0}}>
+                <h3 style={{fontSize:14,fontWeight:700,color:"#1e2330",margin:0}}>
                   {catEditItem ? `✏️ Modifier "${catEditItem.nom}"` : "➕ Ajouter une catégorie"}
                 </h3>
                 {!catEditItem && dbCats.length > 0 && (
@@ -493,7 +493,7 @@ export default function ParcVehicules({ parc, setParc, user }) {
                   placeholder="Ex : PELLE, PELLETEUSE, MINIPELLE, BULLDOZER"
                   rows={3}
                   style={{...inp,resize:"vertical",fontFamily:"monospace",lineHeight:1.6}}/>
-                <div style={{fontSize:11,color:"#9ca3af",marginTop:4}}>
+                <div style={{fontSize:11,color:"#8a9ab8",marginTop:4}}>
                   {catForm.mots_cles.split(",").map(s=>s.trim()).filter(Boolean).length} mot(s)-clé(s) · correspondance sur <strong>nom</strong> ou <strong>marque</strong> de l'engin
                 </div>
               </div>
@@ -508,8 +508,8 @@ export default function ParcVehicules({ parc, setParc, user }) {
                 )}
                 <button onClick={handleCatSave} disabled={catSaving||!catForm.nom.trim()}
                   style={{flex:2,padding:"10px",
-                          background:catForm.nom.trim()?"#111827":"#e5e7eb",
-                          color:catForm.nom.trim()?"#fff":"#9ca3af",
+                          background:catForm.nom.trim()?"#1e2330":"#e0e0d8",
+                          color:catForm.nom.trim()?"#fff":"#8a9ab8",
                           border:"none",borderRadius:10,fontWeight:700,
                           cursor:catForm.nom.trim()?"pointer":"not-allowed",fontSize:13}}>
                   {catSaving ? "⏳…" : catEditItem ? "💾 Mettre à jour" : "➕ Ajouter"}

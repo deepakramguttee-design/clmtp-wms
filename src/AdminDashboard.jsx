@@ -36,7 +36,7 @@ const SITE_LABELS   = { clmtp_sable: "SABLÉ", claisse_rail: "CLAISSE", stmf: "S
 function Skeleton({ h = 100 }) {
   return (
     <div style={{
-      background: "#263248", borderRadius: 12, height: h,
+      background: "#e8e8e2", borderRadius: 12, height: h,
       animation: "pulse 1.5s ease-in-out infinite",
     }} />
   );
@@ -50,12 +50,12 @@ function KPICard({ icon, label, value, color, loading }) {
   if (loading) return <Skeleton h={110} />;
   return (
     <div style={{
-      background: "#1e293b", borderRadius: 14, padding: "18px 20px",
-      border: "1px solid #334155",
+      background: "#ffffff", borderRadius: 14, padding: "18px 20px",
+      border: "1px solid #e0e0d8",
     }}>
       <div style={{ fontSize: 24, marginBottom: 8 }}>{icon}</div>
       <div style={{ fontSize: 26, fontWeight: 900, color, letterSpacing: -1 }}>{value}</div>
-      <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 6, fontWeight: 500 }}>{label}</div>
+      <div style={{ fontSize: 12, color: "#666", marginTop: 6, fontWeight: 500 }}>{label}</div>
     </div>
   );
 }
@@ -65,8 +65,8 @@ function SiteCard({ siteKey, products, loading, error }) {
   if (loading) return <Skeleton h={150} />;
   if (error) return (
     <div style={{
-      background: "#1e293b", borderRadius: 14, padding: 20,
-      border: "1px solid #334155", flex: 1, minWidth: 220,
+      background: "#ffffff", borderRadius: 14, padding: 20,
+      border: "1px solid #e0e0d8", flex: 1, minWidth: 220,
     }}>
       <ErrorMsg msg={error} />
     </div>
@@ -79,7 +79,7 @@ function SiteCard({ siteKey, products, loading, error }) {
   const pct      = total > 0 ? Math.round((enStock / total) * 100) : 0;
   return (
     <div style={{
-      background: "#1e293b", borderRadius: 14, padding: "18px 20px",
+      background: "#ffffff", borderRadius: 14, padding: "18px 20px",
       border: `1px solid ${meta.color}55`, flex: 1, minWidth: 220,
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
@@ -88,28 +88,28 @@ function SiteCard({ siteKey, products, loading, error }) {
           background: meta.color + "33",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>{meta.icon}</div>
-        <span style={{ fontWeight: 800, fontSize: 15, color: "#f1f5f9" }}>{meta.label}</span>
+        <span style={{ fontWeight: 800, fontSize: 15, color: "#1a1a1a" }}>{meta.label}</span>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
         {[
-          { v: fmt(total),     l: "Références",  c: "#f1f5f9" },
+          { v: fmt(total),     l: "Références",  c: "#1a1a1a" },
           { v: fmtEur(valeur), l: "Valeur stock", c: "#10b981" },
           { v: fmt(ruptures),  l: "Ruptures",     c: "#ef4444" },
           { v: fmt(faibles),   l: "Stock faible", c: "#f59e0b" },
         ].map(({ v, l, c }) => (
           <div key={l}>
             <div style={{ fontSize: 18, fontWeight: 900, color: c }}>{v}</div>
-            <div style={{ fontSize: 11, color: "#64748b" }}>{l}</div>
+            <div style={{ fontSize: 11, color: "#777" }}>{l}</div>
           </div>
         ))}
       </div>
-      <div style={{ background: "#0f172a", borderRadius: 6, height: 6, overflow: "hidden" }}>
+      <div style={{ background: "#e0e0d8", borderRadius: 6, height: 6, overflow: "hidden" }}>
         <div style={{
           height: "100%", width: `${pct}%`,
           background: meta.dot, borderRadius: 6, transition: "width 0.6s ease",
         }} />
       </div>
-      <div style={{ fontSize: 11, color: "#64748b", marginTop: 4, textAlign: "right" }}>
+      <div style={{ fontSize: 11, color: "#777", marginTop: 4, textAlign: "right" }}>
         {pct}% en stock
       </div>
     </div>
@@ -268,8 +268,8 @@ export default function AdminDashboard({ user, navigateTo }) {
   // ── RENDER ─────────────────────────────────────────────────────────────────
   return (
     <div style={{
-      background: "#0f172a", minHeight: "100vh", padding: 24,
-      color: "#f1f5f9", fontFamily: "inherit",
+      background: "transparent", minHeight: "100vh", padding: 24,
+      color: "#1a1a1a", fontFamily: "inherit",
     }}>
       <style>{`
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
@@ -286,18 +286,18 @@ export default function AdminDashboard({ user, navigateTo }) {
             <button
               onClick={() => navigateTo("dashboard")}
               style={{
-                background: "none", border: "1px solid #334155", borderRadius: 8,
-                color: "#94a3b8", cursor: "pointer", fontSize: 13, fontWeight: 600,
+                background: "#ffffff", border: "1px solid #e0e0d8", borderRadius: 8,
+                color: "#1a1a1a", cursor: "pointer", fontSize: 13, fontWeight: 600,
                 padding: "6px 12px", display: "flex", alignItems: "center", gap: 6,
               }}
             >
               ← Dashboard
             </button>
           )}
-          <h1 style={{ margin: 0, fontSize: 26, fontWeight: 900, color: "#f1f5f9" }}>
+          <h1 style={{ margin: 0, fontSize: 26, fontWeight: 900, color: "#1a1a1a" }}>
             ⚙️ Administration
           </h1>
-          <p style={{ margin: "4px 0 0", fontSize: 12, color: "#64748b" }}>
+          <p style={{ margin: "4px 0 0", fontSize: 12, color: "#777" }}>
             {lastRefresh
               ? `Actualisé à ${lastRefresh.toLocaleTimeString("fr-FR")}`
               : "Chargement en cours…"}
@@ -307,8 +307,8 @@ export default function AdminDashboard({ user, navigateTo }) {
           onClick={fetchAll}
           disabled={loading}
           style={{
-            padding: "10px 22px", borderRadius: 10, border: "1px solid #334155",
-            background: loading ? "#1e293b" : "#1e40af",
+            padding: "10px 22px", borderRadius: 10, border: "1px solid #e0e0d8",
+            background: loading ? "#e0e0d8" : "#1e2330",
             color: loading ? "#475569" : "#fff",
             fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", fontSize: 14,
             display: "flex", alignItems: "center", gap: 8,
@@ -350,10 +350,10 @@ export default function AdminDashboard({ user, navigateTo }) {
       }}>
         {/* BarChart mouvements 7j */}
         <div style={{
-          background: "#1e293b", borderRadius: 14, padding: "20px 20px 10px",
-          border: "1px solid #334155",
+          background: "#ffffff", borderRadius: 14, padding: "20px 20px 10px",
+          border: "1px solid #e0e0d8",
         }}>
-          <h3 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 800, color: "#f1f5f9" }}>
+          <h3 style={{ margin: "0 0 16px", fontSize: 15, fontWeight: 800, color: "#1a1a1a" }}>
             📈 Mouvements — 7 derniers jours
           </h3>
           {errors.mouvements
@@ -365,23 +365,23 @@ export default function AdminDashboard({ user, navigateTo }) {
                 <BarChart data={chartMouv} margin={{ top: 4, right: 8, left: -24, bottom: 0 }}>
                   <XAxis
                     dataKey="date"
-                    tick={{ fill: "#94a3b8", fontSize: 12 }}
+                    tick={{ fill: "#666", fontSize: 12 }}
                     axisLine={false} tickLine={false}
                   />
                   <YAxis
-                    tick={{ fill: "#94a3b8", fontSize: 11 }}
+                    tick={{ fill: "#666", fontSize: 11 }}
                     axisLine={false} tickLine={false}
                     allowDecimals={false}
                   />
                   <Tooltip
                     contentStyle={{
-                      background: "#0f172a", border: "1px solid #334155",
-                      borderRadius: 8, color: "#f1f5f9",
+                      background: "#ffffff", border: "1px solid #e0e0d8",
+                      borderRadius: 8, color: "#1a1a1a",
                     }}
-                    labelStyle={{ color: "#94a3b8", marginBottom: 4 }}
+                    labelStyle={{ color: "#666", marginBottom: 4 }}
                     cursor={{ fill: "#ffffff08" }}
                   />
-                  <Legend wrapperStyle={{ color: "#94a3b8", fontSize: 12 }} />
+                  <Legend wrapperStyle={{ color: "#666", fontSize: 12 }} />
                   <Bar dataKey="entrees" name="Entrées" fill="#10b981" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="sorties" name="Sorties" fill="#ef4444" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -392,10 +392,10 @@ export default function AdminDashboard({ user, navigateTo }) {
 
         {/* Alertes stock bas */}
         <div style={{
-          background: "#1e293b", borderRadius: 14, padding: 20,
-          border: "1px solid #334155", display: "flex", flexDirection: "column",
+          background: "#ffffff", borderRadius: 14, padding: 20,
+          border: "1px solid #e0e0d8", display: "flex", flexDirection: "column",
         }}>
-          <h3 style={{ margin: "0 0 14px", fontSize: 15, fontWeight: 800, color: "#f1f5f9" }}>
+          <h3 style={{ margin: "0 0 14px", fontSize: 15, fontWeight: 800, color: "#1a1a1a" }}>
             ⚠️ Alertes stock bas
           </h3>
           {loading
@@ -418,17 +418,17 @@ export default function AdminDashboard({ user, navigateTo }) {
                     }}>
                       <div style={{ flex: 1, overflow: "hidden", marginRight: 8 }}>
                         <div style={{
-                          fontWeight: 600, fontSize: 12, color: "#f1f5f9",
+                          fontWeight: 600, fontSize: 12, color: "#1a1a1a",
                           whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
                         }}>{p.name}</div>
-                        <div style={{ fontSize: 11, color: "#64748b" }}>{p.fournisseur || "—"}</div>
+                        <div style={{ fontSize: 11, color: "#777" }}>{p.fournisseur || "—"}</div>
                       </div>
                       <div style={{ textAlign: "right", flexShrink: 0 }}>
                         <div style={{
                           fontWeight: 900, fontSize: 16,
                           color: isRupture ? "#f87171" : "#fbbf24",
                         }}>{p.stock}</div>
-                        <div style={{ fontSize: 10, color: "#64748b" }}>min: {p.min}</div>
+                        <div style={{ fontSize: 10, color: "#777" }}>min: {p.min}</div>
                       </div>
                     </div>
                   );
@@ -447,11 +447,11 @@ export default function AdminDashboard({ user, navigateTo }) {
       }}>
         {/* Prêts actifs */}
         <div style={{
-          background: "#1e293b", borderRadius: 14, padding: 20,
-          border: "1px solid #334155",
+          background: "#ffffff", borderRadius: 14, padding: 20,
+          border: "1px solid #e0e0d8",
         }}>
           <h3 style={{
-            margin: "0 0 14px", fontSize: 15, fontWeight: 800, color: "#f1f5f9",
+            margin: "0 0 14px", fontSize: 15, fontWeight: 800, color: "#1a1a1a",
             display: "flex", alignItems: "center", gap: 10,
           }}>
             🤝 Prêts en cours
@@ -469,7 +469,7 @@ export default function AdminDashboard({ user, navigateTo }) {
             : loading
             ? <Skeleton h={180} />
             : pretsActifs.length === 0
-            ? <div style={{ color: "#64748b", fontSize: 13, textAlign: "center", padding: 24 }}>Aucun prêt en cours</div>
+            ? <div style={{ color: "#777", fontSize: 13, textAlign: "center", padding: 24 }}>Aucun prêt en cours</div>
             : (
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
@@ -478,8 +478,8 @@ export default function AdminDashboard({ user, navigateTo }) {
                       {["Article", "Emprunteur", "Site", "Retour prévu"].map(h => (
                         <th key={h} style={{
                           padding: "6px 8px", textAlign: "left",
-                          color: "#64748b", fontWeight: 600,
-                          borderBottom: "1px solid #334155",
+                          color: "#777", fontWeight: 600,
+                          borderBottom: "1px solid #e0e0d8",
                         }}>{h}</th>
                       ))}
                     </tr>
@@ -500,13 +500,13 @@ export default function AdminDashboard({ user, navigateTo }) {
                           <td style={{ padding: "9px 8px", color: "#e2e8f0" }}>
                             {p.emprunteur || "—"}
                           </td>
-                          <td style={{ padding: "9px 8px", color: "#94a3b8" }}>
+                          <td style={{ padding: "9px 8px", color: "#666" }}>
                             {SITE_LABELS[p.site_id] || p.site_id || "—"}
                           </td>
                           <td style={{ padding: "9px 8px" }}>
                             <span style={{
                               fontWeight: 700,
-                              color: enRetard ? "#f87171" : retour ? "#10b981" : "#64748b",
+                              color: enRetard ? "#f87171" : retour ? "#10b981" : "#777",
                             }}>
                               {retour ? retour.toLocaleDateString("fr-FR") : "—"}
                             </span>
@@ -530,10 +530,10 @@ export default function AdminDashboard({ user, navigateTo }) {
 
         {/* Activité utilisateurs */}
         <div style={{
-          background: "#1e293b", borderRadius: 14, padding: 20,
-          border: "1px solid #334155",
+          background: "#ffffff", borderRadius: 14, padding: 20,
+          border: "1px solid #e0e0d8",
         }}>
-          <h3 style={{ margin: "0 0 14px", fontSize: 15, fontWeight: 800, color: "#f1f5f9" }}>
+          <h3 style={{ margin: "0 0 14px", fontSize: 15, fontWeight: 800, color: "#1a1a1a" }}>
             👥 Activité utilisateurs
           </h3>
           {errors.utilisateurs
@@ -553,7 +553,7 @@ export default function AdminDashboard({ user, navigateTo }) {
                     return (
                       <div key={u.id} style={{
                         display: "flex", alignItems: "center", gap: 10,
-                        padding: "8px 0", borderBottom: "1px solid #263248",
+                        padding: "8px 0", borderBottom: "1px solid #e0e0d8",
                       }}>
                         <div style={{
                           width: 34, height: 34, borderRadius: "50%",
@@ -568,9 +568,9 @@ export default function AdminDashboard({ user, navigateTo }) {
                           }}>
                             {u.prenom} {u.nom}
                           </div>
-                          <div style={{ fontSize: 11, color: "#64748b" }}>{u.role}</div>
+                          <div style={{ fontSize: 11, color: "#777" }}>{u.role}</div>
                         </div>
-                        <div style={{ fontSize: 11, color: "#94a3b8", textAlign: "right", flexShrink: 0 }}>
+                        <div style={{ fontSize: 11, color: "#666", textAlign: "right", flexShrink: 0 }}>
                           {fmtRelative(u.derniere_connexion)}
                         </div>
                       </div>
@@ -580,7 +580,7 @@ export default function AdminDashboard({ user, navigateTo }) {
 
                 {/* Volume mouvements/site 30j */}
                 <div>
-                  <p style={{ margin: "0 0 8px", fontSize: 11, color: "#64748b", fontWeight: 700, letterSpacing: 0.5 }}>
+                  <p style={{ margin: "0 0 8px", fontSize: 11, color: "#777", fontWeight: 700, letterSpacing: 0.5 }}>
                     MOUVEMENTS / SITE — 30 JOURS
                   </p>
                   {errors.mouvements
@@ -594,19 +594,19 @@ export default function AdminDashboard({ user, navigateTo }) {
                         >
                           <XAxis
                             type="number"
-                            tick={{ fill: "#94a3b8", fontSize: 10 }}
+                            tick={{ fill: "#666", fontSize: 10 }}
                             axisLine={false} tickLine={false}
                             allowDecimals={false}
                           />
                           <YAxis
                             type="category" dataKey="site" width={90}
-                            tick={{ fill: "#94a3b8", fontSize: 11 }}
+                            tick={{ fill: "#666", fontSize: 11 }}
                             axisLine={false} tickLine={false}
                           />
                           <Tooltip
                             contentStyle={{
-                              background: "#0f172a", border: "1px solid #334155",
-                              borderRadius: 8, color: "#f1f5f9",
+                              background: "#ffffff", border: "1px solid #e0e0d8",
+                              borderRadius: 8, color: "#1a1a1a",
                             }}
                             cursor={{ fill: "#ffffff08" }}
                           />

@@ -5,7 +5,7 @@ const STATUTS = {
   "Disponible":             { bg: "#d1fae5", text: "#065f46" },
   "En cours d'utilisation": { bg: "#fef3c7", text: "#92400e" },
   "Endommagé":              { bg: "#fee2e2", text: "#991b1b" },
-  "Retiré":                 { bg: "#f3f4f6", text: "#374151" },
+  "Retiré":                 { bg: "#f3f4f6", text: "#555" },
   "Service":                { bg: "#dbeafe", text: "#1e40af" },
   "Manquant":               { bg: "#f3e8ff", text: "#6b21a8" },
   "Volé":                   { bg: "#fce7f3", text: "#9d174d" },
@@ -22,7 +22,7 @@ const PAGE_SIZE = 100;
 // ── SOUS-COMPOSANTS ───────────────────────────────────────────────────────────
 
 function StatutBadge({ statut }) {
-  const c = STATUTS[statut] || { bg: "#f3f4f6", text: "#374151" };
+  const c = STATUTS[statut] || { bg: "#f3f4f6", text: "#555" };
   return (
     <span style={{ background: c.bg, color: c.text, padding: "3px 9px", borderRadius: 20, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>
       {statut || "—"}
@@ -33,7 +33,7 @@ function StatutBadge({ statut }) {
 function Spinner() {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 60, gap: 12, color: "#6b7280", fontSize: 14 }}>
-      <div style={{ width: 20, height: 20, border: "2px solid #e5e7eb", borderTopColor: "#3b82f6", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <div style={{ width: 20, height: 20, border: "2px solid #e0e0d8", borderTopColor: "#3b82f6", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       Chargement…
     </div>
   );
@@ -86,28 +86,28 @@ function ModalEdit({ equip, onClose, onSaved, personnes, localisations }) {
   };
 
   const inputStyle = {
-    width: "100%", padding: "9px 12px", border: "1px solid #4b5563",
+    width: "100%", padding: "9px 12px", border: "1px solid #e0e0d8",
     borderRadius: 9, fontSize: 13, outline: "none", boxSizing: "border-box",
-    background: "#374151", color: "#f9fafb",
+    background: "#ffffff", color: "#1a1a1a",
   };
-  const labelStyle = { fontSize: 11, fontWeight: 600, color: "#9ca3af", display: "block", marginBottom: 5 };
+  const labelStyle = { fontSize: 11, fontWeight: 600, color: "#666", display: "block", marginBottom: 5 };
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(3px)" }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: "#1f2937", borderRadius: 20, padding: 28, width: "min(96vw,500px)", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 64px rgba(0,0,0,.5)", border: "1px solid rgba(255,255,255,.08)" }}>
+      <div style={{ background: "#ffffff", borderRadius: 20, padding: 28, width: "min(96vw,500px)", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 8px 32px rgba(0,0,0,.12)", border: "1px solid #e0e0d8" }}>
 
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
           <div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: "#f9fafb" }}>✏️ Modifier l'équipement</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "#1a1a1a" }}>✏️ Modifier l'équipement</div>
             <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
               {equip.code && <span style={{ fontFamily: "monospace", color: "#a78bfa", marginRight: 8 }}>#{equip.code}</span>}
               {equip.nom}
             </div>
           </div>
           <button onClick={onClose}
-            style={{ background: "rgba(255,255,255,.08)", border: "none", borderRadius: 8, padding: "6px 11px", cursor: "pointer", color: "#9ca3af", fontSize: 14, lineHeight: 1 }}>✕</button>
+            style={{ background: "#f5f5f0", border: "1px solid #e0e0d8", borderRadius: 8, padding: "6px 11px", cursor: "pointer", color: "#666", fontSize: 14, lineHeight: 1 }}>✕</button>
         </div>
 
         {/* Bouton Prêt rapide */}
@@ -184,7 +184,7 @@ function ModalEdit({ equip, onClose, onSaved, personnes, localisations }) {
         {/* Actions */}
         <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
           <button onClick={onClose}
-            style={{ flex: 1, padding: "11px", background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 10, fontWeight: 600, cursor: "pointer", color: "#9ca3af", fontSize: 13 }}>
+            style={{ flex: 1, padding: "11px", background: "#f5f5f0", border: "1px solid #e0e0d8", borderRadius: 10, fontWeight: 600, cursor: "pointer", color: "#666", fontSize: 13 }}>
             Annuler
           </button>
           <button onClick={handleSave} disabled={saving}
@@ -266,7 +266,7 @@ export default function InventaireOutillage({ user, siteId }) {
   }), [equipements]);
 
   const TH = ({ children }) => (
-    <th style={{ padding: "10px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: 0.5, whiteSpace: "nowrap" }}>
+    <th style={{ padding: "10px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#8a9ab8", textTransform: "uppercase", letterSpacing: 0.5, whiteSpace: "nowrap" }}>
       {children}
     </th>
   );
@@ -279,7 +279,7 @@ export default function InventaireOutillage({ user, siteId }) {
 
       {/* Header */}
       <div>
-        <h1 style={{ fontSize: 22, fontWeight: 900, color: "#111827", margin: 0 }}>Inventaire outillage</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 900, color: "#1e2330", margin: 0 }}>Inventaire outillage</h1>
         <p style={{ color: "#6b7280", fontSize: 13, margin: "4px 0 0" }}>
           {equipements.length} équipements · {stats.disponible} disponibles · {stats.en_cours} en cours
         </p>
@@ -288,12 +288,12 @@ export default function InventaireOutillage({ user, siteId }) {
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
         {[
-          { l: "Total",       v: stats.total,      icon: "🔧", color: "#111827" },
+          { l: "Total",       v: stats.total,      icon: "🔧", color: "#1e2330" },
           { l: "Disponibles", v: stats.disponible, icon: "✅", color: "#065f46" },
           { l: "En cours",    v: stats.en_cours,   icon: "🔨", color: "#92400e" },
           { l: "Incidents",   v: stats.endommage,  icon: "⚠️", color: "#dc2626" },
         ].map(k => (
-          <div key={k.l} style={{ background: "#fff", borderRadius: 14, padding: "16px 18px", border: "1px solid #e5e7eb", boxShadow: "0 1px 3px rgba(0,0,0,.05)" }}>
+          <div key={k.l} style={{ background: "#fff", borderRadius: 14, padding: "16px 18px", border: "1px solid #e0e0d8", boxShadow: "0 1px 3px rgba(0,0,0,.05)" }}>
             <div style={{ fontSize: 20, marginBottom: 6 }}>{k.icon}</div>
             <div style={{ fontSize: 22, fontWeight: 900, color: k.color, letterSpacing: -0.5 }}>{k.v}</div>
             <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>{k.l}</div>
@@ -307,21 +307,21 @@ export default function InventaireOutillage({ user, siteId }) {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="🔍  Code, description, modèle, assigné…"
-          style={{ flex: 1, minWidth: 240, padding: "10px 16px", border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 14, outline: "none" }}
+          style={{ flex: 1, minWidth: 240, padding: "10px 16px", border: "1px solid #e0e0d8", borderRadius: 10, fontSize: 14, outline: "none" }}
         />
         <select value={filterSite} onChange={e => setFilterSite(e.target.value)}
-          style={{ padding: "10px 14px", border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 13, outline: "none", background: "#fff" }}>
+          style={{ padding: "10px 14px", border: "1px solid #e0e0d8", borderRadius: 10, fontSize: 13, outline: "none", background: "#fff" }}>
           <option value="tous">Tous les sites</option>
           {Object.entries(SITE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           <option value="">Non assigné</option>
         </select>
         <select value={filterCat} onChange={e => setFilterCat(e.target.value)}
-          style={{ padding: "10px 14px", border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 13, outline: "none", background: "#fff", maxWidth: 220 }}>
+          style={{ padding: "10px 14px", border: "1px solid #e0e0d8", borderRadius: 10, fontSize: 13, outline: "none", background: "#fff", maxWidth: 220 }}>
           <option value="tous">Toutes catégories</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
         <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)}
-          style={{ padding: "10px 14px", border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 13, outline: "none", background: "#fff" }}>
+          style={{ padding: "10px 14px", border: "1px solid #e0e0d8", borderRadius: 10, fontSize: 13, outline: "none", background: "#fff" }}>
           <option value="tous">Tous les statuts</option>
           {Object.keys(STATUTS).map(s => <option key={s} value={s}>{s}</option>)}
         </select>
@@ -338,26 +338,26 @@ export default function InventaireOutillage({ user, siteId }) {
             {totalPages > 1 && (
               <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
                 <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
-                  style={{ padding: "5px 12px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", cursor: page === 0 ? "not-allowed" : "pointer", color: page === 0 ? "#d1d5db" : "#374151", fontWeight: 600, fontSize: 13 }}>←</button>
-                <span style={{ fontSize: 13, color: "#374151", fontWeight: 600 }}>{page + 1} / {totalPages}</span>
+                  style={{ padding: "5px 12px", border: "1px solid #e0e0d8", borderRadius: 8, background: "#fff", cursor: page === 0 ? "not-allowed" : "pointer", color: page === 0 ? "#d1d5db" : "#555", fontWeight: 600, fontSize: 13 }}>←</button>
+                <span style={{ fontSize: 13, color: "#555", fontWeight: 600 }}>{page + 1} / {totalPages}</span>
                 <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}
-                  style={{ padding: "5px 12px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", cursor: page >= totalPages - 1 ? "not-allowed" : "pointer", color: page >= totalPages - 1 ? "#d1d5db" : "#374151", fontWeight: 600, fontSize: 13 }}>→</button>
+                  style={{ padding: "5px 12px", border: "1px solid #e0e0d8", borderRadius: 8, background: "#fff", cursor: page >= totalPages - 1 ? "not-allowed" : "pointer", color: page >= totalPages - 1 ? "#d1d5db" : "#555", fontWeight: 600, fontSize: 13 }}>→</button>
               </div>
             )}
           </div>
 
           {filtered.length === 0 ? (
-            <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", padding: 60, textAlign: "center", color: "#9ca3af" }}>
+            <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e0e0d8", padding: 60, textAlign: "center", color: "#8a9ab8" }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>🔧</div>
-              <div style={{ fontWeight: 700, color: "#374151", fontSize: 15 }}>Aucun équipement trouvé</div>
+              <div style={{ fontWeight: 700, color: "#555", fontSize: 15 }}>Aucun équipement trouvé</div>
               <div style={{ fontSize: 13, marginTop: 6 }}>Modifiez vos critères de recherche.</div>
             </div>
           ) : (
-            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e0e0d8", overflow: "hidden" }}>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ background: "#111827" }}>
+                    <tr style={{ background: "#1e2330" }}>
                       <TH>Code</TH>
                       <TH>Fabricant</TH>
                       <TH>Description</TH>
@@ -379,13 +379,13 @@ export default function InventaireOutillage({ user, siteId }) {
                           {e.fabricant || "—"}
                         </td>
                         <td style={{ padding: "9px 12px", maxWidth: 280 }}>
-                          <div style={{ fontWeight: 600, fontSize: 13, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.nom}</div>
-                          {e.numero_serie && <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>S/N {e.numero_serie}</div>}
+                          <div style={{ fontWeight: 600, fontSize: 13, color: "#1e2330", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.nom}</div>
+                          {e.numero_serie && <div style={{ fontSize: 10, color: "#8a9ab8", marginTop: 2 }}>S/N {e.numero_serie}</div>}
                         </td>
-                        <td style={{ padding: "9px 12px", fontSize: 12, color: "#374151", whiteSpace: "nowrap" }}>
+                        <td style={{ padding: "9px 12px", fontSize: 12, color: "#555", whiteSpace: "nowrap" }}>
                           {e.modele || "—"}
                         </td>
-                        <td style={{ padding: "9px 12px", fontSize: 12, color: "#374151" }}>
+                        <td style={{ padding: "9px 12px", fontSize: 12, color: "#555" }}>
                           {e.categorie || "—"}
                         </td>
                         <td style={{ padding: "9px 12px", whiteSpace: "nowrap" }}>
@@ -393,17 +393,17 @@ export default function InventaireOutillage({ user, siteId }) {
                             <span style={{ background: "#f0f9ff", color: "#0369a1", padding: "2px 8px", borderRadius: 99, fontSize: 11, fontWeight: 600 }}>
                               {SITE_LABELS[e.site] || e.site}
                             </span>
-                          ) : <span style={{ color: "#9ca3af", fontSize: 12 }}>—</span>}
+                          ) : <span style={{ color: "#8a9ab8", fontSize: 12 }}>—</span>}
                         </td>
                         <td style={{ padding: "9px 12px", whiteSpace: "nowrap" }}>
                           <StatutBadge statut={e.statut} />
                         </td>
-                        <td style={{ padding: "9px 12px", fontSize: 12, color: "#374151", whiteSpace: "nowrap" }}>
-                          {e.assigne_a || <span style={{ color: "#9ca3af" }}>—</span>}
+                        <td style={{ padding: "9px 12px", fontSize: 12, color: "#555", whiteSpace: "nowrap" }}>
+                          {e.assigne_a || <span style={{ color: "#8a9ab8" }}>—</span>}
                         </td>
                         <td style={{ padding: "9px 8px", whiteSpace: "nowrap" }}>
                           <button onClick={() => setEditing(e)}
-                            style={{ padding: "5px 12px", background: "#111827", color: "#fff", border: "none", borderRadius: 7, cursor: "pointer", fontSize: 12, fontWeight: 600 }}>
+                            style={{ padding: "5px 12px", background: "#1e2330", color: "#fff", border: "none", borderRadius: 7, cursor: "pointer", fontSize: 12, fontWeight: 600 }}>
                             ✏️ Modifier
                           </button>
                         </td>

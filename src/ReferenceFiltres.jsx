@@ -44,7 +44,7 @@ const emptyEng = () => ({ ...Object.fromEntries(ENG_COLS.map(c => [c.key, ''])),
 function Spinner() {
   return (
     <div style={{display:'flex',justifyContent:'center',padding:60}}>
-      <div style={{width:32,height:32,border:'3px solid #e5e7eb',borderTop:'3px solid #111827',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/>
+      <div style={{width:32,height:32,border:'3px solid #e5e7eb',borderTop:'3px solid #1e2330',borderRadius:'50%',animation:'spin 0.8s linear infinite'}}/>
     </div>
   );
 }
@@ -152,11 +152,11 @@ export default function ReferenceFiltres({ user }) {
       {/* Header */}
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
         <div>
-          <h1 style={{fontSize:22,fontWeight:900,color:'#111827',margin:0}}>Références filtres</h1>
+          <h1 style={{fontSize:22,fontWeight:900,color:'#1e2330',margin:0}}>Références filtres</h1>
           <p style={{color:'#6b7280',fontSize:13,margin:'4px 0 0'}}>{filtered.length} résultat{filtered.length!==1?'s':''}</p>
         </div>
         {isAdmin&&(
-          <button onClick={openAdd} style={{background:'#111827',color:'#fff',border:'none',borderRadius:10,padding:'9px 18px',fontWeight:700,cursor:'pointer',fontSize:13}}>
+          <button onClick={openAdd} style={{background:'#1e2330',color:'#fff',border:'none',borderRadius:10,padding:'9px 18px',fontWeight:700,cursor:'pointer',fontSize:13}}>
             + Ajouter
           </button>
         )}
@@ -166,8 +166,8 @@ export default function ReferenceFiltres({ user }) {
       <div style={{display:'flex',gap:4,borderBottom:'2px solid #e5e7eb'}}>
         {[{id:'vehicules',label:'🚗 Véhicules (VU/VL/VP/VC)'},{id:'engins',label:'🏗️ Engins lourds'}].map(t=>(
           <button key={t.id} onClick={()=>{setTab(t.id);setSearch('');setCatFilter('');}}
-            style={{padding:'10px 20px',border:'none',borderBottom:tab===t.id?'2px solid #111827':'2px solid transparent',
-              background:'none',fontWeight:tab===t.id?700:400,color:tab===t.id?'#111827':'#6b7280',
+            style={{padding:'10px 20px',border:'none',borderBottom:tab===t.id?'2px solid #1e2330':'2px solid transparent',
+              background:'none',fontWeight:tab===t.id?700:400,color:tab===t.id?'#1e2330':'#6b7280',
               cursor:'pointer',fontSize:13,marginBottom:-2}}>
             {t.label}
           </button>
@@ -199,7 +199,7 @@ export default function ReferenceFiltres({ user }) {
           </thead>
           <tbody>
             {filtered.length===0?(
-              <tr><td colSpan={cols.length+(isAdmin?1:0)} style={{...tdStyle,textAlign:'center',color:'#9ca3af',padding:32}}>
+              <tr><td colSpan={cols.length+(isAdmin?1:0)} style={{...tdStyle,textAlign:'center',color:'#8a9ab8',padding:32}}>
                 Aucun résultat
               </td></tr>
             ):filtered.map(row=>(
@@ -242,7 +242,7 @@ export default function ReferenceFiltres({ user }) {
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000,backdropFilter:'blur(2px)',padding:16}}>
           <div style={{background:'#fff',borderRadius:20,padding:28,width:'min(96vw,560px)',maxHeight:'90vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-              <h2 style={{fontSize:17,fontWeight:800,color:'#111827',margin:0}}>
+              <h2 style={{fontSize:17,fontWeight:800,color:'#1e2330',margin:0}}>
                 {editTarget?'✏️ Modifier':'➕ Ajouter'} — {tab==='vehicules'?'Véhicule':'Engin'}
               </h2>
               <button onClick={()=>setShowForm(false)} style={{background:'#f3f4f6',border:'none',borderRadius:8,padding:'6px 12px',cursor:'pointer',fontSize:16}}>✕</button>
@@ -267,7 +267,7 @@ export default function ReferenceFiltres({ user }) {
               <button onClick={()=>setShowForm(false)} style={{flex:1,padding:'11px',background:'#f3f4f6',border:'none',borderRadius:10,fontWeight:600,cursor:'pointer'}}>Annuler</button>
               <button onClick={handleSave}
                 disabled={!(tab==='vehicules'?form.designation:form.engin)||saving}
-                style={{flex:2,padding:'11px',background:!(tab==='vehicules'?form.designation:form.engin)||saving?'#e5e7eb':'#111827',color:!(tab==='vehicules'?form.designation:form.engin)||saving?'#9ca3af':'#fff',border:'none',borderRadius:10,fontWeight:700,cursor:'pointer',fontSize:14}}>
+                style={{flex:2,padding:'11px',background:!(tab==='vehicules'?form.designation:form.engin)||saving?'#e0e0d8':'#1e2330',color:!(tab==='vehicules'?form.designation:form.engin)||saving?'#8a9ab8':'#fff',border:'none',borderRadius:10,fontWeight:700,cursor:'pointer',fontSize:14}}>
                 {saving?'⏳ Enregistrement…':editTarget?'💾 Enregistrer':'➕ Ajouter'}
               </button>
             </div>

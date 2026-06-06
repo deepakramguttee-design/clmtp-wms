@@ -33,19 +33,19 @@ const STATUS_CONFIG = {
   ok:       { bg: "#d1fae5", text: "#065f46", label: "En stock" },
   warning:  { bg: "#fef3c7", text: "#92400e", label: "Faible" },
   critical: { bg: "#fee2e2", text: "#991b1b", label: "Critique" },
-  rupture:  { bg: "#f3f4f6", text: "#374151", label: "Rupture" },
+  rupture:  { bg: "#f3f4f6", text: "#555", label: "Rupture" },
 };
 const OR_STATUTS = {
   ouvert:     { bg: "#dbeafe", text: "#1e40af", label: "Ouvert" },
   en_cours:   { bg: "#fef3c7", text: "#92400e", label: "En cours" },
   en_attente: { bg: "#f3e8ff", text: "#6b21a8", label: "En attente pièces" },
   termine:    { bg: "#d1fae5", text: "#065f46", label: "Terminé" },
-  annule:     { bg: "#f3f4f6", text: "#374151", label: "Annulé" },
+  annule:     { bg: "#f3f4f6", text: "#555", label: "Annulé" },
 };
 const OR_PRIORITES = {
   urgente: { bg: "#fee2e2", text: "#991b1b" },
   haute:   { bg: "#fef3c7", text: "#92400e" },
-  normale: { bg: "#f3f4f6", text: "#374151" },
+  normale: { bg: "#f3f4f6", text: "#555" },
 };
 const FOURN_TOP = [
   { name:"KRAMP",count:286},{name:"GUILIANI",count:150},{name:"ADPL",count:126},
@@ -55,13 +55,13 @@ const FOURN_TOP = [
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 function Badge({ status, map }) {
-  const c = (map||STATUS_CONFIG)[status]||{bg:"#f3f4f6",text:"#374151",label:status};
+  const c = (map||STATUS_CONFIG)[status]||{bg:"#f3f4f6",text:"#555",label:status};
   return <span style={{background:c.bg,color:c.text,padding:"3px 10px",borderRadius:20,fontSize:11,fontWeight:700,whiteSpace:"nowrap"}}>{c.label||status}</span>;
 }
 
 function Spinner() {
   return <div style={{display:"flex",alignItems:"center",justifyContent:"center",padding:40,gap:12,color:"#6b7280",fontSize:14}}>
-    <div style={{width:20,height:20,border:"2px solid #e5e7eb",borderTopColor:"#3b82f6",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
+    <div style={{width:20,height:20,border:"2px solid #e0e0d8",borderTopColor:"#3b82f6",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
     Chargement…
   </div>;
 }
@@ -88,22 +88,22 @@ function Dashboard({ stockOverrides, mouvements, ordres, products, user, navigat
     <div style={{display:"flex",flexDirection:"column",gap:22}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",flexWrap:"wrap",gap:10}}>
         <div>
-          <h1 style={{fontSize:26,fontWeight:900,color:"#111827",margin:0}}>Tableau de bord</h1>
+          <h1 style={{fontSize:26,fontWeight:900,color:"#1a1a1a",margin:0}}>Tableau de bord</h1>
           <p style={{color:"#6b7280",margin:"4px 0 0",fontSize:13}}>{time.toLocaleDateString("fr-FR",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</p>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           {user?.role==="admin"&&navigateTo&&(
-            <button onClick={()=>navigateTo("admin")} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #e5e7eb",background:"#fff",color:"#374151",fontWeight:600,cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",gap:6}}>
+            <button onClick={()=>navigateTo("admin")} style={{padding:"7px 14px",borderRadius:8,border:"1px solid #e0e0d8",background:"#fff",color:"#555",fontWeight:600,cursor:"pointer",fontSize:12,display:"flex",alignItems:"center",gap:6}}>
               🛡️ Administration
             </button>
           )}
-          <div style={{background:"#111827",color:"#fff",borderRadius:10,padding:"8px 16px",fontFamily:"monospace",fontSize:16,fontWeight:700}}>{time.toLocaleTimeString("fr-FR")}</div>
+          <div style={{background:"#1e2330",color:"#fff",borderRadius:10,padding:"8px 16px",fontFamily:"monospace",fontSize:16,fontWeight:700}}>{time.toLocaleTimeString("fr-FR")}</div>
         </div>
       </div>
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(155px,1fr))",gap:12}}>
         {[
-          {label:"Références",value:stats.total.toLocaleString("fr-FR"),icon:"🗂",color:"#111827"},
+          {label:"Références",value:stats.total.toLocaleString("fr-FR"),icon:"🗂",color:"#1a1a1a"},
           {label:"En stock",value:stats.ok.toLocaleString("fr-FR"),icon:"✅",color:"#059669"},
           {label:"Rupture",value:stats.rupture.toLocaleString("fr-FR"),icon:"🔴",color:"#dc2626"},
           {label:"Faible",value:stats.faible,icon:"⚠️",color:"#d97706"},
@@ -111,7 +111,7 @@ function Dashboard({ stockOverrides, mouvements, ordres, products, user, navigat
           {label:"OR en cours",value:orOuverts.length,icon:"🔧",color:"#7c3aed"},
           {label:"Mouvements/jour",value:mouvJour.length,icon:"📥",color:"#0891b2"},
         ].map((k,i)=>(
-          <div key={i} style={{background:"#fff",borderRadius:14,padding:"16px 18px",border:"1px solid #e5e7eb",boxShadow:"0 1px 3px rgba(0,0,0,0.05)"}}>
+          <div key={i} style={{background:"#fff",borderRadius:14,padding:"16px 18px",border:"1px solid #e0e0d8",boxShadow:"0 1px 3px rgba(0,0,0,0.05)"}}>
             <div style={{fontSize:22,marginBottom:6}}>{k.icon}</div>
             <div style={{fontSize:22,fontWeight:900,color:k.color,letterSpacing:-0.5}}>{k.value}</div>
             <div style={{fontSize:12,color:"#6b7280",marginTop:4}}>{k.label}</div>
@@ -120,16 +120,16 @@ function Dashboard({ stockOverrides, mouvements, ordres, products, user, navigat
       </div>
 
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
-        <div style={{background:"#111827",borderRadius:16,padding:22,color:"#fff"}}>
+        <div style={{background:"#fff",borderRadius:16,padding:22,color:"#1a1a1a",border:"1px solid #e0e0d8"}}>
           <h3 style={{margin:"0 0 4px",fontWeight:800,fontSize:15}}>⚠️ Stock faible / critique</h3>
-          <p style={{margin:"0 0 14px",fontSize:12,color:"#9ca3af"}}>Articles sous le seuil minimum</p>
+          <p style={{margin:"0 0 14px",fontSize:12,color:"#666"}}>Articles sous le seuil minimum</p>
           {alertes.length===0
-            ? <div style={{color:"#9ca3af",fontSize:13}}>✅ Aucune alerte</div>
+            ? <div style={{color:"#666",fontSize:13}}>✅ Aucune alerte</div>
             : alertes.map(p=>(
-              <div key={p.id} style={{padding:"9px 12px",background:"rgba(255,255,255,0.06)",borderRadius:9,marginBottom:7,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div key={p.id} style={{padding:"9px 12px",background:"rgba(0,0,0,0.04)",borderRadius:9,marginBottom:7,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <div>
                   <div style={{fontWeight:600,fontSize:12,maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.name}</div>
-                  <div style={{fontSize:11,color:"#9ca3af",marginTop:2}}>{p.fournisseur||"—"}</div>
+                  <div style={{fontSize:11,color:"#8a9ab8",marginTop:2}}>{p.fournisseur||"—"}</div>
                 </div>
                 <div style={{textAlign:"right"}}>
                   <div style={{fontWeight:800,color:"#fbbf24",fontSize:16}}>{getStock(p)}</div>
@@ -141,14 +141,14 @@ function Dashboard({ stockOverrides, mouvements, ordres, products, user, navigat
         </div>
 
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
-          <div style={{background:"#fff",borderRadius:16,padding:20,border:"1px solid #e5e7eb"}}>
-            <h3 style={{margin:"0 0 14px",fontWeight:800,fontSize:15,color:"#111827"}}>🔧 Derniers OR</h3>
+          <div style={{background:"#fff",borderRadius:16,padding:20,border:"1px solid #e0e0d8"}}>
+            <h3 style={{margin:"0 0 14px",fontWeight:800,fontSize:15,color:"#1a1a1a"}}>🔧 Derniers OR</h3>
             {orOuverts.length===0
-              ? <div style={{color:"#9ca3af",fontSize:13}}>Aucun OR en cours</div>
+              ? <div style={{color:"#8a9ab8",fontSize:13}}>Aucun OR en cours</div>
               : orOuverts.slice(0,4).map(o=>(
                 <div key={o.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",background:"#f9fafb",borderRadius:9,marginBottom:7}}>
                   <div>
-                    <div style={{fontWeight:700,fontSize:13,color:"#111827"}}>{o.numero}</div>
+                    <div style={{fontWeight:700,fontSize:13,color:"#1a1a1a"}}>{o.numero}</div>
                     <div style={{fontSize:11,color:"#6b7280"}}>{o.machine}</div>
                   </div>
                   <Badge status={o.statut} map={OR_STATUTS}/>
@@ -333,9 +333,9 @@ function Stock({ stockOverrides, setStockOverrides, products, user, siteId, cust
   return (
     <div style={{display:"flex",flexDirection:"column",gap:14}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
-        <h1 style={{fontSize:22,fontWeight:900,color:"#111827",margin:0}}>Stocks — <span style={{color:"#3b82f6"}}>{filtered.length.toLocaleString("fr-FR")}</span> références</h1>
+        <h1 style={{fontSize:22,fontWeight:900,color:"#1a1a1a",margin:0}}>Stocks — <span style={{color:"#3b82f6"}}>{filtered.length.toLocaleString("fr-FR")}</span> références</h1>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          {isAdmin&&<button onClick={()=>setShowNewArticle(true)} style={{background:"#111827",color:"#fff",border:"none",borderRadius:10,padding:"9px 16px",fontWeight:700,cursor:"pointer",fontSize:13}}>+ Nouvelle référence</button>}
+          {isAdmin&&<button onClick={()=>setShowNewArticle(true)} style={{background:"#1e2330",color:"#fff",border:"none",borderRadius:10,padding:"9px 16px",fontWeight:700,cursor:"pointer",fontSize:13}}>+ Nouvelle référence</button>}
           <div style={{fontSize:13,color:"#6b7280",background:"#f3f4f6",padding:"6px 14px",borderRadius:8}}>Page {safe}/{totalPages}</div>
         </div>
       </div>
@@ -359,34 +359,34 @@ function Stock({ stockOverrides, setStockOverrides, products, user, siteId, cust
               {l:"Unité",k:"unit",ph:"pcs"},
             ].map(f=>(
               <div key={f.k}>
-                <label style={{fontSize:11,fontWeight:600,color:"#374151",display:"block",marginBottom:4}}>{f.l}</label>
-                <input type={f.t||"text"} value={newArticleForm[f.k]} onChange={e=>setNewArticleForm(p=>({...p,[f.k]:e.target.value}))} placeholder={f.ph} style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                <label style={{fontSize:11,fontWeight:600,color:"#555",display:"block",marginBottom:4}}>{f.l}</label>
+                <input type={f.t||"text"} value={newArticleForm[f.k]} onChange={e=>setNewArticleForm(p=>({...p,[f.k]:e.target.value}))} placeholder={f.ph} style={{width:"100%",padding:"8px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
               </div>
             ))}
           </div>
-          <button onClick={handleAddNewArticle} disabled={savingNew||!newArticleForm.id||!newArticleForm.name} style={{padding:"10px 24px",background:savingNew||!newArticleForm.id||!newArticleForm.name?"#e5e7eb":"#0369a1",color:savingNew||!newArticleForm.id||!newArticleForm.name?"#9ca3af":"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:13}}>
+          <button onClick={handleAddNewArticle} disabled={savingNew||!newArticleForm.id||!newArticleForm.name} style={{padding:"10px 24px",background:savingNew||!newArticleForm.id||!newArticleForm.name?"#e0e0d8":"#0369a1",color:savingNew||!newArticleForm.id||!newArticleForm.name?"#8a9ab8":"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:13}}>
             {savingNew?"⏳ Création…":"💾 Créer l'article"}
           </button>
         </div>
       )}
       <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-        <input value={search} onChange={e=>{setSearch(e.target.value);setPage(1);}} placeholder="🔍  Rechercher article, SKU, fournisseur, emplacement…" style={{flex:1,minWidth:260,padding:"10px 16px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:14,outline:"none"}}/>
-        <select value={fourn} onChange={e=>{setFourn(e.target.value);setPage(1);}} style={{padding:"10px 12px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",minWidth:160}}>
+        <input value={search} onChange={e=>{setSearch(e.target.value);setPage(1);}} placeholder="🔍  Rechercher article, SKU, fournisseur, emplacement…" style={{flex:1,minWidth:260,padding:"10px 16px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:14,outline:"none"}}/>
+        <select value={fourn} onChange={e=>{setFourn(e.target.value);setPage(1);}} style={{padding:"10px 12px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",minWidth:160}}>
           <option value="">Tous fournisseurs</option>
           {uniqueFourns.map(f=><option key={f} value={f}>{f}</option>)}
         </select>
       </div>
       <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
         {[{v:"tous",l:`Tous (${allProducts.length})`},{v:"ok",l:`En stock (${counts.ok})`},{v:"rupture",l:`Rupture (${counts.rupture})`},{v:"critical",l:`Critique (${counts.critical})`},{v:"warning",l:`Faible (${counts.warning})`}].map(btn=>(
-          <button key={btn.v} onClick={()=>{setStatus(btn.v);setPage(1);}} style={{padding:"7px 14px",borderRadius:9,border:`2px solid ${status===btn.v?"#111827":"#e5e7eb"}`,background:status===btn.v?"#111827":"#fff",color:status===btn.v?"#fff":"#374151",fontWeight:600,cursor:"pointer",fontSize:12}}>{btn.l}</button>
+          <button key={btn.v} onClick={()=>{setStatus(btn.v);setPage(1);}} style={{padding:"7px 14px",borderRadius:9,border:`2px solid ${status===btn.v?"#1e2330":"#e0e0d8"}`,background:status===btn.v?"#1e2330":"#fff",color:status===btn.v?"#fff":"#555",fontWeight:600,cursor:"pointer",fontSize:12}}>{btn.l}</button>
         ))}
       </div>
-      <div style={{background:"#fff",borderRadius:14,border:"1px solid #e5e7eb",overflow:"hidden"}}>
+      <div style={{background:"#fff",borderRadius:14,border:"1px solid #e0e0d8",overflow:"hidden"}}>
         <div style={{overflowX:"auto"}}>
           <table style={{width:"100%",borderCollapse:"collapse"}}>
-            <thead><tr style={{background:"#111827"}}>
+            <thead><tr style={{background:"#1e2330"}}>
               {["SKU","Désignation","Fournisseur","Emplacement","Stock","Min.","Prix HT","Statut",""].map(h=>(
-                <th key={h} style={{padding:"11px 14px",textAlign:"left",fontSize:11,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:0.5,whiteSpace:"nowrap"}}>{h}</th>
+                <th key={h} style={{padding:"11px 14px",textAlign:"left",fontSize:11,fontWeight:700,color:"#8a9ab8",textTransform:"uppercase",letterSpacing:0.5,whiteSpace:"nowrap"}}>{h}</th>
               ))}
             </tr></thead>
             <tbody>
@@ -400,16 +400,16 @@ function Stock({ stockOverrides, setStockOverrides, products, user, siteId, cust
                       {p.id}
                       {isEdited&&<span style={{marginLeft:4,background:"#dbeafe",color:"#1e40af",fontSize:9,padding:"1px 5px",borderRadius:99,fontWeight:700}}>✏️</span>}
                     </td>
-                    <td style={{padding:"10px 14px",maxWidth:230}}><div style={{fontWeight:600,fontSize:13,color:"#111827",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{art.name||p.name}</div></td>
+                    <td style={{padding:"10px 14px",maxWidth:230}}><div style={{fontWeight:600,fontSize:13,color:"#1a1a1a",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{art.name||p.name}</div></td>
                     <td style={{padding:"10px 14px",fontSize:12,color:"#6b7280",whiteSpace:"nowrap"}}>{art.fournisseur||p.fournisseur||"—"}</td>
-                    <td style={{padding:"10px 14px",fontFamily:"monospace",fontSize:12,fontWeight:600,color:"#374151"}}>{art.location||p.location}</td>
-                    <td style={{padding:"10px 14px",textAlign:"center"}}><span style={{fontSize:16,fontWeight:900,color:s===0?"#dc2626":s<(art.min||p.min)&&(art.min||p.min)>0?"#d97706":"#111827"}}>{s}</span></td>
-                    <td style={{padding:"10px 14px",textAlign:"center",fontSize:12,color:"#9ca3af"}}>{art.min||p.min}</td>
-                    <td style={{padding:"10px 14px",textAlign:"right",fontSize:12,fontWeight:600,color:"#374151",whiteSpace:"nowrap"}}>{(art.prix||p.prix)>0?(art.prix||p.prix).toLocaleString("fr-FR",{minimumFractionDigits:2})+" €":"—"}</td>
+                    <td style={{padding:"10px 14px",fontFamily:"monospace",fontSize:12,fontWeight:600,color:"#555"}}>{art.location||p.location}</td>
+                    <td style={{padding:"10px 14px",textAlign:"center"}}><span style={{fontSize:16,fontWeight:900,color:s===0?"#dc2626":s<(art.min||p.min)&&(art.min||p.min)>0?"#d97706":"#1e2330"}}>{s}</span></td>
+                    <td style={{padding:"10px 14px",textAlign:"center",fontSize:12,color:"#8a9ab8"}}>{art.min||p.min}</td>
+                    <td style={{padding:"10px 14px",textAlign:"right",fontSize:12,fontWeight:600,color:"#555",whiteSpace:"nowrap"}}>{(art.prix||p.prix)>0?(art.prix||p.prix).toLocaleString("fr-FR",{minimumFractionDigits:2})+" €":"—"}</td>
                     <td style={{padding:"10px 14px"}}><Badge status={st}/></td>
                     <td style={{padding:"10px 14px"}}>
                       <div style={{display:"flex",gap:6}}>
-                        <button onClick={()=>openEdit(p)} style={{padding:"5px 12px",background:"#f3f4f6",border:"none",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600,color:"#374151",whiteSpace:"nowrap"}}>✏️ Modifier</button>
+                        <button onClick={()=>openEdit(p)} style={{padding:"5px 12px",background:"#f3f4f6",border:"none",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600,color:"#555",whiteSpace:"nowrap"}}>✏️ Modifier</button>
                         {canDelete&&(
                           <button onClick={()=>setConfirmDelete(p)} style={{padding:"5px 10px",background:"#fee2e2",border:"1px solid #fca5a5",borderRadius:8,cursor:"pointer",fontSize:12,color:"#dc2626",fontWeight:600}}>🗑</button>
                         )}
@@ -423,11 +423,11 @@ function Stock({ stockOverrides, setStockOverrides, products, user, siteId, cust
         </div>
         <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:6,padding:"12px",borderTop:"1px solid #f3f4f6"}}>
           {[{l:"«",a:()=>setPage(1),d:safe===1},{l:"‹",a:()=>setPage(p=>Math.max(1,p-1)),d:safe===1}].map((b,i)=>(
-            <button key={i} onClick={b.a} disabled={b.d} style={{padding:"6px 11px",borderRadius:7,border:"1px solid #e5e7eb",background:"#fff",cursor:b.d?"not-allowed":"pointer",color:b.d?"#d1d5db":"#374151",fontWeight:600,fontSize:13}}>{b.l}</button>
+            <button key={i} onClick={b.a} disabled={b.d} style={{padding:"6px 11px",borderRadius:7,border:"1px solid #e0e0d8",background:"#fff",cursor:b.d?"not-allowed":"pointer",color:b.d?"#d1d5db":"#555",fontWeight:600,fontSize:13}}>{b.l}</button>
           ))}
-          {Array.from({length:Math.min(5,totalPages)},(_,i)=>{const pg=Math.max(1,Math.min(safe-2+i,totalPages-4+i));return <button key={pg} onClick={()=>setPage(pg)} style={{padding:"6px 11px",borderRadius:7,border:`2px solid ${pg===safe?"#111827":"#e5e7eb"}`,background:pg===safe?"#111827":"#fff",color:pg===safe?"#fff":"#374151",fontWeight:700,fontSize:13,cursor:"pointer"}}>{pg}</button>;}).filter((_,i)=>{ const pg=Math.max(1,Math.min(safe-2+i,totalPages-4+i)); return pg>=1&&pg<=totalPages; })}
+          {Array.from({length:Math.min(5,totalPages)},(_,i)=>{const pg=Math.max(1,Math.min(safe-2+i,totalPages-4+i));return <button key={pg} onClick={()=>setPage(pg)} style={{padding:"6px 11px",borderRadius:7,border:`2px solid ${pg===safe?"#1e2330":"#e0e0d8"}`,background:pg===safe?"#1e2330":"#fff",color:pg===safe?"#fff":"#555",fontWeight:700,fontSize:13,cursor:"pointer"}}>{pg}</button>;}).filter((_,i)=>{ const pg=Math.max(1,Math.min(safe-2+i,totalPages-4+i)); return pg>=1&&pg<=totalPages; })}
           {[{l:"›",a:()=>setPage(p=>Math.min(totalPages,p+1)),d:safe===totalPages},{l:"»",a:()=>setPage(totalPages),d:safe===totalPages}].map((b,i)=>(
-            <button key={i} onClick={b.a} disabled={b.d} style={{padding:"6px 11px",borderRadius:7,border:"1px solid #e5e7eb",background:"#fff",cursor:b.d?"not-allowed":"pointer",color:b.d?"#d1d5db":"#374151",fontWeight:600,fontSize:13}}>{b.l}</button>
+            <button key={i} onClick={b.a} disabled={b.d} style={{padding:"6px 11px",borderRadius:7,border:"1px solid #e0e0d8",background:"#fff",cursor:b.d?"not-allowed":"pointer",color:b.d?"#d1d5db":"#555",fontWeight:600,fontSize:13}}>{b.l}</button>
           ))}
         </div>
       </div>
@@ -437,46 +437,46 @@ function Stock({ stockOverrides, setStockOverrides, products, user, siteId, cust
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(2px)"}}>
           <div style={{background:"#fff",borderRadius:20,padding:30,width:"min(96vw,480px)",boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-              <h2 style={{fontSize:17,fontWeight:800,color:"#111827",margin:0}}>✏️ Modifier l'article</h2>
+              <h2 style={{fontSize:17,fontWeight:800,color:"#1a1a1a",margin:0}}>✏️ Modifier l'article</h2>
               <button onClick={()=>setEditArticle(null)} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:15}}>✕</button>
             </div>
-            <div style={{background:"#f9fafb",borderRadius:10,padding:"10px 14px",marginBottom:18,border:"1px solid #e5e7eb"}}>
-              <div style={{fontWeight:700,fontSize:13,color:"#111827"}}>{editArticle.name}</div>
-              <div style={{fontSize:11,color:"#9ca3af",marginTop:2}}>{editArticle.id}</div>
+            <div style={{background:"#f9fafb",borderRadius:10,padding:"10px 14px",marginBottom:18,border:"1px solid #e0e0d8"}}>
+              <div style={{fontWeight:700,fontSize:13,color:"#1a1a1a"}}>{editArticle.name}</div>
+              <div style={{fontSize:11,color:"#8a9ab8",marginTop:2}}>{editArticle.id}</div>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:13}}>
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Fournisseur</label>
+                <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Fournisseur</label>
                 <input value={editForm.fournisseur} onChange={e=>setEditForm(f=>({...f,fournisseur:e.target.value}))}
                   placeholder="Nom du fournisseur"
-                  style={{width:"100%",padding:"10px 13px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  style={{width:"100%",padding:"10px 13px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
               </div>
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Emplacement</label>
+                <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Emplacement</label>
                 <input value={editForm.location} onChange={e=>setEditForm(f=>({...f,location:e.target.value}))}
                   placeholder="Ex: A-01-02"
-                  style={{width:"100%",padding:"10px 13px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",fontFamily:"monospace",letterSpacing:1}}/>
+                  style={{width:"100%",padding:"10px 13px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",fontFamily:"monospace",letterSpacing:1}}/>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                 <div>
-                  <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Stock actuel</label>
+                  <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Stock actuel</label>
                   <input type="number" min="0" value={editForm.stock} onChange={e=>setEditForm(f=>({...f,stock:e.target.value}))}
-                    style={{width:"100%",padding:"10px 13px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:16,fontWeight:700,outline:"none",boxSizing:"border-box",color:"#059669"}}/>
+                    style={{width:"100%",padding:"10px 13px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:16,fontWeight:700,outline:"none",boxSizing:"border-box",color:"#059669"}}/>
                 </div>
                 <div>
-                  <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Stock minimum</label>
+                  <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Stock minimum</label>
                   <input type="number" min="0" value={editForm.min} onChange={e=>setEditForm(f=>({...f,min:e.target.value}))}
-                    style={{width:"100%",padding:"10px 13px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:16,fontWeight:700,outline:"none",boxSizing:"border-box",color:"#d97706"}}/>
+                    style={{width:"100%",padding:"10px 13px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:16,fontWeight:700,outline:"none",boxSizing:"border-box",color:"#d97706"}}/>
                 </div>
               </div>
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Prix HT (€)</label>
+                <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Prix HT (€)</label>
                 <input type="number" step="0.01" min="0" value={editForm.prix} onChange={e=>setEditForm(f=>({...f,prix:e.target.value}))}
-                  style={{width:"100%",padding:"10px 13px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:14,fontWeight:700,outline:"none",boxSizing:"border-box",color:"#3b82f6"}}/>
+                  style={{width:"100%",padding:"10px 13px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:14,fontWeight:700,outline:"none",boxSizing:"border-box",color:"#3b82f6"}}/>
               </div>
               <div style={{display:"flex",gap:10,marginTop:4}}>
                 <button onClick={()=>setEditArticle(null)} style={{flex:1,padding:"12px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer"}}>Annuler</button>
-                <button onClick={handleSave} disabled={saving} style={{flex:2,padding:"12px",background:saving?"#9ca3af":"#111827",color:"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>
+                <button onClick={handleSave} disabled={saving} style={{flex:2,padding:"12px",background:saving?"#8a9ab8":"#1e2330",color:"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>
                   {saving?"⏳ Enregistrement…":"💾 Enregistrer"}
                 </button>
               </div>
@@ -489,9 +489,9 @@ function Stock({ stockOverrides, setStockOverrides, products, user, siteId, cust
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}}>
           <div style={{background:"#fff",borderRadius:20,padding:28,width:"min(96vw,400px)",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",textAlign:"center"}}>
             <div style={{fontSize:44,marginBottom:12}}>🗑️</div>
-            <h3 style={{fontSize:17,fontWeight:800,color:"#111827",marginBottom:8}}>Réinitialiser cet article ?</h3>
-            <p style={{fontSize:13,color:"#374151",fontWeight:600,marginBottom:6}}>{confirmDelete.name}</p>
-            <p style={{fontSize:12,color:"#9ca3af",marginBottom:20}}>Les modifications de stock, emplacement et prix seront supprimées. L'article reviendra à ses valeurs d'origine du catalogue.</p>
+            <h3 style={{fontSize:17,fontWeight:800,color:"#1a1a1a",marginBottom:8}}>Réinitialiser cet article ?</h3>
+            <p style={{fontSize:13,color:"#555",fontWeight:600,marginBottom:6}}>{confirmDelete.name}</p>
+            <p style={{fontSize:12,color:"#8a9ab8",marginBottom:20}}>Les modifications de stock, emplacement et prix seront supprimées. L'article reviendra à ses valeurs d'origine du catalogue.</p>
             <div style={{display:"flex",gap:10}}>
               <button onClick={()=>setConfirmDelete(null)} style={{flex:1,padding:"12px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer",fontSize:14}}>Annuler</button>
               <button onClick={()=>handleDeleteStock(confirmDelete)} style={{flex:1,padding:"12px",background:"#dc2626",color:"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>🗑 Réinitialiser</button>
@@ -669,12 +669,12 @@ function EntreesSorties({ mouvements, setMouvements, stockOverrides, setStockOve
 
   return (
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
-      <div><h1 style={{fontSize:22,fontWeight:900,color:"#111827",margin:0}}>Entrées / Sorties de stock</h1>
+      <div><h1 style={{fontSize:22,fontWeight:900,color:"#1a1a1a",margin:0}}>Entrées / Sorties de stock</h1>
         <p style={{color:"#6b7280",fontSize:13,margin:"4px 0 0"}}>{mouvements.length} mouvement{mouvements.length!==1?"s":""} · synchronisé en temps réel</p>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:12}}>
-        {[{label:"Total",value:mouvements.length,icon:"🔄",color:"#111827"},{label:"Entrées",value:totalEntrees.toLocaleString("fr-FR"),icon:"📥",color:"#059669"},{label:"Sorties",value:totalSorties.toLocaleString("fr-FR"),icon:"📤",color:"#dc2626"},{label:"Aujourd'hui",value:mouvements.filter(m=>new Date(m.created_at||m.date).toDateString()===new Date().toDateString()).length,icon:"📅",color:"#3b82f6"}].map((k,i)=>(
-          <div key={i} style={{background:"#fff",borderRadius:14,padding:"16px 18px",border:"1px solid #e5e7eb"}}>
+        {[{label:"Total",value:mouvements.length,icon:"🔄",color:"#1a1a1a"},{label:"Entrées",value:totalEntrees.toLocaleString("fr-FR"),icon:"📥",color:"#059669"},{label:"Sorties",value:totalSorties.toLocaleString("fr-FR"),icon:"📤",color:"#dc2626"},{label:"Aujourd'hui",value:mouvements.filter(m=>new Date(m.created_at||m.date).toDateString()===new Date().toDateString()).length,icon:"📅",color:"#3b82f6"}].map((k,i)=>(
+          <div key={i} style={{background:"#fff",borderRadius:14,padding:"16px 18px",border:"1px solid #e0e0d8"}}>
             <div style={{fontSize:22,marginBottom:6}}>{k.icon}</div>
             <div style={{fontSize:22,fontWeight:900,color:k.color}}>{k.value}</div>
             <div style={{fontSize:12,color:"#6b7280",marginTop:3}}>{k.label}</div>
@@ -684,18 +684,18 @@ function EntreesSorties({ mouvements, setMouvements, stockOverrides, setStockOve
 
       <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:20,alignItems:"start"}}>
         {/* Formulaire */}
-        <div style={{background:"#fff",borderRadius:16,border:"1px solid #e5e7eb",padding:22,position:"sticky",top:0}}>
-          <h3 style={{fontSize:15,fontWeight:800,color:"#111827",marginBottom:16}}>➕ Nouveau mouvement</h3>
+        <div style={{background:"#fff",borderRadius:16,border:"1px solid #e0e0d8",padding:22,position:"sticky",top:0}}>
+          <h3 style={{fontSize:15,fontWeight:800,color:"#1a1a1a",marginBottom:16}}>➕ Nouveau mouvement</h3>
           <div style={{display:"flex",gap:8,marginBottom:16}}>
             {[{v:"entree",l:"📥 Entrée",bg:"#d1fae5",c:"#065f46",bc:"#059669"},{v:"sortie",l:"📤 Sortie",bg:"#fee2e2",c:"#991b1b",bc:"#dc2626"}].map(t=>(
-              <button key={t.v} onClick={()=>setType(t.v)} style={{flex:1,padding:"11px",borderRadius:10,border:`2px solid ${type===t.v?t.bc:"#e5e7eb"}`,background:type===t.v?t.bg:"#fff",color:type===t.v?t.c:"#6b7280",fontWeight:700,cursor:"pointer",fontSize:14}}>{t.l}</button>
+              <button key={t.v} onClick={()=>setType(t.v)} style={{flex:1,padding:"11px",borderRadius:10,border:`2px solid ${type===t.v?t.bc:"#e0e0d8"}`,background:type===t.v?t.bg:"#fff",color:type===t.v?t.c:"#6b7280",fontWeight:700,cursor:"pointer",fontSize:14}}>{t.l}</button>
             ))}
           </div>
           <div style={{marginBottom:12,position:"relative"}}>
-            <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Article *</label>
-            <input value={search} onChange={e=>handleSearch(e.target.value)} placeholder="Rechercher un article…" style={{width:"100%",padding:"10px 14px",border:`1px solid ${selectedArticle?"#10b981":"#e5e7eb"}`,borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+            <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Article *</label>
+            <input value={search} onChange={e=>handleSearch(e.target.value)} placeholder="Rechercher un article…" style={{width:"100%",padding:"10px 14px",border:`1px solid ${selectedArticle?"#10b981":"#e0e0d8"}`,borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
             {suggestions.length>0&&(
-              <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.1)",zIndex:100,overflow:"hidden",marginTop:4}}>
+              <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e0e0d8",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.1)",zIndex:100,overflow:"hidden",marginTop:4}}>
                 {suggestions.map(p=>(
                   <div key={p.id} onClick={()=>{setSelectedArticle(p);setSearch(p.name);setSuggestions([]);}} style={{padding:"9px 14px",cursor:"pointer",borderBottom:"1px solid #f3f4f6",display:"flex",justifyContent:"space-between"}}
                     onMouseEnter={e=>e.currentTarget.style.background="#f9fafb"} onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
@@ -722,14 +722,14 @@ function EntreesSorties({ mouvements, setMouvements, stockOverrides, setStockOve
             )}
           </div>
           {selectedArticle&&(
-            <div style={{background:"#f9fafb",borderRadius:10,padding:"10px 14px",marginBottom:12,border:"1px solid #e5e7eb",fontSize:12}}>
-              <div style={{fontWeight:700,color:"#111827"}}>{selectedArticle.name}</div>
+            <div style={{background:"#f9fafb",borderRadius:10,padding:"10px 14px",marginBottom:12,border:"1px solid #e0e0d8",fontSize:12}}>
+              <div style={{fontWeight:700,color:"#1a1a1a"}}>{selectedArticle.name}</div>
               <div style={{color:"#6b7280",marginTop:3}}>📍 {selectedArticle.location} · Stock actuel : <strong style={{color:getStock(selectedArticle)===0?"#dc2626":"#059669"}}>{getStock(selectedArticle)}</strong></div>
             </div>
           )}
           <div style={{marginBottom:12}}>
-            <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Quantité *</label>
-            <input type="number" min="1" value={quantite} onChange={e=>setQuantite(e.target.value)} placeholder="0" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:16,outline:"none",boxSizing:"border-box",fontWeight:700}}/>
+            <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Quantité *</label>
+            <input type="number" min="1" value={quantite} onChange={e=>setQuantite(e.target.value)} placeholder="0" style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:16,outline:"none",boxSizing:"border-box",fontWeight:700}}/>
             {selectedArticle&&quantite&&parseInt(quantite)>0&&(
               <div style={{fontSize:12,color:"#6b7280",marginTop:5,padding:"5px 10px",background:type==="entree"?"#f0fdf4":"#fff1f2",borderRadius:7}}>
                 Stock après : <strong style={{color:type==="entree"?"#059669":"#dc2626",fontSize:14}}>{type==="entree"?getStock(selectedArticle)+parseInt(quantite):getStock(selectedArticle)-parseInt(quantite)}</strong>
@@ -739,12 +739,12 @@ function EntreesSorties({ mouvements, setMouvements, stockOverrides, setStockOve
 
           {/* PRIX — affiché toujours */}
           <div style={{marginBottom:12}}>
-            <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>
+            <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>
               {type==="entree" ? "💶 Prix unitaire HT (€)" : "💶 Prix unitaire HT (€)"}
               {type==="entree" && <span style={{fontSize:10,color:"#3b82f6",marginLeft:6}}>→ créera un lot FIFO automatiquement</span>}
             </label>
             <input type="number" step="0.0001" min="0" value={prixUnitaire} onChange={e=>setPrixUnitaire(e.target.value)} placeholder="Ex: 15.0000"
-              style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:15,fontWeight:700,color:"#3b82f6",outline:"none",boxSizing:"border-box"}}/>
+              style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:15,fontWeight:700,color:"#3b82f6",outline:"none",boxSizing:"border-box"}}/>
             {prixUnitaire && quantite && parseInt(quantite)>0 && (
               <div style={{fontSize:12,color:"#6b7280",marginTop:5,padding:"5px 10px",background:"#eff6ff",borderRadius:7}}>
                 Valeur totale : <strong style={{color:"#3b82f6"}}>{(parseFloat(prixUnitaire||0)*parseInt(quantite||0)).toFixed(2)} €</strong>
@@ -772,30 +772,30 @@ function EntreesSorties({ mouvements, setMouvements, stockOverrides, setStockOve
             </div>
           )}
           {type==="sortie" && fifoLots.length===0 && selectedArticle && (
-            <div style={{marginBottom:12,padding:"10px 13px",background:"#f9fafb",borderRadius:9,border:"1px solid #e5e7eb",fontSize:12,color:"#9ca3af"}}>
+            <div style={{marginBottom:12,padding:"10px 13px",background:"#f9fafb",borderRadius:9,border:"1px solid #e0e0d8",fontSize:12,color:"#8a9ab8"}}>
               ℹ️ Aucun lot FIFO pour cet article — ajoutez des lots dans <strong>🏷️ Lots FIFO</strong>
             </div>
           )}
           <div style={{marginBottom:12}}>
-            <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Motif</label>
-            <select value={motif} onChange={e=>setMotif(e.target.value)} style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}>
+            <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Motif</label>
+            <select value={motif} onChange={e=>setMotif(e.target.value)} style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}>
               {type==="entree"?<><option value="">Réception fournisseur</option><option>Retour client</option><option>Correction inventaire</option><option>Transfert interne</option><option>Autre</option></>
               :<><option value="">Consommation chantier</option><option>Ordre de réparation</option><option>Perte / Casse</option><option>Correction inventaire</option><option>Autre</option></>}
             </select>
           </div>
           <div style={{marginBottom:12}}>
-            <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>
+            <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>
               {type==="sortie"&&motif==="Ordre de réparation"?"N° OR":"N° bon / référence"}
             </label>
-            <input value={reference} onChange={e=>setReference(e.target.value)} placeholder={type==="sortie"&&motif==="Ordre de réparation"?"OR-2026-0001…":"BL-2026-001, OR-2026-0001…"} style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+            <input value={reference} onChange={e=>setReference(e.target.value)} placeholder={type==="sortie"&&motif==="Ordre de réparation"?"OR-2026-0001…":"BL-2026-001, OR-2026-0001…"} style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
           </div>
           <div style={{marginBottom:18}}>
-            <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>
-              {type==="sortie"?"N° chantier":"N° BDC"} <span style={{fontSize:10,color:"#9ca3af",fontWeight:400}}>{type==="sortie"?"":"(Bon de commande)"}</span>
+            <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>
+              {type==="sortie"?"N° chantier":"N° BDC"} <span style={{fontSize:10,color:"#8a9ab8",fontWeight:400}}>{type==="sortie"?"":"(Bon de commande)"}</span>
             </label>
-            <input value={bdc} onChange={e=>setBdc(e.target.value)} placeholder={type==="sortie"?"CH-2026-001…":"BDC-2026-001…"} style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",fontFamily:"monospace",letterSpacing:0.5}}/>
+            <input value={bdc} onChange={e=>setBdc(e.target.value)} placeholder={type==="sortie"?"CH-2026-001…":"BDC-2026-001…"} style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",fontFamily:"monospace",letterSpacing:0.5}}/>
           </div>
-          <button onClick={()=>setShowConfirm(true)} disabled={!selectedArticle||!quantite||parseInt(quantite)<=0} style={{width:"100%",padding:"13px",borderRadius:11,border:"none",cursor:selectedArticle&&quantite&&parseInt(quantite)>0?"pointer":"not-allowed",background:!selectedArticle||!quantite||parseInt(quantite)<=0?"#e5e7eb":type==="entree"?"#059669":"#dc2626",color:!selectedArticle||!quantite||parseInt(quantite)<=0?"#9ca3af":"#fff",fontWeight:800,fontSize:15}}>
+          <button onClick={()=>setShowConfirm(true)} disabled={!selectedArticle||!quantite||parseInt(quantite)<=0} style={{width:"100%",padding:"13px",borderRadius:11,border:"none",cursor:selectedArticle&&quantite&&parseInt(quantite)>0?"pointer":"not-allowed",background:!selectedArticle||!quantite||parseInt(quantite)<=0?"#e0e0d8":type==="entree"?"#059669":"#dc2626",color:!selectedArticle||!quantite||parseInt(quantite)<=0?"#8a9ab8":"#fff",fontWeight:800,fontSize:15}}>
             {type==="entree"?"📥 Valider l'entrée":"📤 Valider la sortie"}
           </button>
         </div>
@@ -803,21 +803,21 @@ function EntreesSorties({ mouvements, setMouvements, stockOverrides, setStockOve
         {/* Historique */}
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            <input value={filterSearch} onChange={e=>{setFilterSearch(e.target.value);setPage(1);}} placeholder="🔍  Rechercher dans l'historique…" style={{flex:1,minWidth:200,padding:"9px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none"}}/>
+            <input value={filterSearch} onChange={e=>{setFilterSearch(e.target.value);setPage(1);}} placeholder="🔍  Rechercher dans l'historique…" style={{flex:1,minWidth:200,padding:"9px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none"}}/>
             {["tous","entree","sortie"].map(f=>(
-              <button key={f} onClick={()=>{setFilterType(f);setPage(1);}} style={{padding:"8px 14px",borderRadius:9,border:`2px solid ${filterType===f?"#111827":"#e5e7eb"}`,background:filterType===f?"#111827":"#fff",color:filterType===f?"#fff":"#374151",fontWeight:600,cursor:"pointer",fontSize:12}}>
+              <button key={f} onClick={()=>{setFilterType(f);setPage(1);}} style={{padding:"8px 14px",borderRadius:9,border:`2px solid ${filterType===f?"#1e2330":"#e0e0d8"}`,background:filterType===f?"#1e2330":"#fff",color:filterType===f?"#fff":"#555",fontWeight:600,cursor:"pointer",fontSize:12}}>
                 {f==="tous"?`Tous (${mouvements.length})`:f==="entree"?`📥 Entrées (${mouvements.filter(m=>m.type==="entree").length})`:`📤 Sorties (${mouvements.filter(m=>m.type==="sortie").length})`}
               </button>
             ))}
           </div>
-          <div style={{background:"#fff",borderRadius:14,border:"1px solid #e5e7eb",overflow:"hidden"}}>
+          <div style={{background:"#fff",borderRadius:14,border:"1px solid #e0e0d8",overflow:"hidden"}}>
             {rows.length===0
-              ? <div style={{padding:40,textAlign:"center",color:"#9ca3af"}}><div style={{fontSize:36,marginBottom:10}}>📋</div><div style={{fontWeight:700,color:"#374151",marginBottom:6}}>Aucun mouvement</div><div style={{fontSize:13}}>Utilisez le formulaire pour enregistrer une entrée ou sortie.</div></div>
+              ? <div style={{padding:40,textAlign:"center",color:"#8a9ab8"}}><div style={{fontSize:36,marginBottom:10}}>📋</div><div style={{fontWeight:700,color:"#555",marginBottom:6}}>Aucun mouvement</div><div style={{fontSize:13}}>Utilisez le formulaire pour enregistrer une entrée ou sortie.</div></div>
               : <>
                 <table style={{width:"100%",borderCollapse:"collapse"}}>
-                  <thead><tr style={{background:"#111827"}}>
+                  <thead><tr style={{background:"#1e2330"}}>
                     {["Date","Type","Article","Qté","Avant","Après","Motif","Réf.","BDC",""].map(h=>(
-                      <th key={h} style={{padding:"10px 12px",textAlign:"left",fontSize:10,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:0.5,whiteSpace:"nowrap"}}>{h}</th>
+                      <th key={h} style={{padding:"10px 12px",textAlign:"left",fontSize:10,fontWeight:700,color:"#8a9ab8",textTransform:"uppercase",letterSpacing:0.5,whiteSpace:"nowrap"}}>{h}</th>
                     ))}
                   </tr></thead>
                   <tbody>
@@ -829,11 +829,11 @@ function EntreesSorties({ mouvements, setMouvements, stockOverrides, setStockOve
                         <tr key={m.id||i} style={{borderBottom:"1px solid #f3f4f6",background:i%2===0?"#fff":"#fafafa"}}>
                           <td style={{padding:"9px 12px",fontSize:11,color:"#6b7280",whiteSpace:"nowrap"}}>{dt.toLocaleDateString("fr-FR")}<br/><span style={{fontSize:10}}>{dt.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</span></td>
                           <td style={{padding:"9px 12px"}}><span style={{padding:"3px 8px",borderRadius:99,fontSize:10,fontWeight:700,background:m.type==="entree"?"#d1fae5":"#fee2e2",color:m.type==="entree"?"#065f46":"#991b1b"}}>{m.type==="entree"?"📥 Entrée":"📤 Sortie"}</span></td>
-                          <td style={{padding:"9px 12px",maxWidth:180}}><div style={{fontWeight:600,fontSize:12,color:"#111827",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{name}</div><div style={{fontSize:10,color:"#9ca3af"}}>{id}</div></td>
+                          <td style={{padding:"9px 12px",maxWidth:180}}><div style={{fontWeight:600,fontSize:12,color:"#1a1a1a",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{name}</div><div style={{fontSize:10,color:"#8a9ab8"}}>{id}</div></td>
                           <td style={{padding:"9px 12px",textAlign:"center"}}><span style={{fontSize:15,fontWeight:900,color:m.type==="entree"?"#059669":"#dc2626"}}>{m.type==="entree"?"+":"-"}{m.quantite}</span></td>
                           <td style={{padding:"9px 12px",textAlign:"center",fontSize:12,color:"#6b7280",fontWeight:600}}>{m.stock_avant??m.stockAvant}</td>
                           <td style={{padding:"9px 12px",textAlign:"center"}}><span style={{fontSize:14,fontWeight:800,color:(m.stock_apres??m.stockApres)===0?"#dc2626":"#059669"}}>{m.stock_apres??m.stockApres}</span></td>
-                          <td style={{padding:"9px 12px",fontSize:11,color:"#374151"}}>{m.motif||"—"}</td>
+                          <td style={{padding:"9px 12px",fontSize:11,color:"#555"}}>{m.motif||"—"}</td>
                           <td style={{padding:"9px 12px",fontSize:11,fontFamily:"monospace",color:"#6b7280"}}>{m.reference||"—"}</td>
                           <td style={{padding:"9px 12px",fontSize:11,fontFamily:"monospace",color:"#7c3aed",fontWeight:600}}>{m.num_bdc||"—"}</td>
                           <td style={{padding:"9px 12px",minWidth:90}}>
@@ -848,9 +848,9 @@ function EntreesSorties({ mouvements, setMouvements, stockOverrides, setStockOve
                   </tbody>
                 </table>
                 <div style={{display:"flex",justifyContent:"center",gap:6,padding:"12px",borderTop:"1px solid #f3f4f6"}}>
-                  <button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1} style={{padding:"5px 12px",borderRadius:7,border:"1px solid #e5e7eb",background:"#fff",cursor:page===1?"not-allowed":"pointer",color:page===1?"#d1d5db":"#374151",fontWeight:600}}>‹ Préc.</button>
+                  <button onClick={()=>setPage(p=>Math.max(1,p-1))} disabled={page===1} style={{padding:"5px 12px",borderRadius:7,border:"1px solid #e0e0d8",background:"#fff",cursor:page===1?"not-allowed":"pointer",color:page===1?"#d1d5db":"#555",fontWeight:600}}>‹ Préc.</button>
                   <span style={{fontSize:13,color:"#6b7280",padding:"5px 8px"}}>Page {page}/{totalPages}</span>
-                  <button onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages} style={{padding:"5px 12px",borderRadius:7,border:"1px solid #e5e7eb",background:"#fff",cursor:page===totalPages?"not-allowed":"pointer",color:page===totalPages?"#d1d5db":"#374151",fontWeight:600}}>Suiv. ›</button>
+                  <button onClick={()=>setPage(p=>Math.min(totalPages,p+1))} disabled={page===totalPages} style={{padding:"5px 12px",borderRadius:7,border:"1px solid #e0e0d8",background:"#fff",cursor:page===totalPages?"not-allowed":"pointer",color:page===totalPages?"#d1d5db":"#555",fontWeight:600}}>Suiv. ›</button>
                 </div>
               </>
             }
@@ -863,7 +863,7 @@ function EntreesSorties({ mouvements, setMouvements, stockOverrides, setStockOve
           <div style={{background:"#fff",borderRadius:20,padding:32,width:"min(96vw,420px)",boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
             <div style={{textAlign:"center",marginBottom:20}}>
               <div style={{fontSize:44,marginBottom:10}}>{type==="entree"?"📥":"📤"}</div>
-              <h2 style={{fontSize:18,fontWeight:800,color:"#111827",margin:"0 0 6px"}}>Confirmer la {type==="entree"?"entrée":"sortie"}</h2>
+              <h2 style={{fontSize:18,fontWeight:800,color:"#1a1a1a",margin:"0 0 6px"}}>Confirmer la {type==="entree"?"entrée":"sortie"}</h2>
             </div>
             <div style={{background:"#f9fafb",borderRadius:12,padding:16,marginBottom:20,display:"flex",flexDirection:"column",gap:8}}>
               {[
@@ -875,15 +875,15 @@ function EntreesSorties({ mouvements, setMouvements, stockOverrides, setStockOve
                 ...(reference?[{l:"Référence",v:reference}]:[]),
                 ...(bdc?[{l:"N° BDC",v:<span style={{fontFamily:"monospace",fontWeight:700,color:"#7c3aed"}}>{bdc}</span>}]:[]),
               ].map(r=>(
-                <div key={r.l} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #e5e7eb",fontSize:13}}>
+                <div key={r.l} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #e0e0d8",fontSize:13}}>
                   <span style={{color:"#6b7280"}}>{r.l}</span>
-                  <span style={{fontWeight:600,color:"#111827",maxWidth:200,textAlign:"right",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.v}</span>
+                  <span style={{fontWeight:600,color:"#1a1a1a",maxWidth:200,textAlign:"right",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.v}</span>
                 </div>
               ))}
             </div>
             <div style={{display:"flex",gap:10}}>
               <button onClick={()=>setShowConfirm(false)} style={{flex:1,padding:"12px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer"}}>Annuler</button>
-              <button onClick={handleConfirm} disabled={saving} style={{flex:2,padding:"12px",background:saving?"#9ca3af":type==="entree"?"#059669":"#dc2626",color:"#fff",border:"none",borderRadius:10,fontWeight:800,cursor:saving?"not-allowed":"pointer",fontSize:14}}>
+              <button onClick={handleConfirm} disabled={saving} style={{flex:2,padding:"12px",background:saving?"#8a9ab8":type==="entree"?"#059669":"#dc2626",color:"#fff",border:"none",borderRadius:10,fontWeight:800,cursor:saving?"not-allowed":"pointer",fontSize:14}}>
                 {saving?"⏳ Enregistrement…":"✅ Confirmer"}
               </button>
             </div>
@@ -991,21 +991,21 @@ function GestionFIFO() {
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 900, color: "#111827", margin: 0 }}>Lots d'achat — Méthode FIFO</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: "#1a1a1a", margin: 0 }}>Lots d'achat — Méthode FIFO</h1>
           <p style={{ color: "#6b7280", fontSize: 13, margin: "4px 0 0" }}>Premier Entré, Premier Sorti · {totalLots} lots ouverts</p>
         </div>
         {selectedArticle && (
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={() => setShowConso(true)} style={{ padding: "9px 16px", background: "#fee2e2", border: "none", borderRadius: 10, fontWeight: 700, cursor: "pointer", fontSize: 13, color: "#dc2626" }}>📤 Consommer FIFO</button>
-            <button onClick={() => setShowForm(true)} style={{ background: "#111827", color: "#fff", border: "none", borderRadius: 10, padding: "9px 18px", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>+ Nouveau lot d'achat</button>
+            <button onClick={() => setShowForm(true)} style={{ background: "#1e2330", color: "#fff", border: "none", borderRadius: 10, padding: "9px 18px", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>+ Nouveau lot d'achat</button>
           </div>
         )}
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 0, background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+      <div style={{ display: "flex", gap: 0, background: "#fff", borderRadius: 12, border: "1px solid #e0e0d8", overflow: "hidden" }}>
         {[{ v: "lots", l: "🏷️ Par référence" }, { v: "global", l: "📋 Tous les lots" }].map(t => (
-          <button key={t.v} onClick={() => setOnglet(t.v)} style={{ flex: 1, padding: "11px", border: "none", background: onglet === t.v ? "#111827" : "transparent", color: onglet === t.v ? "#fff" : "#6b7280", fontWeight: onglet === t.v ? 700 : 500, cursor: "pointer", fontSize: 13, fontFamily: "'DM Sans',sans-serif" }}>{t.l}</button>
+          <button key={t.v} onClick={() => setOnglet(t.v)} style={{ flex: 1, padding: "11px", border: "none", background: onglet === t.v ? "#1e2330" : "transparent", color: onglet === t.v ? "#fff" : "#6b7280", fontWeight: onglet === t.v ? 700 : 500, cursor: "pointer", fontSize: 13, fontFamily: "'DM Sans',sans-serif" }}>{t.l}</button>
         ))}
       </div>
 
@@ -1013,17 +1013,17 @@ function GestionFIFO() {
       {onglet === "lots" && (
         <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: 18, alignItems: "start" }}>
           {/* Sélecteur article */}
-          <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", padding: 20 }}>
-            <h3 style={{ fontSize: 14, fontWeight: 800, color: "#111827", marginBottom: 14 }}>🔍 Choisir une référence</h3>
+          <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e0e0d8", padding: 20 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 800, color: "#1a1a1a", marginBottom: 14 }}>🔍 Choisir une référence</h3>
             <div style={{ position: "relative", marginBottom: 14 }}>
               <input value={search} onChange={e => handleSearch(e.target.value)} placeholder="Rechercher SKU, nom…"
-                style={{ width: "100%", padding: "10px 13px", border: `1px solid ${selectedArticle ? "#10b981" : "#e5e7eb"}`, borderRadius: 10, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+                style={{ width: "100%", padding: "10px 13px", border: `1px solid ${selectedArticle ? "#10b981" : "#e0e0d8"}`, borderRadius: 10, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
               {suggestions.length > 0 && (
-                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.1)", zIndex: 100, overflow: "hidden", marginTop: 4 }}>
+                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#fff", border: "1px solid #e0e0d8", borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.1)", zIndex: 100, overflow: "hidden", marginTop: 4 }}>
                   {suggestions.map(p => (
                     <div key={p.id} onClick={() => selectArticle(p)} style={{ padding: "9px 14px", cursor: "pointer", borderBottom: "1px solid #f3f4f6" }}
                       onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"} onMouseLeave={e => e.currentTarget.style.background = "#fff"}>
-                      <div style={{ fontWeight: 600, fontSize: 13, color: "#111827" }}>{p.name}</div>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: "#1a1a1a" }}>{p.name}</div>
                       <div style={{ fontSize: 11, color: "#6b7280" }}>{p.id} · {p.fournisseur || "—"}</div>
                     </div>
                   ))}
@@ -1033,8 +1033,8 @@ function GestionFIFO() {
 
             {selectedArticle && (
               <>
-                <div style={{ background: "#f9fafb", borderRadius: 10, padding: "12px 14px", marginBottom: 16, border: "1px solid #e5e7eb" }}>
-                  <div style={{ fontWeight: 800, fontSize: 13, color: "#111827", marginBottom: 6 }}>{selectedArticle.name}</div>
+                <div style={{ background: "#f9fafb", borderRadius: 10, padding: "12px 14px", marginBottom: 16, border: "1px solid #e0e0d8" }}>
+                  <div style={{ fontWeight: 800, fontSize: 13, color: "#1a1a1a", marginBottom: 6 }}>{selectedArticle.name}</div>
                   <div style={{ fontSize: 12, color: "#6b7280" }}>{selectedArticle.id} · {selectedArticle.fournisseur || "—"}</div>
                 </div>
 
@@ -1046,9 +1046,9 @@ function GestionFIFO() {
                     { l: "Prix moyen FIFO", v: prixMoyen.toFixed(4) + " €", c: "#7c3aed" },
                     { l: "Lots ouverts", v: lotsOuverts.length, c: "#d97706" },
                   ].map(s => (
-                    <div key={s.l} style={{ background: "#f9fafb", borderRadius: 9, padding: "10px 12px", border: "1px solid #e5e7eb" }}>
+                    <div key={s.l} style={{ background: "#f9fafb", borderRadius: 9, padding: "10px 12px", border: "1px solid #e0e0d8" }}>
                       <div style={{ fontSize: 16, fontWeight: 900, color: s.c }}>{s.v}</div>
-                      <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>{s.l}</div>
+                      <div style={{ fontSize: 10, color: "#8a9ab8", marginTop: 2 }}>{s.l}</div>
                     </div>
                   ))}
                 </div>
@@ -1064,7 +1064,7 @@ function GestionFIFO() {
             )}
 
             {!selectedArticle && (
-              <div style={{ textAlign: "center", padding: 30, color: "#9ca3af", fontSize: 13 }}>
+              <div style={{ textAlign: "center", padding: 30, color: "#8a9ab8", fontSize: 13 }}>
                 <div style={{ fontSize: 32, marginBottom: 8 }}>🏷️</div>
                 Recherchez une référence pour voir ses lots d'achat
               </div>
@@ -1074,18 +1074,18 @@ function GestionFIFO() {
           {/* Liste des lots */}
           <div>
             {!selectedArticle ? (
-              <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", padding: 40, textAlign: "center", color: "#9ca3af" }}>
+              <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e0e0d8", padding: 40, textAlign: "center", color: "#8a9ab8" }}>
                 <div style={{ fontSize: 40, marginBottom: 10 }}>📦</div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "#374151" }}>Sélectionnez une référence</div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "#555" }}>Sélectionnez une référence</div>
               </div>
             ) : loadingLots ? <Spinner /> : (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {lots.length === 0 ? (
-                  <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: 40, textAlign: "center" }}>
+                  <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e0e0d8", padding: 40, textAlign: "center" }}>
                     <div style={{ fontSize: 36, marginBottom: 10 }}>🏷️</div>
-                    <div style={{ fontWeight: 700, color: "#374151", marginBottom: 8 }}>Aucun lot d'achat</div>
-                    <div style={{ color: "#9ca3af", fontSize: 13, marginBottom: 16 }}>Ajoutez le premier lot d'achat pour cette référence</div>
-                    <button onClick={() => setShowForm(true)} style={{ padding: "10px 20px", background: "#111827", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, cursor: "pointer", fontSize: 13 }}>+ Ajouter un lot</button>
+                    <div style={{ fontWeight: 700, color: "#555", marginBottom: 8 }}>Aucun lot d'achat</div>
+                    <div style={{ color: "#8a9ab8", fontSize: 13, marginBottom: 16 }}>Ajoutez le premier lot d'achat pour cette référence</div>
+                    <button onClick={() => setShowForm(true)} style={{ padding: "10px 20px", background: "#1e2330", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, cursor: "pointer", fontSize: 13 }}>+ Ajouter un lot</button>
                   </div>
                 ) : lots.map((lot, i) => {
                   const isClos = lot.clos || lot.qty_restante === 0;
@@ -1093,32 +1093,32 @@ function GestionFIFO() {
                   const valeur = lot.qty_restante * lot.prix_unitaire;
                   const isNext = !isClos && i === lots.findIndex(l => !l.clos && l.qty_restante > 0);
                   return (
-                    <div key={lot.id} style={{ background: "#fff", borderRadius: 14, border: `2px solid ${isNext ? "#f59e0b" : isClos ? "#f3f4f6" : "#e5e7eb"}`, padding: "16px 20px", opacity: isClos ? 0.65 : 1 }}>
+                    <div key={lot.id} style={{ background: "#fff", borderRadius: 14, border: `2px solid ${isNext ? "#f59e0b" : isClos ? "#f3f4f6" : "#e0e0d8"}`, padding: "16px 20px", opacity: isClos ? 0.65 : 1 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10, flexWrap: "wrap", gap: 8 }}>
                         <div>
                           <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4, flexWrap: "wrap" }}>
                             {isNext && <span style={{ background: "#fef3c7", color: "#92400e", padding: "2px 8px", borderRadius: 99, fontSize: 10, fontWeight: 700 }}>⏭ PROCHAIN FIFO</span>}
-                            {isClos && <span style={{ background: "#f3f4f6", color: "#9ca3af", padding: "2px 8px", borderRadius: 99, fontSize: 10, fontWeight: 700 }}>✅ ÉPUISÉ</span>}
+                            {isClos && <span style={{ background: "#f3f4f6", color: "#8a9ab8", padding: "2px 8px", borderRadius: 99, fontSize: 10, fontWeight: 700 }}>✅ ÉPUISÉ</span>}
                             <span style={{ fontFamily: "monospace", fontSize: 12, color: "#6b7280" }}>📅 {new Date(lot.date_achat).toLocaleDateString("fr-FR")}</span>
                           </div>
-                          <div style={{ fontSize: 13, color: "#374151" }}>
+                          <div style={{ fontSize: 13, color: "#555" }}>
                             {lot.fournisseur && <span>🏭 {lot.fournisseur}</span>}
                             {lot.reference_bon && <span style={{ marginLeft: 8 }}>📄 {lot.reference_bon}</span>}
                           </div>
-                          {lot.notes && <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2, fontStyle: "italic" }}>{lot.notes}</div>}
+                          {lot.notes && <div style={{ fontSize: 12, color: "#8a9ab8", marginTop: 2, fontStyle: "italic" }}>{lot.notes}</div>}
                         </div>
                         <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
                           <div style={{ textAlign: "center" }}>
-                            <div style={{ fontSize: 22, fontWeight: 900, color: isClos ? "#9ca3af" : "#059669" }}>{lot.qty_restante}</div>
-                            <div style={{ fontSize: 10, color: "#9ca3af" }}>/ {lot.qty_initiale} restantes</div>
+                            <div style={{ fontSize: 22, fontWeight: 900, color: isClos ? "#8a9ab8" : "#059669" }}>{lot.qty_restante}</div>
+                            <div style={{ fontSize: 10, color: "#8a9ab8" }}>/ {lot.qty_initiale} restantes</div>
                           </div>
                           <div style={{ textAlign: "center" }}>
                             <div style={{ fontSize: 18, fontWeight: 900, color: "#3b82f6" }}>{parseFloat(lot.prix_unitaire).toFixed(4)} €</div>
-                            <div style={{ fontSize: 10, color: "#9ca3af" }}>prix unitaire</div>
+                            <div style={{ fontSize: 10, color: "#8a9ab8" }}>prix unitaire</div>
                           </div>
                           <div style={{ textAlign: "center" }}>
                             <div style={{ fontSize: 14, fontWeight: 700, color: "#7c3aed" }}>{valeur.toFixed(2)} €</div>
-                            <div style={{ fontSize: 10, color: "#9ca3af" }}>valeur restante</div>
+                            <div style={{ fontSize: 10, color: "#8a9ab8" }}>valeur restante</div>
                           </div>
                           {!isClos && <button onClick={() => handleDelete(lot.id)} style={{ padding: "5px 9px", background: "#fee2e2", border: "none", borderRadius: 7, cursor: "pointer", color: "#dc2626", fontSize: 12 }}>🗑</button>}
                         </div>
@@ -1126,7 +1126,7 @@ function GestionFIFO() {
                       <div style={{ background: "#f3f4f6", borderRadius: 99, height: 8, overflow: "hidden" }}>
                         <div style={{ width: `${pctRestant}%`, height: "100%", borderRadius: 99, background: isClos ? "#d1d5db" : isNext ? "#f59e0b" : "#3b82f6", transition: "width 0.5s" }} />
                       </div>
-                      <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>{pctRestant}% restant · Acheté {lot.qty_initiale} unités</div>
+                      <div style={{ fontSize: 11, color: "#8a9ab8", marginTop: 4 }}>{pctRestant}% restant · Acheté {lot.qty_initiale} unités</div>
                     </div>
                   );
                 })}
@@ -1140,12 +1140,12 @@ function GestionFIFO() {
       {onglet === "global" && (
         <div>
           <input value={filterSearch} onChange={e => setFilterSearch(e.target.value)} placeholder="🔍 Rechercher article, fournisseur…"
-            style={{ width: "100%", padding: "10px 16px", border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 13, outline: "none", marginBottom: 14 }} />
-          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+            style={{ width: "100%", padding: "10px 16px", border: "1px solid #e0e0d8", borderRadius: 10, fontSize: 13, outline: "none", marginBottom: 14 }} />
+          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e0e0d8", overflow: "hidden" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead><tr style={{ background: "#111827" }}>
+              <thead><tr style={{ background: "#1e2330" }}>
                 {["Date achat", "Article", "Fournisseur", "Qté achetée", "Qté restante", "Prix unitaire", "Valeur restante", "Statut"].map(h => (
-                  <th key={h} style={{ padding: "10px 13px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: 0.5, whiteSpace: "nowrap" }}>{h}</th>
+                  <th key={h} style={{ padding: "10px 13px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#8a9ab8", textTransform: "uppercase", letterSpacing: 0.5, whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>
@@ -1154,20 +1154,20 @@ function GestionFIFO() {
                   const valeur = lot.qty_restante * lot.prix_unitaire;
                   return (
                     <tr key={lot.id} style={{ borderBottom: "1px solid #f3f4f6", background: i % 2 === 0 ? "#fff" : "#fafafa", opacity: isClos ? 0.6 : 1 }}>
-                      <td style={{ padding: "10px 13px", fontSize: 12, color: "#374151", whiteSpace: "nowrap" }}>{new Date(lot.date_achat).toLocaleDateString("fr-FR")}</td>
+                      <td style={{ padding: "10px 13px", fontSize: 12, color: "#555", whiteSpace: "nowrap" }}>{new Date(lot.date_achat).toLocaleDateString("fr-FR")}</td>
                       <td style={{ padding: "10px 13px", maxWidth: 220 }}>
-                        <div style={{ fontWeight: 600, fontSize: 12, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lot.article_name}</div>
-                        <div style={{ fontSize: 10, color: "#9ca3af" }}>{lot.article_id}</div>
+                        <div style={{ fontWeight: 600, fontSize: 12, color: "#1a1a1a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lot.article_name}</div>
+                        <div style={{ fontSize: 10, color: "#8a9ab8" }}>{lot.article_id}</div>
                       </td>
                       <td style={{ padding: "10px 13px", fontSize: 12, color: "#6b7280" }}>{lot.fournisseur || "—"}</td>
-                      <td style={{ padding: "10px 13px", textAlign: "center", fontWeight: 700, color: "#374151" }}>{lot.qty_initiale}</td>
+                      <td style={{ padding: "10px 13px", textAlign: "center", fontWeight: 700, color: "#555" }}>{lot.qty_initiale}</td>
                       <td style={{ padding: "10px 13px", textAlign: "center" }}>
-                        <span style={{ fontWeight: 900, fontSize: 15, color: isClos ? "#9ca3af" : "#059669" }}>{lot.qty_restante}</span>
+                        <span style={{ fontWeight: 900, fontSize: 15, color: isClos ? "#8a9ab8" : "#059669" }}>{lot.qty_restante}</span>
                       </td>
                       <td style={{ padding: "10px 13px", textAlign: "right", fontWeight: 700, color: "#3b82f6" }}>{parseFloat(lot.prix_unitaire).toFixed(4)} €</td>
                       <td style={{ padding: "10px 13px", textAlign: "right", fontWeight: 600, color: "#7c3aed" }}>{valeur.toFixed(2)} €</td>
                       <td style={{ padding: "10px 13px" }}>
-                        <span style={{ background: isClos ? "#f3f4f6" : "#d1fae5", color: isClos ? "#9ca3af" : "#065f46", padding: "2px 8px", borderRadius: 99, fontSize: 10, fontWeight: 700 }}>
+                        <span style={{ background: isClos ? "#f3f4f6" : "#d1fae5", color: isClos ? "#8a9ab8" : "#065f46", padding: "2px 8px", borderRadius: 99, fontSize: 10, fontWeight: 700 }}>
                           {isClos ? "✅ Épuisé" : "🟢 Ouvert"}
                         </span>
                       </td>
@@ -1176,7 +1176,7 @@ function GestionFIFO() {
                 })}
               </tbody>
             </table>
-            {filteredAll.length === 0 && <div style={{ padding: 30, textAlign: "center", color: "#9ca3af", fontSize: 13 }}>Aucun lot trouvé</div>}
+            {filteredAll.length === 0 && <div style={{ padding: 30, textAlign: "center", color: "#8a9ab8", fontSize: 13 }}>Aucun lot trouvé</div>}
           </div>
         </div>
       )}
@@ -1186,7 +1186,7 @@ function GestionFIFO() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(2px)" }}>
           <div style={{ background: "#fff", borderRadius: 20, padding: 30, width: "min(96vw,480px)", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h2 style={{ fontSize: 17, fontWeight: 800, color: "#111827", margin: 0 }}>🏷️ Nouveau lot d'achat</h2>
+              <h2 style={{ fontSize: 17, fontWeight: 800, color: "#1a1a1a", margin: 0 }}>🏷️ Nouveau lot d'achat</h2>
               <button onClick={() => setShowForm(false)} style={{ background: "#f3f4f6", border: "none", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontSize: 15 }}>✕</button>
             </div>
             <div style={{ background: "#f0fdf4", borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: "#065f46", fontWeight: 600 }}>
@@ -1195,20 +1195,20 @@ function GestionFIFO() {
             <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>Date d'achat *</label>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 5 }}>Date d'achat *</label>
                   <input type="date" value={form.dateAchat} onChange={e => setForm(p => ({ ...p, dateAchat: e.target.value }))}
-                    style={{ width: "100%", padding: "10px 13px", border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+                    style={{ width: "100%", padding: "10px 13px", border: "1px solid #e0e0d8", borderRadius: 10, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>Quantité achetée *</label>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 5 }}>Quantité achetée *</label>
                   <input type="number" min="1" value={form.qty} onChange={e => setForm(p => ({ ...p, qty: e.target.value }))} placeholder="Ex: 5"
-                    style={{ width: "100%", padding: "10px 13px", border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 16, fontWeight: 700, outline: "none", boxSizing: "border-box" }} />
+                    style={{ width: "100%", padding: "10px 13px", border: "1px solid #e0e0d8", borderRadius: 10, fontSize: 16, fontWeight: 700, outline: "none", boxSizing: "border-box" }} />
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>Prix unitaire HT (€) *</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 5 }}>Prix unitaire HT (€) *</label>
                 <input type="number" step="0.0001" min="0" value={form.prixUnitaire} onChange={e => setForm(p => ({ ...p, prixUnitaire: e.target.value }))} placeholder="Ex: 15.00"
-                  style={{ width: "100%", padding: "12px 13px", border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 18, fontWeight: 900, color: "#3b82f6", outline: "none", boxSizing: "border-box" }} />
+                  style={{ width: "100%", padding: "12px 13px", border: "1px solid #e0e0d8", borderRadius: 10, fontSize: 18, fontWeight: 900, color: "#3b82f6", outline: "none", boxSizing: "border-box" }} />
                 {form.qty && form.prixUnitaire && (
                   <div style={{ marginTop: 5, fontSize: 12, color: "#059669", fontWeight: 600 }}>
                     💶 Valeur totale du lot : {(parseFloat(form.qty || 0) * parseFloat(form.prixUnitaire || 0)).toFixed(2)} €
@@ -1217,25 +1217,25 @@ function GestionFIFO() {
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>Fournisseur</label>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 5 }}>Fournisseur</label>
                   <input value={form.fournisseur} onChange={e => setForm(p => ({ ...p, fournisseur: e.target.value }))} placeholder={selectedArticle?.fournisseur || "Fournisseur"}
-                    style={{ width: "100%", padding: "10px 13px", border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+                    style={{ width: "100%", padding: "10px 13px", border: "1px solid #e0e0d8", borderRadius: 10, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>N° bon de commande</label>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 5 }}>N° bon de commande</label>
                   <input value={form.referenceBon} onChange={e => setForm(p => ({ ...p, referenceBon: e.target.value }))} placeholder="BC-2026-001"
-                    style={{ width: "100%", padding: "10px 13px", border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+                    style={{ width: "100%", padding: "10px 13px", border: "1px solid #e0e0d8", borderRadius: 10, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 5 }}>Notes</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 5 }}>Notes</label>
                 <input value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Remarques, conditions…"
-                  style={{ width: "100%", padding: "10px 13px", border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+                  style={{ width: "100%", padding: "10px 13px", border: "1px solid #e0e0d8", borderRadius: 10, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
               </div>
               <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
                 <button onClick={() => setShowForm(false)} style={{ flex: 1, padding: "12px", background: "#f3f4f6", border: "none", borderRadius: 10, fontWeight: 600, cursor: "pointer" }}>Annuler</button>
                 <button onClick={handleAddLot} disabled={saving || !form.qty || !form.prixUnitaire || !form.dateAchat}
-                  style={{ flex: 2, padding: "12px", background: form.qty && form.prixUnitaire ? "#111827" : "#e5e7eb", color: form.qty && form.prixUnitaire ? "#fff" : "#9ca3af", border: "none", borderRadius: 10, fontWeight: 700, cursor: form.qty && form.prixUnitaire ? "pointer" : "not-allowed", fontSize: 14 }}>
+                  style={{ flex: 2, padding: "12px", background: form.qty && form.prixUnitaire ? "#1e2330" : "#e0e0d8", color: form.qty && form.prixUnitaire ? "#fff" : "#8a9ab8", border: "none", borderRadius: 10, fontWeight: 700, cursor: form.qty && form.prixUnitaire ? "pointer" : "not-allowed", fontSize: 14 }}>
                   {saving ? "⏳ Enregistrement…" : "🏷️ Ajouter ce lot"}
                 </button>
               </div>
@@ -1249,7 +1249,7 @@ function GestionFIFO() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
           <div style={{ background: "#fff", borderRadius: 20, padding: 30, width: "min(96vw,440px)", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h2 style={{ fontSize: 17, fontWeight: 800, color: "#111827", margin: 0 }}>📤 Consommer FIFO</h2>
+              <h2 style={{ fontSize: 17, fontWeight: 800, color: "#1a1a1a", margin: 0 }}>📤 Consommer FIFO</h2>
               <button onClick={() => { setShowConso(false); setConsoResult(null); }} style={{ background: "#f3f4f6", border: "none", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontSize: 15 }}>✕</button>
             </div>
             {!consoResult ? (
@@ -1258,9 +1258,9 @@ function GestionFIFO() {
                   ⚡ Les unités seront prélevées sur les lots les plus anciens en premier (FIFO).
                 </div>
                 <div style={{ marginBottom: 16 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>Quantité à consommer</label>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: "#555", display: "block", marginBottom: 6 }}>Quantité à consommer</label>
                   <input type="number" min="1" value={qtyConso} onChange={e => setQtyConso(e.target.value)} placeholder="Ex: 3"
-                    style={{ width: "100%", padding: "14px", border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 22, fontWeight: 900, outline: "none", textAlign: "center", boxSizing: "border-box" }} />
+                    style={{ width: "100%", padding: "14px", border: "1px solid #e0e0d8", borderRadius: 10, fontSize: 22, fontWeight: 900, outline: "none", textAlign: "center", boxSizing: "border-box" }} />
                   {qtyConso && qtyDisponible > 0 && (
                     <div style={{ marginTop: 6, fontSize: 12, color: parseInt(qtyConso) > qtyDisponible ? "#dc2626" : "#059669", fontWeight: 600 }}>
                       {parseInt(qtyConso) > qtyDisponible ? `⚠️ Stock insuffisant (disponible: ${qtyDisponible})` : `✅ ${qtyDisponible - parseInt(qtyConso)} unités resteront après consommation`}
@@ -1270,7 +1270,7 @@ function GestionFIFO() {
                 <div style={{ display: "flex", gap: 10 }}>
                   <button onClick={() => { setShowConso(false); setConsoResult(null); }} style={{ flex: 1, padding: "12px", background: "#f3f4f6", border: "none", borderRadius: 10, fontWeight: 600, cursor: "pointer" }}>Annuler</button>
                   <button onClick={handleConsommer} disabled={saving || !qtyConso || parseInt(qtyConso) > qtyDisponible}
-                    style={{ flex: 2, padding: "12px", background: qtyConso && parseInt(qtyConso) <= qtyDisponible ? "#dc2626" : "#e5e7eb", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, cursor: "pointer", fontSize: 14 }}>
+                    style={{ flex: 2, padding: "12px", background: qtyConso && parseInt(qtyConso) <= qtyDisponible ? "#dc2626" : "#e0e0d8", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, cursor: "pointer", fontSize: 14 }}>
                     {saving ? "⏳ Traitement…" : "📤 Consommer"}
                   </button>
                 </div>
@@ -1292,7 +1292,7 @@ function GestionFIFO() {
                     <div style={{ marginTop: 8, color: "#dc2626", fontWeight: 600, fontSize: 13 }}>⚠️ {consoResult.qtyManquante} unité(s) manquante(s) — stock insuffisant</div>
                   )}
                 </div>
-                <button onClick={() => { setShowConso(false); setConsoResult(null); }} style={{ width: "100%", padding: "12px", background: "#111827", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, cursor: "pointer", fontSize: 14 }}>Fermer</button>
+                <button onClick={() => { setShowConso(false); setConsoResult(null); }} style={{ width: "100%", padding: "12px", background: "#1e2330", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, cursor: "pointer", fontSize: 14 }}>Fermer</button>
               </>
             )}
           </div>
@@ -1304,13 +1304,13 @@ function GestionFIFO() {
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}}>
           <div style={{background:"#fff",borderRadius:20,padding:28,width:"min(96vw,400px)",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",textAlign:"center"}}>
             <div style={{fontSize:44,marginBottom:12}}>🗑️</div>
-            <h3 style={{fontSize:17,fontWeight:800,color:"#111827",marginBottom:8}}>Supprimer ce mouvement ?</h3>
+            <h3 style={{fontSize:17,fontWeight:800,color:"#1a1a1a",marginBottom:8}}>Supprimer ce mouvement ?</h3>
             <div style={{background:"#f9fafb",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13}}>
               <div style={{fontWeight:600,color:confirmDeleteMouv.type==="entree"?"#059669":"#dc2626"}}>{confirmDeleteMouv.type==="entree"?"📥 Entrée":"📤 Sortie"} · {confirmDeleteMouv.quantite} unité{confirmDeleteMouv.quantite>1?"s":""}</div>
               <div style={{color:"#6b7280",marginTop:3}}>{confirmDeleteMouv.article_name||confirmDeleteMouv.articleName}</div>
-              <div style={{color:"#9ca3af",fontSize:11,marginTop:2}}>{new Date(confirmDeleteMouv.created_at).toLocaleString("fr-FR")}</div>
+              <div style={{color:"#8a9ab8",fontSize:11,marginTop:2}}>{new Date(confirmDeleteMouv.created_at).toLocaleString("fr-FR")}</div>
             </div>
-            <p style={{fontSize:12,color:"#9ca3af",marginBottom:20}}>⚠️ Cette action ne modifie pas le stock — uniquement l'historique.</p>
+            <p style={{fontSize:12,color:"#8a9ab8",marginBottom:20}}>⚠️ Cette action ne modifie pas le stock — uniquement l'historique.</p>
             <div style={{display:"flex",gap:10}}>
               <button onClick={()=>setConfirmDeleteMouv(null)} style={{flex:1,padding:"12px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer"}}>Annuler</button>
               <button onClick={()=>handleDeleteMouvement(confirmDeleteMouv)} style={{flex:1,padding:"12px",background:"#dc2626",color:"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer"}}>🗑 Supprimer</button>
@@ -1450,25 +1450,25 @@ function GestionPrix({ prixFournisseurs, setPrixFournisseurs, historiquePrix, se
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
         <div>
-          <h1 style={{fontSize:22,fontWeight:900,color:"#111827",margin:0}}>Gestion des prix</h1>
+          <h1 style={{fontSize:22,fontWeight:900,color:"#1a1a1a",margin:0}}>Gestion des prix</h1>
           <p style={{color:"#6b7280",fontSize:13,margin:"4px 0 0"}}>{totalPrix} prix enregistrés · {articlesAvecMultiPrix} articles avec plusieurs fournisseurs</p>
         </div>
         <div style={{display:"flex",gap:8}}>
-          <button onClick={()=>setShowImport(true)} style={{padding:"9px 16px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer",fontSize:13,color:"#374151"}}>📊 Import Excel</button>
+          <button onClick={()=>setShowImport(true)} style={{padding:"9px 16px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer",fontSize:13,color:"#555"}}>📊 Import Excel</button>
           <button onClick={handleExportExcel} disabled={prixFournisseurs.length===0} style={{padding:"9px 16px",background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:10,fontWeight:600,cursor:prixFournisseurs.length===0?"not-allowed":"pointer",fontSize:13,color:"#065f46",opacity:prixFournisseurs.length===0?0.5:1}}>⬇️ Export Excel</button>
-          <button onClick={()=>setShowForm(true)} style={{background:"#111827",color:"#fff",border:"none",borderRadius:10,padding:"9px 18px",fontWeight:700,cursor:"pointer",fontSize:13}}>+ Ajouter un prix</button>
+          <button onClick={()=>setShowForm(true)} style={{background:"#1e2330",color:"#fff",border:"none",borderRadius:10,padding:"9px 18px",fontWeight:700,cursor:"pointer",fontSize:13}}>+ Ajouter un prix</button>
         </div>
       </div>
 
       {/* KPIs */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))",gap:12}}>
         {[
-          {label:"Prix enregistrés",value:totalPrix,icon:"💶",color:"#111827"},
+          {label:"Prix enregistrés",value:totalPrix,icon:"💶",color:"#1a1a1a"},
           {label:"Articles multi-fourn.",value:articlesAvecMultiPrix,icon:"🏭",color:"#3b82f6"},
           {label:"Écart max potentiel",value:economiesPotentielles.toFixed(2)+" €",icon:"📉",color:"#059669"},
           {label:"Variations historiques",value:historiquePrix.length,icon:"📈",color:"#7c3aed"},
         ].map((k,i)=>(
-          <div key={i} style={{background:"#fff",borderRadius:14,padding:"16px 18px",border:"1px solid #e5e7eb"}}>
+          <div key={i} style={{background:"#fff",borderRadius:14,padding:"16px 18px",border:"1px solid #e0e0d8"}}>
             <div style={{fontSize:22,marginBottom:6}}>{k.icon}</div>
             <div style={{fontSize:20,fontWeight:900,color:k.color}}>{k.value}</div>
             <div style={{fontSize:12,color:"#6b7280",marginTop:3}}>{k.label}</div>
@@ -1477,23 +1477,23 @@ function GestionPrix({ prixFournisseurs, setPrixFournisseurs, historiquePrix, se
       </div>
 
       {/* Onglets */}
-      <div style={{display:"flex",gap:8,borderBottom:"2px solid #e5e7eb",paddingBottom:0}}>
+      <div style={{display:"flex",gap:8,borderBottom:"2px solid #e0e0d8",paddingBottom:0}}>
         {[{v:"comparaison",l:"🏭 Comparaison fournisseurs"},{v:"historique",l:"📈 Historique des prix"}].map(t=>(
-          <button key={t.v} onClick={()=>setOnglet(t.v)} style={{padding:"10px 18px",borderRadius:"10px 10px 0 0",border:"none",background:onglet===t.v?"#111827":"transparent",color:onglet===t.v?"#fff":"#6b7280",fontWeight:onglet===t.v?700:500,cursor:"pointer",fontSize:13,marginBottom:-2,borderBottom:onglet===t.v?"2px solid #111827":"none"}}>{t.l}</button>
+          <button key={t.v} onClick={()=>setOnglet(t.v)} style={{padding:"10px 18px",borderRadius:"10px 10px 0 0",border:"none",background:onglet===t.v?"#1e2330":"transparent",color:onglet===t.v?"#fff":"#6b7280",fontWeight:onglet===t.v?700:500,cursor:"pointer",fontSize:13,marginBottom:-2,borderBottom:onglet===t.v?"2px solid #1e2330":"none"}}>{t.l}</button>
         ))}
       </div>
 
-      <input value={filterSearch} onChange={e=>setFilterSearch(e.target.value)} placeholder="🔍  Rechercher article, fournisseur…" style={{padding:"10px 16px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none"}}/>
+      <input value={filterSearch} onChange={e=>setFilterSearch(e.target.value)} placeholder="🔍  Rechercher article, fournisseur…" style={{padding:"10px 16px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none"}}/>
 
       {/* Comparaison fournisseurs */}
       {onglet==="comparaison"&&(
         <div style={{display:"flex",flexDirection:"column",gap:12}}>
           {groupesFiltres.length===0?(
-            <div style={{background:"#fff",borderRadius:14,border:"1px solid #e5e7eb",padding:50,textAlign:"center"}}>
+            <div style={{background:"#fff",borderRadius:14,border:"1px solid #e0e0d8",padding:50,textAlign:"center"}}>
               <div style={{fontSize:40,marginBottom:12}}>💶</div>
-              <div style={{fontWeight:700,fontSize:16,color:"#374151",marginBottom:8}}>Aucun prix enregistré</div>
-              <div style={{color:"#9ca3af",fontSize:13,marginBottom:20}}>Ajoutez des prix manuellement ou importez un fichier Excel.</div>
-              <button onClick={()=>setShowForm(true)} style={{padding:"10px 24px",background:"#111827",color:"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>+ Ajouter un prix</button>
+              <div style={{fontWeight:700,fontSize:16,color:"#555",marginBottom:8}}>Aucun prix enregistré</div>
+              <div style={{color:"#8a9ab8",fontSize:13,marginBottom:20}}>Ajoutez des prix manuellement ou importez un fichier Excel.</div>
+              <button onClick={()=>setShowForm(true)} style={{padding:"10px 24px",background:"#1e2330",color:"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>+ Ajouter un prix</button>
             </div>
           ):groupesFiltres.map(g=>{
             const minPrix=Math.min(...g.prix.map(p=>p.prix_ht));
@@ -1501,10 +1501,10 @@ function GestionPrix({ prixFournisseurs, setPrixFournisseurs, historiquePrix, se
             const ecart=maxPrix-minPrix;
             const meilleurfournisseur=g.prix.find(p=>p.prix_ht===minPrix);
             return (
-              <div key={g.articleId} style={{background:"#fff",borderRadius:14,border:"1px solid #e5e7eb",padding:"18px 22px"}}>
+              <div key={g.articleId} style={{background:"#fff",borderRadius:14,border:"1px solid #e0e0d8",padding:"18px 22px"}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:10}}>
                   <div>
-                    <div style={{fontWeight:800,fontSize:14,color:"#111827"}}>{g.articleName}</div>
+                    <div style={{fontWeight:800,fontSize:14,color:"#1a1a1a"}}>{g.articleName}</div>
                     <div style={{fontSize:12,color:"#6b7280",marginTop:2}}>{g.articleId} · {g.prix.length} fournisseur{g.prix.length>1?"s":""}</div>
                   </div>
                   {g.prix.length>1&&(
@@ -1521,25 +1521,25 @@ function GestionPrix({ prixFournisseurs, setPrixFournisseurs, historiquePrix, se
                     const isWorst=p.prix_ht===maxPrix&&g.prix.length>1;
                     const barPct=maxPrix>0?Math.round((p.prix_ht/maxPrix)*100):100;
                     return (
-                      <div key={p.id} style={{padding:"12px 14px",borderRadius:10,background:isBest?"#f0fdf4":isWorst?"#fff1f2":"#f9fafb",border:`1px solid ${isBest?"#bbf7d0":isWorst?"#fecaca":"#e5e7eb"}`}}>
+                      <div key={p.id} style={{padding:"12px 14px",borderRadius:10,background:isBest?"#f0fdf4":isWorst?"#fff1f2":"#f9fafb",border:`1px solid ${isBest?"#bbf7d0":isWorst?"#fecaca":"#e0e0d8"}`}}>
                         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                           <div style={{display:"flex",alignItems:"center",gap:10}}>
-                            <div style={{fontWeight:700,fontSize:13,color:"#111827"}}>{p.fournisseur}</div>
+                            <div style={{fontWeight:700,fontSize:13,color:"#1a1a1a"}}>{p.fournisseur}</div>
                             {isBest&&<span style={{background:"#d1fae5",color:"#065f46",padding:"2px 8px",borderRadius:99,fontSize:10,fontWeight:700}}>✅ Meilleur prix</span>}
                             {isWorst&&g.prix.length>1&&<span style={{background:"#fee2e2",color:"#991b1b",padding:"2px 8px",borderRadius:99,fontSize:10,fontWeight:700}}>⚠️ Plus cher</span>}
                           </div>
                           <div style={{display:"flex",alignItems:"center",gap:12}}>
                             <div style={{textAlign:"right"}}>
-                              <div style={{fontSize:20,fontWeight:900,color:isBest?"#059669":isWorst?"#dc2626":"#111827"}}>{p.prix_ht.toFixed(2)} <span style={{fontSize:12}}>{p.devise}</span></div>
+                              <div style={{fontSize:20,fontWeight:900,color:isBest?"#059669":isWorst?"#dc2626":"#1e2330"}}>{p.prix_ht.toFixed(2)} <span style={{fontSize:12}}>{p.devise}</span></div>
                               {g.prix.length>1&&!isBest&&<div style={{fontSize:11,color:"#dc2626"}}>+{(p.prix_ht-minPrix).toFixed(2)} € vs meilleur</div>}
                             </div>
                             <button onClick={()=>handleDelete(p.id)} style={{padding:"5px 8px",background:"#fee2e2",border:"none",borderRadius:7,cursor:"pointer",color:"#dc2626",fontSize:12}}>🗑</button>
                           </div>
                         </div>
-                        <div style={{background:"#e5e7eb",borderRadius:99,height:5,overflow:"hidden"}}>
+                        <div style={{background:"#e0e0d8",borderRadius:99,height:5,overflow:"hidden"}}>
                           <div style={{width:`${barPct}%`,height:"100%",borderRadius:99,background:isBest?"#059669":isWorst?"#dc2626":"#3b82f6",transition:"width 0.5s"}}/>
                         </div>
-                        <div style={{display:"flex",gap:16,marginTop:6,fontSize:11,color:"#9ca3af"}}>
+                        <div style={{display:"flex",gap:16,marginTop:6,fontSize:11,color:"#8a9ab8"}}>
                           {p.delai_livraison>0&&<span>🚚 Délai : {p.delai_livraison} j</span>}
                           {p.quantite_min>1&&<span>📦 Min : {p.quantite_min} unités</span>}
                           {p.notes&&<span>💬 {p.notes}</span>}
@@ -1562,18 +1562,18 @@ function GestionPrix({ prixFournisseurs, setPrixFournisseurs, historiquePrix, se
 
       {/* Historique des prix */}
       {onglet==="historique"&&(
-        <div style={{background:"#fff",borderRadius:14,border:"1px solid #e5e7eb",overflow:"hidden"}}>
+        <div style={{background:"#fff",borderRadius:14,border:"1px solid #e0e0d8",overflow:"hidden"}}>
           {histFiltre.length===0?(
-            <div style={{padding:40,textAlign:"center",color:"#9ca3af"}}>
+            <div style={{padding:40,textAlign:"center",color:"#8a9ab8"}}>
               <div style={{fontSize:36,marginBottom:10}}>📈</div>
-              <div style={{fontWeight:700,color:"#374151",marginBottom:6}}>Aucun historique</div>
+              <div style={{fontWeight:700,color:"#555",marginBottom:6}}>Aucun historique</div>
               <div style={{fontSize:13}}>Les variations de prix apparaîtront ici automatiquement.</div>
             </div>
           ):(
             <table style={{width:"100%",borderCollapse:"collapse"}}>
-              <thead><tr style={{background:"#111827"}}>
+              <thead><tr style={{background:"#1e2330"}}>
                 {["Date","Article","Fournisseur","Ancien prix","Nouveau prix","Variation","Motif"].map(h=>(
-                  <th key={h} style={{padding:"10px 14px",textAlign:"left",fontSize:11,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:0.5,whiteSpace:"nowrap"}}>{h}</th>
+                  <th key={h} style={{padding:"10px 14px",textAlign:"left",fontSize:11,fontWeight:700,color:"#8a9ab8",textTransform:"uppercase",letterSpacing:0.5,whiteSpace:"nowrap"}}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>
@@ -1584,18 +1584,18 @@ function GestionPrix({ prixFournisseurs, setPrixFournisseurs, historiquePrix, se
                     <tr key={h.id||i} style={{borderBottom:"1px solid #f3f4f6",background:i%2===0?"#fff":"#fafafa"}}>
                       <td style={{padding:"10px 14px",fontSize:11,color:"#6b7280",whiteSpace:"nowrap"}}>{new Date(h.created_at).toLocaleDateString("fr-FR")}</td>
                       <td style={{padding:"10px 14px",maxWidth:200}}>
-                        <div style={{fontWeight:600,fontSize:12,color:"#111827",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{h.article_name}</div>
-                        <div style={{fontSize:10,color:"#9ca3af"}}>{h.article_id}</div>
+                        <div style={{fontWeight:600,fontSize:12,color:"#1a1a1a",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{h.article_name}</div>
+                        <div style={{fontSize:10,color:"#8a9ab8"}}>{h.article_id}</div>
                       </td>
-                      <td style={{padding:"10px 14px",fontSize:12,color:"#374151"}}>{h.fournisseur}</td>
+                      <td style={{padding:"10px 14px",fontSize:12,color:"#555"}}>{h.fournisseur}</td>
                       <td style={{padding:"10px 14px",textAlign:"right",fontSize:13,color:"#6b7280"}}>{h.ancien_prix!=null?h.ancien_prix.toFixed(2)+" €":"—"}</td>
-                      <td style={{padding:"10px 14px",textAlign:"right"}}><span style={{fontSize:15,fontWeight:800,color:"#111827"}}>{h.nouveau_prix.toFixed(2)} €</span></td>
+                      <td style={{padding:"10px 14px",textAlign:"right"}}><span style={{fontSize:15,fontWeight:800,color:"#1a1a1a"}}>{h.nouveau_prix.toFixed(2)} €</span></td>
                       <td style={{padding:"10px 14px",textAlign:"center"}}>
                         {variation!=null?(
                           <span style={{background:hausse?"#fee2e2":"#d1fae5",color:hausse?"#991b1b":"#065f46",padding:"3px 8px",borderRadius:99,fontSize:11,fontWeight:700}}>
                             {hausse?"↑":"↓"} {Math.abs(variation).toFixed(1)}%
                           </span>
-                        ):<span style={{color:"#9ca3af",fontSize:12}}>Nouveau</span>}
+                        ):<span style={{color:"#8a9ab8",fontSize:12}}>Nouveau</span>}
                       </td>
                       <td style={{padding:"10px 14px",fontSize:12,color:"#6b7280"}}>{h.motif||"—"}</td>
                     </tr>
@@ -1612,18 +1612,18 @@ function GestionPrix({ prixFournisseurs, setPrixFournisseurs, historiquePrix, se
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(2px)"}}>
           <div style={{background:"#fff",borderRadius:20,padding:32,width:"min(96vw,520px)",maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
-              <h2 style={{fontSize:18,fontWeight:800,color:"#111827",margin:0}}>💶 Ajouter / modifier un prix</h2>
+              <h2 style={{fontSize:18,fontWeight:800,color:"#1a1a1a",margin:0}}>💶 Ajouter / modifier un prix</h2>
               <button onClick={()=>setShowForm(false)} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:16}}>✕</button>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:14}}>
               {/* Recherche article */}
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Article *</label>
+                <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Article *</label>
                 <div style={{position:"relative"}}>
                   <input value={search} onChange={e=>handleSearchArticle(e.target.value)} placeholder="Rechercher par nom ou SKU…"
-                    style={{width:"100%",padding:"10px 14px",border:`1px solid ${selectedArticle?"#10b981":"#e5e7eb"}`,borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                    style={{width:"100%",padding:"10px 14px",border:`1px solid ${selectedArticle?"#10b981":"#e0e0d8"}`,borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                   {suggestions.length>0&&(
-                    <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.1)",zIndex:100,overflow:"hidden",marginTop:4}}>
+                    <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e0e0d8",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.1)",zIndex:100,overflow:"hidden",marginTop:4}}>
                       {suggestions.map(p=>(
                         <div key={p.id} onClick={()=>{setSelectedArticle(p);setSearch(p.name);setSuggestions([]);setForm(f=>({...f,fournisseur:p.fournisseur||"",prixHT:p.prix>0?String(p.prix):""}));}}
                           style={{padding:"9px 14px",cursor:"pointer",borderBottom:"1px solid #f3f4f6",display:"flex",justifyContent:"space-between"}}
@@ -1639,20 +1639,20 @@ function GestionPrix({ prixFournisseurs, setPrixFournisseurs, historiquePrix, se
               </div>
               {/* Fournisseur */}
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Fournisseur *</label>
+                <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Fournisseur *</label>
                 <input value={form.fournisseur} onChange={e=>setForm(p=>({...p,fournisseur:e.target.value}))} placeholder="Nom du fournisseur"
-                  style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
               </div>
               {/* Prix + devise */}
               <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:10}}>
                 <div>
-                  <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Prix HT *</label>
+                  <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Prix HT *</label>
                   <input type="number" step="0.01" min="0" value={form.prixHT} onChange={e=>setForm(p=>({...p,prixHT:e.target.value}))} placeholder="0.00"
-                    style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:16,fontWeight:700,outline:"none",boxSizing:"border-box"}}/>
+                    style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:16,fontWeight:700,outline:"none",boxSizing:"border-box"}}/>
                 </div>
                 <div>
-                  <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Devise</label>
-                  <select value={form.devise} onChange={e=>setForm(p=>({...p,devise:e.target.value}))} style={{padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",height:42}}>
+                  <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Devise</label>
+                  <select value={form.devise} onChange={e=>setForm(p=>({...p,devise:e.target.value}))} style={{padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",height:42}}>
                     {["EUR","USD","GBP","CHF","MAD"].map(d=><option key={d}>{d}</option>)}
                   </select>
                 </div>
@@ -1660,26 +1660,26 @@ function GestionPrix({ prixFournisseurs, setPrixFournisseurs, historiquePrix, se
               {/* Délai + qté min */}
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                 <div>
-                  <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Délai livraison (jours)</label>
+                  <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Délai livraison (jours)</label>
                   <input type="number" min="0" value={form.delaiLivraison} onChange={e=>setForm(p=>({...p,delaiLivraison:e.target.value}))} placeholder="0"
-                    style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                    style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                 </div>
                 <div>
-                  <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Quantité minimum</label>
+                  <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Quantité minimum</label>
                   <input type="number" min="1" value={form.quantiteMin} onChange={e=>setForm(p=>({...p,quantiteMin:e.target.value}))} placeholder="1"
-                    style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                    style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                 </div>
               </div>
               {/* Notes */}
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Notes</label>
+                <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Notes</label>
                 <input value={form.notes} onChange={e=>setForm(p=>({...p,notes:e.target.value}))} placeholder="Conditions, remises, validité…"
-                  style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
               </div>
               <div style={{display:"flex",gap:10,marginTop:6}}>
                 <button onClick={()=>setShowForm(false)} style={{flex:1,padding:"12px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer"}}>Annuler</button>
                 <button onClick={handleAddPrix} disabled={!selectedArticle||!form.fournisseur||!form.prixHT||saving}
-                  style={{flex:2,padding:"12px",background:selectedArticle&&form.fournisseur&&form.prixHT?"#111827":"#e5e7eb",color:selectedArticle&&form.fournisseur&&form.prixHT?"#fff":"#9ca3af",border:"none",borderRadius:10,fontWeight:700,cursor:selectedArticle&&form.fournisseur&&form.prixHT?"pointer":"not-allowed",fontSize:14}}>
+                  style={{flex:2,padding:"12px",background:selectedArticle&&form.fournisseur&&form.prixHT?"#1e2330":"#e0e0d8",color:selectedArticle&&form.fournisseur&&form.prixHT?"#fff":"#8a9ab8",border:"none",borderRadius:10,fontWeight:700,cursor:selectedArticle&&form.fournisseur&&form.prixHT?"pointer":"not-allowed",fontSize:14}}>
                   {saving?"⏳ Enregistrement…":"💾 Enregistrer le prix"}
                 </button>
               </div>
@@ -1693,14 +1693,14 @@ function GestionPrix({ prixFournisseurs, setPrixFournisseurs, historiquePrix, se
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}}>
           <div style={{background:"#fff",borderRadius:20,padding:32,width:"min(96vw,480px)",boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
-              <h2 style={{fontSize:18,fontWeight:800,color:"#111827",margin:0}}>📊 Import Excel</h2>
+              <h2 style={{fontSize:18,fontWeight:800,color:"#1a1a1a",margin:0}}>📊 Import Excel</h2>
               <button onClick={()=>setShowImport(false)} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:16}}>✕</button>
             </div>
             <div style={{background:"#f9fafb",borderRadius:12,padding:16,marginBottom:20,fontSize:13}}>
-              <div style={{fontWeight:700,color:"#111827",marginBottom:10}}>Format attendu du fichier Excel :</div>
+              <div style={{fontWeight:700,color:"#1a1a1a",marginBottom:10}}>Format attendu du fichier Excel :</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
                 {["SKU *","Fournisseur *","Prix HT *","Devise","Délai (j)","Qté min","Notes"].map(col=>(
-                  <div key={col} style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:6,padding:"6px 10px",fontSize:12,fontWeight:col.includes("*")?"700":"400",color:col.includes("*")?"#111827":"#6b7280"}}>{col}</div>
+                  <div key={col} style={{background:"#fff",border:"1px solid #e0e0d8",borderRadius:6,padding:"6px 10px",fontSize:12,fontWeight:col.includes("*")?"700":"400",color:col.includes("*")?"#1e2330":"#6b7280"}}>{col}</div>
                 ))}
               </div>
               <div style={{marginTop:10,fontSize:12,color:"#6b7280"}}>* Colonnes obligatoires. Le SKU doit correspondre à votre catalogue.</div>
@@ -1765,7 +1765,7 @@ function Equivalences({ equivalences, setEquivalences, products }) {
   return (
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
       <div>
-        <h1 style={{fontSize:22,fontWeight:900,color:"#111827",margin:0}}>Références équivalentes</h1>
+        <h1 style={{fontSize:22,fontWeight:900,color:"#1a1a1a",margin:0}}>Références équivalentes</h1>
         <p style={{color:"#6b7280",fontSize:13,margin:"4px 0 0"}}>{totalGroupes} article{totalGroupes!==1?"s":""} avec équivalences · synchronisé Supabase 🔄</p>
       </div>
 
@@ -1775,19 +1775,19 @@ function Equivalences({ equivalences, setEquivalences, products }) {
 
       <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:20,alignItems:"start"}}>
         {/* Recherche article */}
-        <div style={{background:"#fff",borderRadius:16,border:"1px solid #e5e7eb",padding:22}}>
-          <h3 style={{fontSize:15,fontWeight:800,color:"#111827",marginBottom:14}}>🔍 Sélectionner un article</h3>
+        <div style={{background:"#fff",borderRadius:16,border:"1px solid #e0e0d8",padding:22}}>
+          <h3 style={{fontSize:15,fontWeight:800,color:"#1a1a1a",marginBottom:14}}>🔍 Sélectionner un article</h3>
           <div style={{position:"relative",marginBottom:16}}>
             <input value={search} onChange={e=>handleSearchArticle(e.target.value)}
               placeholder="Rechercher par nom, SKU…"
-              style={{width:"100%",padding:"10px 14px",border:`1px solid ${selectedArticle?"#10b981":"#e5e7eb"}`,borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+              style={{width:"100%",padding:"10px 14px",border:`1px solid ${selectedArticle?"#10b981":"#e0e0d8"}`,borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
             {suggestions.length>0&&(
-              <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.1)",zIndex:100,overflow:"hidden",marginTop:4}}>
+              <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e0e0d8",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.1)",zIndex:100,overflow:"hidden",marginTop:4}}>
                 {suggestions.map(p=>(
                   <div key={p.id} onClick={()=>{setSelectedArticle(p);setSearch(p.name);setSuggestions([]);setSearchEq("");setSuggEq([]);}}
                     style={{padding:"9px 14px",cursor:"pointer",borderBottom:"1px solid #f3f4f6",display:"flex",justifyContent:"space-between"}}
                     onMouseEnter={e=>e.currentTarget.style.background="#f9fafb"} onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
-                    <div><div style={{fontWeight:600,fontSize:13,color:"#111827"}}>{p.name}</div><div style={{fontSize:11,color:"#6b7280"}}>{p.id}</div></div>
+                    <div><div style={{fontWeight:600,fontSize:13,color:"#1a1a1a"}}>{p.name}</div><div style={{fontSize:11,color:"#6b7280"}}>{p.id}</div></div>
                     <span style={{color:"#3b82f6",fontSize:12,fontWeight:600,alignSelf:"center"}}>Sélectionner</span>
                   </div>
                 ))}
@@ -1797,21 +1797,21 @@ function Equivalences({ equivalences, setEquivalences, products }) {
 
           {selectedArticle&&(
             <>
-              <div style={{background:"#f9fafb",borderRadius:10,padding:"12px 14px",marginBottom:16,border:"1px solid #e5e7eb"}}>
-                <div style={{fontWeight:700,fontSize:13,color:"#111827",marginBottom:4}}>{selectedArticle.name}</div>
+              <div style={{background:"#f9fafb",borderRadius:10,padding:"12px 14px",marginBottom:16,border:"1px solid #e0e0d8"}}>
+                <div style={{fontWeight:700,fontSize:13,color:"#1a1a1a",marginBottom:4}}>{selectedArticle.name}</div>
                 <div style={{fontSize:12,color:"#6b7280"}}>
                   {selectedArticle.id} · {selectedArticle.fournisseur||"—"}<br/>
                   Stock : <strong style={{color:selectedArticle.stock===0?"#dc2626":"#059669"}}>{selectedArticle.stock}</strong> · {selectedArticle.location}
                 </div>
               </div>
 
-              <h3 style={{fontSize:14,fontWeight:700,color:"#111827",marginBottom:10}}>➕ Ajouter un équivalent</h3>
+              <h3 style={{fontSize:14,fontWeight:700,color:"#1a1a1a",marginBottom:10}}>➕ Ajouter un équivalent</h3>
               <div style={{position:"relative"}}>
                 <input value={searchEq} onChange={e=>handleSearchEq(e.target.value)}
                   placeholder="Rechercher l'article équivalent…"
-                  style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                 {suggEq.length>0&&(
-                  <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.1)",zIndex:100,overflow:"hidden",marginTop:4}}>
+                  <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e0e0d8",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.1)",zIndex:100,overflow:"hidden",marginTop:4}}>
                     {suggEq.map(p=>(
                       <div key={p.id} onClick={()=>handleAdd(p)}
                         style={{padding:"9px 14px",cursor:"pointer",borderBottom:"1px solid #f3f4f6",display:"flex",justifyContent:"space-between"}}
@@ -1828,21 +1828,21 @@ function Equivalences({ equivalences, setEquivalences, products }) {
         </div>
 
         {/* Équivalences de l'article sélectionné */}
-        <div style={{background:"#fff",borderRadius:16,border:"1px solid #e5e7eb",padding:22}}>
+        <div style={{background:"#fff",borderRadius:16,border:"1px solid #e0e0d8",padding:22}}>
           {!selectedArticle?(
-            <div style={{textAlign:"center",padding:40,color:"#9ca3af"}}>
+            <div style={{textAlign:"center",padding:40,color:"#8a9ab8"}}>
               <div style={{fontSize:40,marginBottom:12}}>↔️</div>
-              <div style={{fontWeight:700,fontSize:15,color:"#374151",marginBottom:6}}>Sélectionnez un article</div>
+              <div style={{fontWeight:700,fontSize:15,color:"#555",marginBottom:6}}>Sélectionnez un article</div>
               <div style={{fontSize:13}}>Recherchez un article à gauche pour voir et gérer ses équivalences.</div>
             </div>
           ):(
             <>
-              <h3 style={{fontSize:15,fontWeight:800,color:"#111827",marginBottom:4}}>
+              <h3 style={{fontSize:15,fontWeight:800,color:"#1a1a1a",marginBottom:4}}>
                 Équivalences de : {selectedArticle.name.slice(0,40)}{selectedArticle.name.length>40?"…":""}
               </h3>
               <p style={{fontSize:12,color:"#6b7280",marginBottom:16}}>{eqProducts.length} équivalent{eqProducts.length!==1?"s":""} défini{eqProducts.length!==1?"s":""}</p>
               {eqProducts.length===0?(
-                <div style={{padding:24,textAlign:"center",background:"#f9fafb",borderRadius:10,color:"#9ca3af",fontSize:13}}>
+                <div style={{padding:24,textAlign:"center",background:"#f9fafb",borderRadius:10,color:"#8a9ab8",fontSize:13}}>
                   Aucune équivalence — utilisez la recherche à gauche pour en ajouter
                 </div>
               ):(
@@ -1850,13 +1850,13 @@ function Equivalences({ equivalences, setEquivalences, products }) {
                   {eqProducts.map(p=>(
                     <div key={p.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 14px",borderRadius:10,background:p.stock>0?"#f0fdf4":"#fff1f2",border:`1px solid ${p.stock>0?"#bbf7d0":"#fecaca"}`}}>
                       <div style={{flex:1}}>
-                        <div style={{fontWeight:700,fontSize:13,color:"#111827"}}>{p.name}</div>
+                        <div style={{fontWeight:700,fontSize:13,color:"#1a1a1a"}}>{p.name}</div>
                         <div style={{fontSize:11,color:"#6b7280",marginTop:2}}>{p.id} · {p.fournisseur||"—"} · {p.location}</div>
                       </div>
                       <div style={{display:"flex",alignItems:"center",gap:10}}>
                         <div style={{textAlign:"right"}}>
                           <div style={{fontWeight:800,fontSize:18,color:p.stock===0?"#dc2626":"#059669"}}>{p.stock}</div>
-                          <div style={{fontSize:10,color:"#9ca3af"}}>en stock</div>
+                          <div style={{fontSize:10,color:"#8a9ab8"}}>en stock</div>
                         </div>
                         <button onClick={()=>handleRemove(selectedArticle.id,p.id)} style={{padding:"5px 10px",background:"#fee2e2",border:"none",borderRadius:8,cursor:"pointer",color:"#dc2626",fontSize:12,fontWeight:600}}>✕ Retirer</button>
                       </div>
@@ -1884,7 +1884,7 @@ const TYPE_INTERV_COLORS = {
   'Remplacement pièce':  { bg:"#dbeafe", text:"#1e40af" },
   'Entretien préventif': { bg:"#ede9fe", text:"#5b21b6" },
   'Contrôle technique':  { bg:"#d1fae5", text:"#0f766e" },
-  'Autre':               { bg:"#f3f4f6", text:"#374151" },
+  'Autre':               { bg:"#f3f4f6", text:"#555" },
 };
 function TypeIntervBadges({ value }) {
   if(!value) return null;
@@ -1892,7 +1892,7 @@ function TypeIntervBadges({ value }) {
   return (
     <span style={{display:"inline-flex",gap:4,flexWrap:"wrap"}}>
       {types.map(t=>{
-        const c=TYPE_INTERV_COLORS[t]||{bg:"#f3f4f6",text:"#374151"};
+        const c=TYPE_INTERV_COLORS[t]||{bg:"#f3f4f6",text:"#555"};
         return <span key={t} style={{background:c.bg,color:c.text,padding:"2px 8px",borderRadius:99,fontSize:11,fontWeight:700,whiteSpace:"nowrap"}}>{t}</span>;
       })}
     </span>
@@ -2118,18 +2118,18 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
   return (
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
-        <div><h1 style={{fontSize:22,fontWeight:900,color:"#111827",margin:0}}>Ordres de réparation</h1>
+        <div><h1 style={{fontSize:22,fontWeight:900,color:"#1a1a1a",margin:0}}>Ordres de réparation</h1>
           <p style={{color:"#6b7280",fontSize:13,margin:"4px 0 0"}}>{ordres.length} OR · synchronisé en temps réel 🔄</p></div>
         <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          <button onClick={exportPDF} title="Exporter en PDF" style={{background:"#fff",color:"#374151",border:"1px solid #e5e7eb",borderRadius:10,padding:"10px 16px",fontWeight:600,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:6}}>📄 PDF</button>
-          <button onClick={exportExcel} title="Exporter en Excel" style={{background:"#fff",color:"#374151",border:"1px solid #e5e7eb",borderRadius:10,padding:"10px 16px",fontWeight:600,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:6}}>📊 Excel</button>
-          <button onClick={()=>setShowForm(true)} style={{background:"#111827",color:"#fff",border:"none",borderRadius:10,padding:"11px 20px",fontWeight:700,cursor:"pointer",fontSize:14}}>+ Nouvel OR</button>
+          <button onClick={exportPDF} title="Exporter en PDF" style={{background:"#fff",color:"#555",border:"1px solid #e0e0d8",borderRadius:10,padding:"10px 16px",fontWeight:600,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:6}}>📄 PDF</button>
+          <button onClick={exportExcel} title="Exporter en Excel" style={{background:"#fff",color:"#555",border:"1px solid #e0e0d8",borderRadius:10,padding:"10px 16px",fontWeight:600,cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",gap:6}}>📊 Excel</button>
+          <button onClick={()=>setShowForm(true)} style={{background:"#1e2330",color:"#fff",border:"none",borderRadius:10,padding:"11px 20px",fontWeight:700,cursor:"pointer",fontSize:14}}>+ Nouvel OR</button>
         </div>
       </div>
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:12}}>
-        {[{label:"Total",value:stats.total,icon:"🔧",color:"#111827"},{label:"Ouverts",value:stats.ouvert,icon:"📂",color:"#1e40af"},{label:"En cours",value:stats.en_cours,icon:"⚙️",color:"#d97706"},{label:"En attente",value:stats.en_attente,icon:"⏳",color:"#7c3aed"},{label:"Terminés",value:stats.termine,icon:"✅",color:"#059669"}].map((k,i)=>(
-          <div key={i} style={{background:"#fff",borderRadius:14,padding:"16px 18px",border:"1px solid #e5e7eb"}}>
+        {[{label:"Total",value:stats.total,icon:"🔧",color:"#1a1a1a"},{label:"Ouverts",value:stats.ouvert,icon:"📂",color:"#1e40af"},{label:"En cours",value:stats.en_cours,icon:"⚙️",color:"#d97706"},{label:"En attente",value:stats.en_attente,icon:"⏳",color:"#7c3aed"},{label:"Terminés",value:stats.termine,icon:"✅",color:"#059669"}].map((k,i)=>(
+          <div key={i} style={{background:"#fff",borderRadius:14,padding:"16px 18px",border:"1px solid #e0e0d8"}}>
             <div style={{fontSize:22,marginBottom:6}}>{k.icon}</div>
             <div style={{fontSize:24,fontWeight:900,color:k.color}}>{k.value}</div>
             <div style={{fontSize:12,color:"#6b7280",marginTop:3}}>{k.label}</div>
@@ -2138,20 +2138,20 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
       </div>
 
       <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-        <input value={filterSearch} onChange={e=>setFilterSearch(e.target.value)} placeholder="🔍  Rechercher numéro, machine, immat, technicien…" style={{flex:1,minWidth:250,padding:"10px 16px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none"}}/>
+        <input value={filterSearch} onChange={e=>setFilterSearch(e.target.value)} placeholder="🔍  Rechercher numéro, machine, immat, technicien…" style={{flex:1,minWidth:250,padding:"10px 16px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none"}}/>
         <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
           {[{v:"tous",l:"Tous"},...Object.entries(OR_STATUTS).map(([k,v])=>({v:k,l:v.label}))].map(f=>(
-            <button key={f.v} onClick={()=>setFilterStatut(f.v)} style={{padding:"8px 14px",borderRadius:9,border:`2px solid ${filterStatut===f.v?"#111827":"#e5e7eb"}`,background:filterStatut===f.v?"#111827":"#fff",color:filterStatut===f.v?"#fff":"#374151",fontWeight:600,cursor:"pointer",fontSize:12}}>{f.l}</button>
+            <button key={f.v} onClick={()=>setFilterStatut(f.v)} style={{padding:"8px 14px",borderRadius:9,border:`2px solid ${filterStatut===f.v?"#1e2330":"#e0e0d8"}`,background:filterStatut===f.v?"#1e2330":"#fff",color:filterStatut===f.v?"#fff":"#555",fontWeight:600,cursor:"pointer",fontSize:12}}>{f.l}</button>
           ))}
         </div>
       </div>
 
       {filtered.length===0?(
-        <div style={{background:"#fff",borderRadius:14,border:"1px solid #e5e7eb",padding:50,textAlign:"center"}}>
+        <div style={{background:"#fff",borderRadius:14,border:"1px solid #e0e0d8",padding:50,textAlign:"center"}}>
           <div style={{fontSize:44,marginBottom:12}}>🔧</div>
-          <div style={{fontWeight:700,fontSize:16,color:"#374151",marginBottom:8}}>Aucun ordre de réparation</div>
-          <div style={{color:"#9ca3af",fontSize:13,marginBottom:20}}>Créez votre premier OR</div>
-          <button onClick={()=>setShowForm(true)} style={{padding:"10px 24px",background:"#111827",color:"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>+ Créer un OR</button>
+          <div style={{fontWeight:700,fontSize:16,color:"#555",marginBottom:8}}>Aucun ordre de réparation</div>
+          <div style={{color:"#8a9ab8",fontSize:13,marginBottom:20}}>Créez votre premier OR</div>
+          <button onClick={()=>setShowForm(true)} style={{padding:"10px 24px",background:"#1e2330",color:"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>+ Créer un OR</button>
         </div>
       ):(
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
@@ -2160,23 +2160,23 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
             const nbSorties=o.pieces.filter(p=>p.sortie).length;
             const totalCout=o.pieces.reduce((a,p)=>a+(p.prix||0)*p.qte,0);
             return (
-              <div key={o.id} style={{background:"#fff",borderRadius:14,border:`1px solid ${o.priorite==="urgente"?"#fca5a5":"#e5e7eb"}`,padding:"18px 22px",cursor:"pointer"}}
+              <div key={o.id} style={{background:"#fff",borderRadius:14,border:`1px solid ${o.priorite==="urgente"?"#fca5a5":"#e0e0d8"}`,padding:"18px 22px",cursor:"pointer"}}
                 onClick={()=>setFicheOrdre(o)} onMouseEnter={e=>e.currentTarget.style.background="#f9fafb"} onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10}}>
                   <div style={{flex:1}}>
                     <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:5,flexWrap:"wrap"}}>
-                      <span style={{fontFamily:"monospace",fontWeight:800,fontSize:15,color:"#111827"}}>{o.numero}</span>
+                      <span style={{fontFamily:"monospace",fontWeight:800,fontSize:15,color:"#1a1a1a"}}>{o.numero}</span>
                       <Badge status={o.statut} map={OR_STATUTS}/><Badge status={o.priorite} map={OR_PRIORITES}/>
                     </div>
-                    <div style={{fontWeight:700,fontSize:15,color:"#111827",marginBottom:3}}>🚗 {o.machine}{o.immat?` — ${o.immat}`:""}</div>
-                    <div style={{fontSize:13,color:"#6b7280"}}>🔧 {o.typePanne}{o.technicien?` · 👤 ${o.technicien}`:""}{(o.kilometrage||o.heures_moteur)&&<span style={{marginLeft:8,fontSize:12,color:"#9ca3af"}}>{o.type_compteur==="h"?`⏱ ${o.heures_moteur} h`:`📏 ${(o.kilometrage||0).toLocaleString("fr-FR")} km`}</span>}</div>
-                    {o.description&&<div style={{fontSize:12,color:"#9ca3af",marginTop:3,fontStyle:"italic"}}>{o.description.slice(0,80)}{o.description.length>80?"…":""}</div>}
+                    <div style={{fontWeight:700,fontSize:15,color:"#1a1a1a",marginBottom:3}}>🚗 {o.machine}{o.immat?` — ${o.immat}`:""}</div>
+                    <div style={{fontSize:13,color:"#6b7280"}}>🔧 {o.typePanne}{o.technicien?` · 👤 ${o.technicien}`:""}{(o.kilometrage||o.heures_moteur)&&<span style={{marginLeft:8,fontSize:12,color:"#8a9ab8"}}>{o.type_compteur==="h"?`⏱ ${o.heures_moteur} h`:`📏 ${(o.kilometrage||0).toLocaleString("fr-FR")} km`}</span>}</div>
+                    {o.description&&<div style={{fontSize:12,color:"#8a9ab8",marginTop:3,fontStyle:"italic"}}>{o.description.slice(0,80)}{o.description.length>80?"…":""}</div>}
                   </div>
                   <div style={{display:"flex",gap:14,alignItems:"center",flexWrap:"wrap"}}>
-                    {nbPieces>0&&<><div style={{textAlign:"center"}}><div style={{fontSize:18,fontWeight:900,color:"#3b82f6"}}>{nbPieces}</div><div style={{fontSize:11,color:"#9ca3af"}}>pièces</div></div>
-                    <div style={{textAlign:"center"}}><div style={{fontSize:18,fontWeight:900,color:nbSorties===nbPieces?"#059669":"#d97706"}}>{nbSorties}/{nbPieces}</div><div style={{fontSize:11,color:"#9ca3af"}}>sorties</div></div></>}
-                    {totalCout>0&&<div style={{textAlign:"center"}}><div style={{fontSize:14,fontWeight:800,color:"#111827"}}>{totalCout.toFixed(0)} €</div><div style={{fontSize:11,color:"#9ca3af"}}>coût</div></div>}
-                    <div style={{textAlign:"right"}}><div style={{fontSize:11,color:"#9ca3af"}}>Ouvert le</div><div style={{fontSize:12,fontWeight:600,color:"#374151"}}>{new Date(o.dateOuverture).toLocaleDateString("fr-FR")}</div></div>
+                    {nbPieces>0&&<><div style={{textAlign:"center"}}><div style={{fontSize:18,fontWeight:900,color:"#3b82f6"}}>{nbPieces}</div><div style={{fontSize:11,color:"#8a9ab8"}}>pièces</div></div>
+                    <div style={{textAlign:"center"}}><div style={{fontSize:18,fontWeight:900,color:nbSorties===nbPieces?"#059669":"#d97706"}}>{nbSorties}/{nbPieces}</div><div style={{fontSize:11,color:"#8a9ab8"}}>sorties</div></div></>}
+                    {totalCout>0&&<div style={{textAlign:"center"}}><div style={{fontSize:14,fontWeight:800,color:"#1a1a1a"}}>{totalCout.toFixed(0)} €</div><div style={{fontSize:11,color:"#8a9ab8"}}>coût</div></div>}
+                    <div style={{textAlign:"right"}}><div style={{fontSize:11,color:"#8a9ab8"}}>Ouvert le</div><div style={{fontSize:12,fontWeight:600,color:"#555"}}>{new Date(o.dateOuverture).toLocaleDateString("fr-FR")}</div></div>
                     {canDelete&&<button onClick={e=>{e.stopPropagation();setConfirmDeleteOR(o);}} style={{padding:"6px 10px",background:"#fee2e2",border:"none",borderRadius:8,cursor:"pointer",color:"#dc2626",fontSize:13}}>🗑</button>}
                   </div>
                 </div>
@@ -2197,13 +2197,13 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}}>
           <div style={{background:"#fff",borderRadius:20,padding:28,width:"min(96vw,400px)",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",textAlign:"center"}}>
             <div style={{fontSize:44,marginBottom:12}}>🗑️</div>
-            <h3 style={{fontSize:17,fontWeight:800,color:"#111827",marginBottom:8}}>Supprimer cet OR ?</h3>
+            <h3 style={{fontSize:17,fontWeight:800,color:"#1a1a1a",marginBottom:8}}>Supprimer cet OR ?</h3>
             <div style={{background:"#f9fafb",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13}}>
-              <div style={{fontWeight:700,color:"#111827",fontFamily:"monospace"}}>{confirmDeleteOR.numero}</div>
+              <div style={{fontWeight:700,color:"#1a1a1a",fontFamily:"monospace"}}>{confirmDeleteOR.numero}</div>
               <div style={{color:"#6b7280",marginTop:3}}>🚗 {confirmDeleteOR.machine}</div>
-              <div style={{color:"#9ca3af",fontSize:11,marginTop:2}}>{confirmDeleteOR.typePanne}</div>
+              <div style={{color:"#8a9ab8",fontSize:11,marginTop:2}}>{confirmDeleteOR.typePanne}</div>
             </div>
-            <p style={{fontSize:12,color:"#9ca3af",marginBottom:20}}>⚠️ Cette action est irréversible.</p>
+            <p style={{fontSize:12,color:"#8a9ab8",marginBottom:20}}>⚠️ Cette action est irréversible.</p>
             <div style={{display:"flex",gap:10}}>
               <button onClick={()=>setConfirmDeleteOR(null)} style={{flex:1,padding:"12px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer"}}>Annuler</button>
               <button onClick={async()=>{await handleDelete(confirmDeleteOR.id);setConfirmDeleteOR(null);}} style={{flex:1,padding:"12px",background:"#dc2626",color:"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer"}}>🗑 Supprimer</button>
@@ -2217,28 +2217,28 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}}>
           <div style={{background:"#fff",borderRadius:20,padding:32,width:"min(96vw,500px)",maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
-              <h2 style={{fontSize:18,fontWeight:800,color:"#111827",margin:0}}>🔧 Nouvel OR</h2>
+              <h2 style={{fontSize:18,fontWeight:800,color:"#1a1a1a",margin:0}}>🔧 Nouvel OR</h2>
               <button onClick={()=>setShowForm(false)} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:16}}>✕</button>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:12}}>
               {/* Sélecteur véhicule / engin (Références filtres) */}
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Véhicule / Engin *</label>
+                <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Véhicule / Engin *</label>
                 <div ref={parcDropRef} style={{position:"relative"}}>
                   <input value={parcSearch} onChange={e=>handleParcSearch(e.target.value)}
                     placeholder="🔍 Désignation, code véhicule ou engin…"
-                    style={{width:"100%",padding:"10px 13px",border:`1px solid ${selectedVehicle?"#10b981":"#e5e7eb"}`,borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                    style={{width:"100%",padding:"10px 13px",border:`1px solid ${selectedVehicle?"#10b981":"#e0e0d8"}`,borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                   {parcDropOpen&&(
-                    <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.15)",zIndex:500,marginTop:4,maxHeight:280,overflowY:"auto"}}>
+                    <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e0e0d8",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.15)",zIndex:500,marginTop:4,maxHeight:280,overflowY:"auto"}}>
                       {parcSugg.length===0?(
-                        <div style={{padding:"14px 16px",color:"#9ca3af",fontSize:13,textAlign:"center"}}>Aucun véhicule/engin trouvé</div>
+                        <div style={{padding:"14px 16px",color:"#8a9ab8",fontSize:13,textAlign:"center"}}>Aucun véhicule/engin trouvé</div>
                       ):parcSugg.map((v,i)=>(
                         <div key={i} onClick={()=>selectVehicle(v)}
                           style={{padding:"10px 14px",cursor:"pointer",borderBottom:"1px solid #f3f4f6",display:"flex",justifyContent:"space-between",alignItems:"center"}}
                           onMouseEnter={e=>e.currentTarget.style.background="#f9fafb"} onMouseLeave={e=>e.currentTarget.style.background=""}>
                           <div style={{minWidth:0}}>
                             {v._code&&<span style={{fontFamily:"monospace",fontSize:11,color:"#6b7280",marginRight:6}}>{v._code}</span>}
-                            <span style={{fontWeight:700,fontSize:13,color:"#111827"}}>{v._label}</span>
+                            <span style={{fontWeight:700,fontSize:13,color:"#1a1a1a"}}>{v._label}</span>
                           </div>
                           <span style={{background:v._type==="vehicule"?"#dbeafe":v._type==="parc"?"#fef3c7":"#d1fae5",color:v._type==="vehicule"?"#1e40af":v._type==="parc"?"#92400e":"#065f46",padding:"2px 8px",borderRadius:99,fontSize:10,fontWeight:700,flexShrink:0,marginLeft:8}}>
                             {v._type==="vehicule"?"Véhicule":v._type==="parc"?"Parc":"Engin"}
@@ -2262,38 +2262,38 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
               </div>
 
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Immatriculation</label>
+                <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Immatriculation</label>
                 <input value={form.immat} onChange={e=>setForm(p=>({...p,immat:e.target.value}))} placeholder="AB-123-CD"
-                  style={{width:"100%",padding:"10px 13px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",fontFamily:"monospace",letterSpacing:1}}/>
+                  style={{width:"100%",padding:"10px 13px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",fontFamily:"monospace",letterSpacing:1}}/>
               </div>
-              <div><label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Type de panne *</label>
-                <select value={panneSelect} onChange={e=>{const val=e.target.value;setPanneSelect(val);setForm(p=>({...p,typePanne:val==="Autre"?"":val}));}} style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",background:"#fff"}}>
+              <div><label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Type de panne *</label>
+                <select value={panneSelect} onChange={e=>{const val=e.target.value;setPanneSelect(val);setForm(p=>({...p,typePanne:val==="Autre"?"":val}));}} style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",background:"#fff"}}>
                   <option value="">— Sélectionner le type de panne —</option>
                   {PANNE_OPTIONS.map(o=><option key={o}>{o}</option>)}
                   <option>Autre</option>
                 </select>
-                {panneSelect==="Autre"&&<input value={form.typePanne} onChange={e=>setForm(p=>({...p,typePanne:e.target.value}))} placeholder="Préciser le type de panne…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",marginTop:8}}/>}
+                {panneSelect==="Autre"&&<input value={form.typePanne} onChange={e=>setForm(p=>({...p,typePanne:e.target.value}))} placeholder="Préciser le type de panne…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",marginTop:8}}/>}
               </div>
-              <div><label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Technicien</label>
+              <div><label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Technicien</label>
                 {siteTechniciens.length>0
-                  ?<select value={form.technicien} onChange={e=>setForm(p=>({...p,technicien:e.target.value}))} style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",background:"#fff"}}>
+                  ?<select value={form.technicien} onChange={e=>setForm(p=>({...p,technicien:e.target.value}))} style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",background:"#fff"}}>
                     <option value="">— Sélectionner un technicien —</option>
                     {siteTechniciens.map(u=><option key={u.id} value={`${u.prenom} ${u.nom}`}>{u.prenom} {u.nom}</option>)}
                   </select>
-                  :<input value={form.technicien} onChange={e=>setForm(p=>({...p,technicien:e.target.value}))} placeholder="Nom du technicien" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  :<input value={form.technicien} onChange={e=>setForm(p=>({...p,technicien:e.target.value}))} placeholder="Nom du technicien" style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                 }</div>
-              <div><label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Priorité</label>
+              <div><label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Priorité</label>
                 <div style={{display:"flex",gap:8}}>
                   {[{v:"urgente",l:"🔴 Urgente"},{v:"haute",l:"🟡 Haute"},{v:"normale",l:"⚪ Normale"}].map(p=>(
-                    <button key={p.v} onClick={()=>setForm(f=>({...f,priorite:p.v}))} style={{flex:1,padding:"9px",borderRadius:9,border:`2px solid ${form.priorite===p.v?"#111827":"#e5e7eb"}`,background:form.priorite===p.v?"#111827":"#fff",color:form.priorite===p.v?"#fff":"#374151",fontWeight:600,cursor:"pointer",fontSize:12}}>{p.l}</button>
+                    <button key={p.v} onClick={()=>setForm(f=>({...f,priorite:p.v}))} style={{flex:1,padding:"9px",borderRadius:9,border:`2px solid ${form.priorite===p.v?"#1e2330":"#e0e0d8"}`,background:form.priorite===p.v?"#1e2330":"#fff",color:form.priorite===p.v?"#fff":"#555",fontWeight:600,cursor:"pointer",fontSize:12}}>{p.l}</button>
                   ))}
                 </div>
               </div>
-              <div><label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Description</label>
-                <textarea value={form.description} onChange={e=>setForm(p=>({...p,description:e.target.value}))} placeholder="Décrivez le problème…" rows={3} style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box",fontFamily:"inherit"}}/></div>
+              <div><label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Description</label>
+                <textarea value={form.description} onChange={e=>setForm(p=>({...p,description:e.target.value}))} placeholder="Décrivez le problème…" rows={3} style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box",fontFamily:"inherit"}}/></div>
               <div style={{display:"flex",gap:10,marginTop:6}}>
                 <button onClick={()=>setShowForm(false)} style={{flex:1,padding:"12px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer"}}>Annuler</button>
-                <button onClick={handleCreate} disabled={!form.machine||!form.typePanne||saving} style={{flex:2,padding:"12px",background:form.machine&&form.typePanne?"#111827":"#e5e7eb",color:form.machine&&form.typePanne?"#fff":"#9ca3af",border:"none",borderRadius:10,fontWeight:700,cursor:form.machine&&form.typePanne?"pointer":"not-allowed",fontSize:14}}>
+                <button onClick={handleCreate} disabled={!form.machine||!form.typePanne||saving} style={{flex:2,padding:"12px",background:form.machine&&form.typePanne?"#1e2330":"#e0e0d8",color:form.machine&&form.typePanne?"#fff":"#8a9ab8",border:"none",borderRadius:10,fontWeight:700,cursor:form.machine&&form.typePanne?"pointer":"not-allowed",fontSize:14}}>
                   {saving?"⏳ Création…":"🔧 Créer l'OR"}
                 </button>
               </div>
@@ -2673,13 +2673,13 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(2px)"}}>
       <div style={{background:"#fff",borderRadius:20,width:"min(98vw,760px)",maxHeight:"92vh",overflowY:"auto",boxShadow:"0 24px 64px rgba(0,0,0,0.25)"}}>
-        <div style={{padding:"20px 26px",borderBottom:"1px solid #e5e7eb",display:"flex",justifyContent:"space-between",alignItems:"center",background:"#111827",borderRadius:"20px 20px 0 0"}}>
+        <div style={{padding:"20px 26px",borderBottom:"1px solid #e0e0d8",display:"flex",justifyContent:"space-between",alignItems:"center",background:"#1e2330",borderRadius:"20px 20px 0 0"}}>
           <div>
-            <div style={{color:"#9ca3af",fontSize:11,fontWeight:600,marginBottom:4,letterSpacing:"0.08em"}}>ORDRE DE RÉPARATION</div>
+            <div style={{color:"#8a9ab8",fontSize:11,fontWeight:600,marginBottom:4,letterSpacing:"0.08em"}}>ORDRE DE RÉPARATION</div>
             <div style={{color:"#fff",fontWeight:900,fontSize:28,fontFamily:"monospace",letterSpacing:"0.04em"}}>{ordre.numero}</div>
             <div style={{marginTop:6}}>
               <div style={{color:"#f3f4f6",fontSize:14,fontWeight:700}}>🚗 {ordre.machine}{ordre.immat?` — ${ordre.immat}`:""}</div>
-              {ordre.typePanne&&<div style={{color:"#9ca3af",fontSize:12,marginTop:2}}>🔧 {ordre.typePanne}</div>}
+              {ordre.typePanne&&<div style={{color:"#8a9ab8",fontSize:12,marginTop:2}}>🔧 {ordre.typePanne}</div>}
             </div>
             <div style={{display:"flex",gap:12,marginTop:6,flexWrap:"wrap"}}>
               {ordre.technicien&&<span style={{color:"#d1d5db",fontSize:12}}>👤 {ordre.technicien}</span>}
@@ -2695,10 +2695,10 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
         </div>
 
         {/* Onglets */}
-        <div style={{display:"flex",borderBottom:"2px solid #e5e7eb",background:"#f9fafb"}}>
+        <div style={{display:"flex",borderBottom:"2px solid #e0e0d8",background:"#f9fafb"}}>
           {[{v:"fiche",l:"📋 Fiche OR"},{v:"temps",l:"⏱️ Temps passé"}].map(t=>(
             <button key={t.v} onClick={()=>setTabFiche(t.v)}
-              style={{padding:"13px 22px",background:"none",border:"none",borderBottom:`3px solid ${tabFiche===t.v?"#111827":"transparent"}`,marginBottom:-2,cursor:"pointer",fontWeight:tabFiche===t.v?700:500,fontSize:13,color:tabFiche===t.v?"#111827":"#6b7280",whiteSpace:"nowrap"}}>
+              style={{padding:"13px 22px",background:"none",border:"none",borderBottom:`3px solid ${tabFiche===t.v?"#1e2330":"transparent"}`,marginBottom:-2,cursor:"pointer",fontWeight:tabFiche===t.v?700:500,fontSize:13,color:tabFiche===t.v?"#1e2330":"#6b7280",whiteSpace:"nowrap"}}>
               {t.l}
             </button>
           ))}
@@ -2707,31 +2707,31 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))",gap:10}}>
             {[{l:"Machine",v:ordre.machine},{l:"Immat.",v:ordre.immat||"—"},...(ordre.type_compteur==="h"?[{l:"Heures moteur",v:ordre.heures_moteur!=null?`${ordre.heures_moteur} h`:"—"}]:[{l:"Kilométrage",v:ordre.kilometrage!=null?`${ordre.kilometrage.toLocaleString("fr-FR")} km`:"—"}]),{l:"Panne",v:ordre.typePanne},{l:"Technicien",v:ordre.technicien||"—"},{l:"Ouvert le",v:new Date(ordre.dateOuverture).toLocaleDateString("fr-FR")},{l:"Priorité",v:<Badge status={ordre.priorite} map={OR_PRIORITES}/>},...(ordre.statut==="termine"&&ordre.dateCloture?[{l:"Clôturé le",v:new Date(ordre.dateCloture).toLocaleDateString("fr-FR")}]:[])].map(r=>(
               <div key={r.l} style={{background:"#f9fafb",borderRadius:10,padding:"10px 14px"}}>
-                <div style={{fontSize:11,color:"#9ca3af",marginBottom:3}}>{r.l}</div>
-                <div style={{fontWeight:700,fontSize:13,color:"#111827"}}>{r.v}</div>
+                <div style={{fontSize:11,color:"#8a9ab8",marginBottom:3}}>{r.l}</div>
+                <div style={{fontWeight:700,fontSize:13,color:"#1a1a1a"}}>{r.v}</div>
               </div>
             ))}
           </div>
           <div>
-            <h3 style={{fontWeight:800,fontSize:15,color:"#111827",margin:"0 0 8px"}}>🚗 Machine / Immatriculation</h3>
+            <h3 style={{fontWeight:800,fontSize:15,color:"#1a1a1a",margin:"0 0 8px"}}>🚗 Machine / Immatriculation</h3>
             <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:8,marginBottom:8}}>
-              <input value={editMachine} onChange={e=>setEditMachine(e.target.value)} placeholder="Désignation de la machine" style={{padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none"}}/>
-              <input value={editImmat} onChange={e=>setEditImmat(e.target.value)} placeholder="Immat." style={{padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none",width:120,fontFamily:"monospace"}}/>
+              <input value={editMachine} onChange={e=>setEditMachine(e.target.value)} placeholder="Désignation de la machine" style={{padding:"9px 12px",border:"1px solid #e0e0d8",borderRadius:9,fontSize:13,outline:"none"}}/>
+              <input value={editImmat} onChange={e=>setEditImmat(e.target.value)} placeholder="Immat." style={{padding:"9px 12px",border:"1px solid #e0e0d8",borderRadius:9,fontSize:13,outline:"none",width:120,fontFamily:"monospace"}}/>
             </div>
             <div style={{display:"flex",gap:8,alignItems:"center"}}>
-              <div style={{display:"flex",borderRadius:8,overflow:"hidden",border:"1px solid #e5e7eb",flexShrink:0}}>
+              <div style={{display:"flex",borderRadius:8,overflow:"hidden",border:"1px solid #e0e0d8",flexShrink:0}}>
                 {[{v:"km",l:"📏 km"},{v:"h",l:"⏱ h moteur"}].map(opt=>(
                   <button key={opt.v} onClick={()=>setEditCompteurType(opt.v)}
-                    style={{padding:"8px 12px",border:"none",background:editCompteurType===opt.v?"#111827":"#fff",color:editCompteurType===opt.v?"#fff":"#374151",fontWeight:600,cursor:"pointer",fontSize:12}}>
+                    style={{padding:"8px 12px",border:"none",background:editCompteurType===opt.v?"#1e2330":"#fff",color:editCompteurType===opt.v?"#fff":"#555",fontWeight:600,cursor:"pointer",fontSize:12}}>
                     {opt.l}
                   </button>
                 ))}
               </div>
               {editCompteurType==="km"
                 ?<input type="number" min="0" value={editKm} onChange={e=>setEditKm(e.target.value)} placeholder="Ex : 45000"
-                    style={{flex:1,padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none"}}/>
+                    style={{flex:1,padding:"9px 12px",border:"1px solid #e0e0d8",borderRadius:9,fontSize:13,outline:"none"}}/>
                 :<input type="number" min="0" step="0.1" value={editHm} onChange={e=>setEditHm(e.target.value)} placeholder="Ex : 1234.5"
-                    style={{flex:1,padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none"}}/>
+                    style={{flex:1,padding:"9px 12px",border:"1px solid #e0e0d8",borderRadius:9,fontSize:13,outline:"none"}}/>
               }
             </div>
             <button onClick={()=>onUpdate({...ordre,machine:editMachine,immat:editImmat,type_compteur:editCompteurType,kilometrage:editKm?parseInt(editKm):null,heures_moteur:editHm?parseFloat(editHm):null})}
@@ -2739,30 +2739,30 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
           </div>
 
           <div>
-            <h3 style={{fontWeight:800,fontSize:15,color:"#111827",margin:"0 0 8px"}}>🔧 Type de panne</h3>
-            <select value={editPanneSelect} onChange={e=>{const v=e.target.value;setEditPanneSelect(v);if(v!=="Autre")setEditTypePanne(v);else setEditTypePanne("");}} style={{width:"100%",padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none",background:"#fff"}}>
+            <h3 style={{fontWeight:800,fontSize:15,color:"#1a1a1a",margin:"0 0 8px"}}>🔧 Type de panne</h3>
+            <select value={editPanneSelect} onChange={e=>{const v=e.target.value;setEditPanneSelect(v);if(v!=="Autre")setEditTypePanne(v);else setEditTypePanne("");}} style={{width:"100%",padding:"9px 12px",border:"1px solid #e0e0d8",borderRadius:9,fontSize:13,outline:"none",background:"#fff"}}>
               <option value="">— Sélectionner —</option>
               {PANNE_OPTIONS.map(o=><option key={o}>{o}</option>)}
               <option>Autre</option>
             </select>
-            {editPanneSelect==="Autre"&&<input value={editTypePanne} onChange={e=>setEditTypePanne(e.target.value)} placeholder="Préciser…" style={{width:"100%",padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none",marginTop:6,boxSizing:"border-box"}}/>}
+            {editPanneSelect==="Autre"&&<input value={editTypePanne} onChange={e=>setEditTypePanne(e.target.value)} placeholder="Préciser…" style={{width:"100%",padding:"9px 12px",border:"1px solid #e0e0d8",borderRadius:9,fontSize:13,outline:"none",marginTop:6,boxSizing:"border-box"}}/>}
             <button onClick={()=>onUpdate({...ordre,typePanne:editTypePanne||editPanneSelect})} disabled={!editTypePanne&&!editPanneSelect} style={{marginTop:7,padding:"7px 16px",background:"#f3f4f6",border:"none",borderRadius:8,cursor:"pointer",fontWeight:600,fontSize:13}}>💾 Sauvegarder</button>
           </div>
 
           <div>
-            <h3 style={{fontWeight:800,fontSize:15,color:"#111827",margin:"0 0 8px"}}>📋 Description</h3>
-            <textarea value={editDesc} onChange={e=>setEditDesc(e.target.value)} rows={2} placeholder="Décrivez le problème…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box",fontFamily:"inherit"}}/>
+            <h3 style={{fontWeight:800,fontSize:15,color:"#1a1a1a",margin:"0 0 8px"}}>📋 Description</h3>
+            <textarea value={editDesc} onChange={e=>setEditDesc(e.target.value)} rows={2} placeholder="Décrivez le problème…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box",fontFamily:"inherit"}}/>
             <button onClick={()=>onUpdate({...ordre,description:editDesc})} style={{marginTop:7,padding:"7px 16px",background:"#f3f4f6",border:"none",borderRadius:8,cursor:"pointer",fontWeight:600,fontSize:13}}>💾 Sauvegarder</button>
           </div>
 
           <div>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:filtresActive&&showFiltresMenu?6:10}}>
-              <h3 style={{fontWeight:800,fontSize:15,color:"#111827",margin:0}}>🔧 Pièces nécessaires</h3>
+              <h3 style={{fontWeight:800,fontSize:15,color:"#1a1a1a",margin:0}}>🔧 Pièces nécessaires</h3>
               <div style={{display:"flex",gap:8,alignItems:"center"}}>
                 {totalCout>0&&<div style={{fontSize:13,fontWeight:700,color:"#3b82f6"}}>Total : {totalCout.toFixed(2)} €</div>}
                 {filtresActive&&(
                   <button onClick={()=>setShowFiltresMenu(v=>!v)}
-                    style={{padding:"5px 12px",background:showFiltresMenu?"#111827":"#f1f5f9",color:showFiltresMenu?"#fff":"#374151",border:"none",borderRadius:8,fontWeight:600,cursor:"pointer",fontSize:12}}>
+                    style={{padding:"5px 12px",background:showFiltresMenu?"#1e2330":"#f1f5f9",color:showFiltresMenu?"#fff":"#555",border:"none",borderRadius:8,fontWeight:600,cursor:"pointer",fontSize:12}}>
                     🔩 Filtres {isVehLeger?"véhicule":"engin"} {showFiltresMenu?"▲":"▼"}
                   </button>
                 )}
@@ -2770,15 +2770,15 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
             </div>
             {filtresActive&&showFiltresMenu&&(
               <div style={{background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:12,padding:"12px 14px",marginBottom:12}}>
-                <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:8}}>
+                <div style={{fontSize:12,fontWeight:700,color:"#555",marginBottom:8}}>
                   Filtres pour <strong>{filtresActive.engin||filtresActive.designation}</strong>{filtresActive.categorie&&<span style={{background:"#e0e7ff",color:"#3730a3",padding:"1px 7px",borderRadius:99,fontSize:10,fontWeight:700,marginLeft:6}}>{filtresActive.categorie}</span>}
                 </div>
                 <div style={{display:"flex",flexDirection:"column",gap:4}}>
                   {filtresActiveLabels.filter(f=>filtresActive[f.key]).map(f=>(
-                    <label key={f.key} style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",padding:"5px 8px",borderRadius:7,background:filtresChecked[f.key]?"#eff6ff":"#fff",border:`1px solid ${filtresChecked[f.key]?"#bfdbfe":"#e5e7eb"}`}}>
+                    <label key={f.key} style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",padding:"5px 8px",borderRadius:7,background:filtresChecked[f.key]?"#eff6ff":"#fff",border:`1px solid ${filtresChecked[f.key]?"#bfdbfe":"#e0e0d8"}`}}>
                       <input type="checkbox" checked={!!filtresChecked[f.key]} onChange={e=>setFiltresChecked(p=>({...p,[f.key]:e.target.checked}))}
                         style={{width:14,height:14,cursor:"pointer",accentColor:"#1e40af"}}/>
-                      <span style={{fontSize:11,fontWeight:600,color:"#374151",minWidth:120}}>{f.label}</span>
+                      <span style={{fontSize:11,fontWeight:600,color:"#555",minWidth:120}}>{f.label}</span>
                       <span style={{fontSize:10,color:"#6b7280",fontFamily:"monospace"}}>{filtresActive[f.key]}</span>
                     </label>
                   ))}
@@ -2786,7 +2786,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                 <div style={{display:"flex",gap:8,marginTop:10}}>
                   <button onClick={handleAddFiltresOR}
                     disabled={!Object.values(filtresChecked).some(Boolean)}
-                    style={{flex:1,padding:"8px",background:Object.values(filtresChecked).some(Boolean)?"#111827":"#e5e7eb",color:Object.values(filtresChecked).some(Boolean)?"#fff":"#9ca3af",border:"none",borderRadius:8,fontWeight:700,cursor:"pointer",fontSize:12}}>
+                    style={{flex:1,padding:"8px",background:Object.values(filtresChecked).some(Boolean)?"#1e2330":"#e0e0d8",color:Object.values(filtresChecked).some(Boolean)?"#fff":"#8a9ab8",border:"none",borderRadius:8,fontWeight:700,cursor:"pointer",fontSize:12}}>
                     ➕ Ajouter à l'OR
                   </button>
                   <button onClick={()=>setShowFiltresMenu(false)} style={{padding:"8px 14px",background:"#f3f4f6",border:"none",borderRadius:8,fontWeight:600,cursor:"pointer",fontSize:12}}>Fermer</button>
@@ -2794,7 +2794,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
               </div>
             )}
             {ordre.pieces.length===0?(
-              <div style={{padding:16,textAlign:"center",background:"#f9fafb",borderRadius:10,color:"#9ca3af",fontSize:13,marginBottom:12}}>Aucune pièce — recherchez ci-dessous</div>
+              <div style={{padding:16,textAlign:"center",background:"#f9fafb",borderRadius:10,color:"#8a9ab8",fontSize:13,marginBottom:12}}>Aucune pièce — recherchez ci-dessous</div>
             ):(
               <div style={{display:"flex",flexDirection:"column",gap:7,marginBottom:12}}>
                 {ordre.pieces.map(p=>{
@@ -2803,20 +2803,20 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                   const svc=isService(p.name);
                   const stockOk=svc||stock>=p.qte;
                   return (
-                    <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,padding:"11px 14px",borderRadius:10,background:p.sortie?"#f0fdf4":!stockOk?"#fff1f2":"#fff",border:`1px solid ${p.sortie?"#bbf7d0":!stockOk?"#fecaca":"#e5e7eb"}`}}>
+                    <div key={p.id} style={{display:"flex",alignItems:"center",gap:10,padding:"11px 14px",borderRadius:10,background:p.sortie?"#f0fdf4":!stockOk?"#fff1f2":"#fff",border:`1px solid ${p.sortie?"#bbf7d0":!stockOk?"#fecaca":"#e0e0d8"}`}}>
                       <div style={{flex:1}}>
-                        <div style={{fontWeight:700,fontSize:13,color:"#111827"}}>{p.name}</div>
+                        <div style={{fontWeight:700,fontSize:13,color:"#1a1a1a"}}>{p.name}</div>
                         <div style={{fontSize:11,color:"#6b7280",marginTop:2}}>
                           {!svc&&<>{p.id}{p.location?` · ${p.location}`:""} · Dispo : <strong style={{color:stock===0?"#dc2626":"#059669"}}>{stock}</strong></>}
                           {svc&&<><span style={{background:"#dbeafe",color:"#1e40af",padding:"1px 7px",borderRadius:99,fontSize:10,fontWeight:700}}>Service</span>{p.id&&p.id!==`virt-${Date.now()}`?` · ${p.id}`:""}</>}
                         </div>
-                        {p.prix>0&&<div style={{fontSize:12,color:"#374151",marginTop:2}}><span style={{fontWeight:600}}>{p.prix.toFixed(2)} €/u</span>{p.qte>1&&<span style={{color:"#111827",fontWeight:700,marginLeft:8}}>= {(p.prix*p.qte).toFixed(2)} €</span>}</div>}
+                        {p.prix>0&&<div style={{fontSize:12,color:"#555",marginTop:2}}><span style={{fontWeight:600}}>{p.prix.toFixed(2)} €/u</span>{p.qte>1&&<span style={{color:"#1a1a1a",fontWeight:700,marginLeft:8}}>= {(p.prix*p.qte).toFixed(2)} €</span>}</div>}
                       </div>
                       <div style={{display:"flex",alignItems:"center",gap:8}}>
-                        <input type="number" min="1" value={p.qte} onChange={e=>updateQte(p.id,e.target.value)} disabled={p.sortie} style={{width:55,padding:"5px 7px",border:"1px solid #e5e7eb",borderRadius:7,fontSize:13,fontWeight:700,textAlign:"center",outline:"none"}}/>
+                        <input type="number" min="1" value={p.qte} onChange={e=>updateQte(p.id,e.target.value)} disabled={p.sortie} style={{width:55,padding:"5px 7px",border:"1px solid #e0e0d8",borderRadius:7,fontSize:13,fontWeight:700,textAlign:"center",outline:"none"}}/>
                         {p.sortie
                           ? <span style={{background:"#d1fae5",color:"#065f46",padding:"5px 10px",borderRadius:8,fontSize:11,fontWeight:700}}>✅ Sorti</span>
-                          : <button onClick={()=>onSortir(ordre,p)} disabled={!svc&&stock<p.qte} style={{padding:"6px 12px",background:!stockOk?"#f3f4f6":"#111827",color:!stockOk?"#9ca3af":"#fff",border:"none",borderRadius:8,cursor:!stockOk?"not-allowed":"pointer",fontSize:12,fontWeight:600}}>{!stockOk?"Stock insuf.":"📤 Sortir"}</button>
+                          : <button onClick={()=>onSortir(ordre,p)} disabled={!svc&&stock<p.qte} style={{padding:"6px 12px",background:!stockOk?"#f3f4f6":"#1e2330",color:!stockOk?"#8a9ab8":"#fff",border:"none",borderRadius:8,cursor:!stockOk?"not-allowed":"pointer",fontSize:12,fontWeight:600}}>{!stockOk?"Stock insuf.":"📤 Sortir"}</button>
                         }
                         {!p.sortie&&<button onClick={()=>removePiece(p.id)} style={{padding:"5px 8px",background:"#fee2e2",border:"none",borderRadius:7,cursor:"pointer",color:"#dc2626",fontSize:12}}>✕</button>}
                       </div>
@@ -2838,7 +2838,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                 <div style={{marginBottom:12,background:"#f0f9ff",border:"1px solid #bae6fd",borderRadius:12,padding:"12px 14px"}}>
                   <div style={{fontSize:12,fontWeight:700,color:"#0c4a6e",marginBottom:8,display:"flex",alignItems:"center",gap:6}}>
                     🛞 {isPneuRemplacement?"Pneu recommandé":"Réparation pneu"}
-                    <span style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:5,fontSize:11,fontWeight:500,color:"#374151"}}>
+                    <span style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:5,fontSize:11,fontWeight:500,color:"#555"}}>
                       Nb roues :
                       <button onClick={()=>setNbreRoues(n=>Math.max(1,n-1))} style={{width:20,height:20,border:"1px solid #d1d5db",borderRadius:4,background:"#fff",cursor:"pointer",fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,padding:0}}>−</button>
                       <strong>{nbreRoues}</strong>
@@ -2899,7 +2899,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                         style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 14px",background:alreadyAdded?"#f0fdf4":"#fff",border:`1px solid ${alreadyAdded?"#bbf7d0":"#d1fae5"}`,borderRadius:10,cursor:alreadyAdded?"default":"pointer"}}
                         onMouseEnter={e=>{if(!alreadyAdded)e.currentTarget.style.background="#f0fdf4";}} onMouseLeave={e=>{if(!alreadyAdded)e.currentTarget.style.background="#fff";}}>
                         <div>
-                          <div style={{fontWeight:700,fontSize:13,color:"#111827"}}>{item.fLabel}</div>
+                          <div style={{fontWeight:700,fontSize:13,color:"#1a1a1a"}}>{item.fLabel}</div>
                           <div style={{fontSize:11,color:"#6b7280",fontFamily:"monospace"}}>
                             {item.product.id}
                             {item.isEquivalent&&<span style={{color:"#92400e",marginLeft:6}}>(éq. de {item.originalRef})</span>}
@@ -2917,9 +2917,9 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
               </div>
             )}
             <div style={{position:"relative"}}>
-              <input value={searchPiece} onChange={e=>handleSearchPiece(e.target.value)} placeholder="🔍  Ajouter une pièce…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+              <input value={searchPiece} onChange={e=>handleSearchPiece(e.target.value)} placeholder="🔍  Ajouter une pièce…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
               {suggPieces.length>0&&(
-                <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e5e7eb",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.1)",zIndex:100,overflow:"hidden",marginTop:4}}>
+                <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e0e0d8",borderRadius:10,boxShadow:"0 8px 24px rgba(0,0,0,0.1)",zIndex:100,overflow:"hidden",marginTop:4}}>
                   {suggPieces.map(p=>{
                     if(p._type==="filtre") return(
                       <div key={p.id} onClick={()=>addPiece(p)} style={{padding:"9px 14px",cursor:"pointer",borderBottom:"1px solid #f3f4f6",display:"flex",justifyContent:"space-between",alignItems:"center"}}
@@ -2937,7 +2937,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                         <div><div style={{fontWeight:600,fontSize:13}}>{p.name}</div><div style={{fontSize:11,color:"#6b7280"}}>{p.id} · {p.fournisseur||"—"}</div></div>
                         <div style={{display:"flex",gap:8,alignItems:"center"}}>
                           {svc?<span style={{background:"#dbeafe",color:"#1e40af",padding:"2px 7px",borderRadius:99,fontSize:10,fontWeight:700}}>Service</span>:<span style={{fontWeight:700,color:s===0?"#dc2626":"#059669",fontSize:14}}>{s}</span>}
-                          {p.prix>0&&<span style={{fontSize:11,color:"#9ca3af"}}>{p.prix.toFixed(2)} €</span>}
+                          {p.prix>0&&<span style={{fontSize:11,color:"#8a9ab8"}}>{p.prix.toFixed(2)} €</span>}
                           <span style={{color:"#3b82f6",fontSize:12,fontWeight:600}}>+ Ajouter</span>
                         </div>
                       </div>
@@ -2954,7 +2954,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
             const totalMO=sessTerminees.reduce((a,s)=>a+Number(s.duree_heures)*(tarifsMap[s.technicien]||0),0);
             return(
               <div>
-                <h3 style={{fontWeight:800,fontSize:15,color:"#111827",margin:"0 0 10px"}}>👷 Main d'œuvre</h3>
+                <h3 style={{fontWeight:800,fontSize:15,color:"#1a1a1a",margin:"0 0 10px"}}>👷 Main d'œuvre</h3>
                 <div style={{display:"flex",flexDirection:"column",gap:6}}>
                   {sessTerminees.map(s=>{
                     const dur=Number(s.duree_heures)||0;
@@ -2962,22 +2962,22 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                     const taux=tarifsMap[s.technicien];
                     const cout=taux!=null?durB*taux:null;
                     return(
-                      <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",background:"#f9fafb",borderRadius:9,border:"1px solid #e5e7eb",fontSize:13}}>
+                      <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",background:"#f9fafb",borderRadius:9,border:"1px solid #e0e0d8",fontSize:13}}>
                         <div>
-                          <strong style={{color:"#111827"}}>{s.technicien||"—"}</strong>
+                          <strong style={{color:"#1a1a1a"}}>{s.technicien||"—"}</strong>
                           <span style={{color:"#6b7280",marginLeft:6}}>{dur.toFixed(2)} h</span>
                           {durB!==dur&&<span style={{color:"#d97706",marginLeft:4,fontSize:11}}>→ {durB.toFixed(2)} h fact.</span>}
                           {taux!=null&&<span style={{color:"#6b7280",marginLeft:4}}>× {Number(taux).toFixed(2)} €/h</span>}
                         </div>
                         {cout!=null
-                          ?<span style={{fontWeight:700,color:"#111827"}}>{cout.toFixed(2)} €</span>
-                          :<span style={{color:"#9ca3af",fontSize:11}}>tarif non défini</span>}
+                          ?<span style={{fontWeight:700,color:"#1a1a1a"}}>{cout.toFixed(2)} €</span>
+                          :<span style={{color:"#8a9ab8",fontSize:11}}>tarif non défini</span>}
                       </div>
                     );
                   })}
                 </div>
                 {totalMO>0&&(
-                  <div style={{display:"flex",justifyContent:"space-between",fontSize:13,fontWeight:700,color:"#374151",marginTop:8,padding:"6px 12px",background:"#f1f5f9",borderRadius:8}}>
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:13,fontWeight:700,color:"#555",marginTop:8,padding:"6px 12px",background:"#f1f5f9",borderRadius:8}}>
                     <span>Total MO</span><span>{totalMO.toFixed(2)} €</span>
                   </div>
                 )}
@@ -2986,8 +2986,8 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
           })()}
 
           <div>
-            <h3 style={{fontWeight:800,fontSize:15,color:"#111827",margin:"0 0 8px"}}>📝 Notes technicien</h3>
-            <textarea value={note} onChange={e=>setNote(e.target.value)} rows={3} placeholder="Observations, travaux effectués…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box",fontFamily:"inherit"}}/>
+            <h3 style={{fontWeight:800,fontSize:15,color:"#1a1a1a",margin:"0 0 8px"}}>📝 Notes technicien</h3>
+            <textarea value={note} onChange={e=>setNote(e.target.value)} rows={3} placeholder="Observations, travaux effectués…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box",fontFamily:"inherit"}}/>
             <button onClick={()=>onUpdate({...ordre,notes:note})} style={{marginTop:7,padding:"7px 16px",background:"#f3f4f6",border:"none",borderRadius:8,cursor:"pointer",fontWeight:600,fontSize:13}}>💾 Sauvegarder</button>
           </div>
 
@@ -3009,35 +3009,35 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                   </div>
                 )}
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:6,borderTop:"1px solid #e2e8f0",marginTop:2}}>
-                  <div style={{fontSize:14,color:"#374151",fontWeight:700}}>💶 TOTAL OR</div>
-                  <div style={{fontSize:22,fontWeight:900,color:"#111827"}}>{totalOR.toFixed(2)} €</div>
+                  <div style={{fontSize:14,color:"#555",fontWeight:700}}>💶 TOTAL OR</div>
+                  <div style={{fontSize:22,fontWeight:900,color:"#1a1a1a"}}>{totalOR.toFixed(2)} €</div>
                 </div>
               </div>
             );
           })()}
 
-          <div style={{display:"flex",gap:8,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid #e5e7eb"}}>
-            <div style={{fontSize:13,fontWeight:600,color:"#374151",alignSelf:"center"}}>Statut :</div>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid #e0e0d8"}}>
+            <div style={{fontSize:13,fontWeight:600,color:"#555",alignSelf:"center"}}>Statut :</div>
             {Object.entries(OR_STATUTS).map(([k,v])=>(
-              <button key={k} onClick={()=>handleChangeStatut(k)} style={{padding:"7px 14px",borderRadius:9,border:`2px solid ${ordre.statut===k?"#111827":"#e5e7eb"}`,background:ordre.statut===k?v.bg:"#fff",color:ordre.statut===k?v.text:"#6b7280",fontWeight:600,cursor:"pointer",fontSize:12}}>{v.label}</button>
+              <button key={k} onClick={()=>handleChangeStatut(k)} style={{padding:"7px 14px",borderRadius:9,border:`2px solid ${ordre.statut===k?"#1e2330":"#e0e0d8"}`,background:ordre.statut===k?v.bg:"#fff",color:ordre.statut===k?v.text:"#6b7280",fontWeight:600,cursor:"pointer",fontSize:12}}>{v.label}</button>
             ))}
           </div>
 
-          <div style={{display:"flex",gap:8,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid #e5e7eb"}}>
-            <div style={{fontSize:13,fontWeight:600,color:"#374151",alignSelf:"center"}}>Priorité :</div>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid #e0e0d8"}}>
+            <div style={{fontSize:13,fontWeight:600,color:"#555",alignSelf:"center"}}>Priorité :</div>
             {[{k:"urgente",l:"🔴 Urgente"},{k:"haute",l:"🟡 Haute"},{k:"normale",l:"⚪ Normale"}].map(({k,l})=>{
               const v=OR_PRIORITES[k];
-              return <button key={k} onClick={()=>onUpdate({...ordre,priorite:k})} style={{padding:"7px 14px",borderRadius:9,border:`2px solid ${ordre.priorite===k?"#111827":"#e5e7eb"}`,background:ordre.priorite===k?v.bg:"#fff",color:ordre.priorite===k?v.text:"#6b7280",fontWeight:600,cursor:"pointer",fontSize:12}}>{l}</button>;
+              return <button key={k} onClick={()=>onUpdate({...ordre,priorite:k})} style={{padding:"7px 14px",borderRadius:9,border:`2px solid ${ordre.priorite===k?"#1e2330":"#e0e0d8"}`,background:ordre.priorite===k?v.bg:"#fff",color:ordre.priorite===k?v.text:"#6b7280",fontWeight:600,cursor:"pointer",fontSize:12}}>{l}</button>;
             })}
           </div>
 
-          <div style={{display:"flex",gap:10,alignItems:"center",paddingTop:8,borderTop:"1px solid #e5e7eb"}}>
-            <div style={{fontSize:13,fontWeight:600,color:"#374151",whiteSpace:"nowrap"}}>👤 Technicien :</div>
+          <div style={{display:"flex",gap:10,alignItems:"center",paddingTop:8,borderTop:"1px solid #e0e0d8"}}>
+            <div style={{fontSize:13,fontWeight:600,color:"#555",whiteSpace:"nowrap"}}>👤 Technicien :</div>
             <input value={editTechnicien} onChange={e=>setEditTechnicien(e.target.value)}
               onBlur={()=>{if(editTechnicien!==ordre.technicien)onUpdate({...ordre,technicien:editTechnicien});}}
               onKeyDown={e=>{if(e.key==="Enter"&&editTechnicien!==ordre.technicien)onUpdate({...ordre,technicien:editTechnicien});}}
               placeholder="Nom du technicien"
-              style={{flex:1,padding:"7px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none"}}/>
+              style={{flex:1,padding:"7px 12px",border:"1px solid #e0e0d8",borderRadius:9,fontSize:13,outline:"none"}}/>
           </div>
 
           {allSorties&&ordre.statut!=="termine"&&(
@@ -3065,9 +3065,9 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
               </div>
             );
             return(
-              <div style={{textAlign:"center",padding:"28px 0",background:"#f9fafb",borderRadius:16,border:`2px solid ${activeSession?"#fcd34d":"#e5e7eb"}`}}>
+              <div style={{textAlign:"center",padding:"28px 0",background:"#f9fafb",borderRadius:16,border:`2px solid ${activeSession?"#fcd34d":"#e0e0d8"}`}}>
                 <div style={{fontSize:11,color:"#6b7280",fontWeight:600,marginBottom:8,letterSpacing:"0.08em"}}>TEMPS EN COURS</div>
-                <div style={{fontFamily:"monospace",fontSize:52,fontWeight:900,color:activeSession?"#111827":"#d1d5db",letterSpacing:"0.04em",lineHeight:1}}>
+                <div style={{fontFamily:"monospace",fontSize:52,fontWeight:900,color:activeSession?"#1e2330":"#d1d5db",letterSpacing:"0.04em",lineHeight:1}}>
                   {fmtElapsed(elapsed)}
                 </div>
                 <div style={{marginTop:18,display:"flex",gap:10,justifyContent:"center"}}>
@@ -3078,11 +3078,11 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                     </button>
                   ):sessions.some(s=>s.statut==="pause")?(
                     <button onClick={startChronometer} disabled={sessionOp}
-                      style={{padding:"10px 28px",background:sessionOp?"#e5e7eb":"#111827",color:sessionOp?"#9ca3af":"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:sessionOp?"not-allowed":"pointer",fontSize:14}}>
+                      style={{padding:"10px 28px",background:sessionOp?"#e0e0d8":"#1e2330",color:sessionOp?"#8a9ab8":"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:sessionOp?"not-allowed":"pointer",fontSize:14}}>
                       {sessionOp?"…":"▶ Reprendre"}
                     </button>
                   ):(
-                    <div style={{fontSize:12,color:"#9ca3af"}}>Démarre automatiquement quand l'OR passe En cours</div>
+                    <div style={{fontSize:12,color:"#8a9ab8"}}>Démarre automatiquement quand l'OR passe En cours</div>
                   )}
                 </div>
                 {activeSession&&<div style={{marginTop:10,fontSize:11,color:"#6b7280"}}>Démarré à {new Date(activeSession.started_at).toLocaleTimeString("fr-FR")}</div>}
@@ -3094,7 +3094,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
           {/* ── Ajout manuel ── */}
           <div>
             <button onClick={()=>setShowManualForm(v=>!v)}
-              style={{padding:"8px 16px",background:showManualForm?"#f3f4f6":"#fff",border:"1px solid #e5e7eb",borderRadius:9,fontWeight:600,cursor:"pointer",fontSize:13,color:"#374151"}}>
+              style={{padding:"8px 16px",background:showManualForm?"#f3f4f6":"#fff",border:"1px solid #e0e0d8",borderRadius:9,fontWeight:600,cursor:"pointer",fontSize:13,color:"#555"}}>
               ✏️ {showManualForm?"Annuler":"Ajouter temps manuellement"}
             </button>
 
@@ -3104,12 +3104,12 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                   <div>
                     <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Date</div>
                     <input type="date" value={manualForm.date} onChange={e=>setManualForm(f=>({...f,date:e.target.value}))}
-                      style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                      style={{width:"100%",padding:"8px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                   </div>
                   <div>
                     <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Type</div>
                     <select value={manualForm.type} onChange={e=>setManualForm(f=>({...f,type:e.target.value}))}
-                      style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",background:"#fff"}}>
+                      style={{width:"100%",padding:"8px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:13,outline:"none",background:"#fff"}}>
                       {TEMPS_TYPES.map(t=><option key={t}>{t}</option>)}
                     </select>
                   </div>
@@ -3118,7 +3118,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                 <div style={{display:"flex",gap:8,marginBottom:10}}>
                   {["fin","duree"].map(m=>(
                     <button key={m} onClick={()=>setManualForm(f=>({...f,duree_mode:m}))}
-                      style={{padding:"6px 14px",borderRadius:8,border:`1px solid ${manualForm.duree_mode===m?"#111827":"#e5e7eb"}`,background:manualForm.duree_mode===m?"#111827":"#fff",color:manualForm.duree_mode===m?"#fff":"#6b7280",fontWeight:600,cursor:"pointer",fontSize:12}}>
+                      style={{padding:"6px 14px",borderRadius:8,border:`1px solid ${manualForm.duree_mode===m?"#1e2330":"#e0e0d8"}`,background:manualForm.duree_mode===m?"#1e2330":"#fff",color:manualForm.duree_mode===m?"#fff":"#6b7280",fontWeight:600,cursor:"pointer",fontSize:12}}>
                       {m==="fin"?"Heure début → fin":"Durée directe"}
                     </button>
                   ))}
@@ -3129,12 +3129,12 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                     <div>
                       <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Heure début</div>
                       <input type="time" value={manualForm.heure_debut} onChange={e=>setManualForm(f=>({...f,heure_debut:e.target.value}))}
-                        style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                        style={{width:"100%",padding:"8px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                     </div>
                     <div>
                       <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Heure fin</div>
                       <input type="time" value={manualForm.heure_fin} onChange={e=>setManualForm(f=>({...f,heure_fin:e.target.value}))}
-                        style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                        style={{width:"100%",padding:"8px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                     </div>
                   </div>
                 ):(
@@ -3142,17 +3142,17 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                     <div>
                       <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Heure début (opt.)</div>
                       <input type="time" value={manualForm.heure_debut} onChange={e=>setManualForm(f=>({...f,heure_debut:e.target.value}))}
-                        style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                        style={{width:"100%",padding:"8px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                     </div>
                     <div>
                       <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Heures</div>
                       <input type="number" min="0" value={manualForm.duree_h} onChange={e=>setManualForm(f=>({...f,duree_h:e.target.value}))}
-                        style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                        style={{width:"100%",padding:"8px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                     </div>
                     <div>
                       <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Minutes</div>
                       <input type="number" min="0" max="59" value={manualForm.duree_m} onChange={e=>setManualForm(f=>({...f,duree_m:e.target.value}))}
-                        style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                        style={{width:"100%",padding:"8px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                     </div>
                   </div>
                 )}
@@ -3162,18 +3162,18 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                     <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Technicien</div>
                     <input value={manualForm.technicien} onChange={e=>setManualForm(f=>({...f,technicien:e.target.value}))}
                       placeholder="Nom du technicien"
-                      style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                      style={{width:"100%",padding:"8px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                   </div>
                   <div>
                     <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Description (optionnel)</div>
                     <input value={manualForm.description} onChange={e=>setManualForm(f=>({...f,description:e.target.value}))}
                       placeholder="Travaux effectués…"
-                      style={{width:"100%",padding:"8px 10px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                      style={{width:"100%",padding:"8px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                   </div>
                 </div>
 
                 <button onClick={handleSaveManual} disabled={savingManual}
-                  style={{padding:"9px 20px",background:savingManual?"#e5e7eb":"#111827",color:savingManual?"#9ca3af":"#fff",border:"none",borderRadius:9,fontWeight:700,cursor:savingManual?"not-allowed":"pointer",fontSize:13}}>
+                  style={{padding:"9px 20px",background:savingManual?"#e0e0d8":"#1e2330",color:savingManual?"#8a9ab8":"#fff",border:"none",borderRadius:9,fontWeight:700,cursor:savingManual?"not-allowed":"pointer",fontSize:13}}>
                   {savingManual?"Enregistrement…":"💾 Enregistrer"}
                 </button>
               </div>
@@ -3182,11 +3182,11 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
 
           {/* ── Historique des sessions ── */}
           <div>
-            <h3 style={{fontWeight:800,fontSize:15,color:"#111827",margin:"0 0 12px"}}>📋 Sessions</h3>
+            <h3 style={{fontWeight:800,fontSize:15,color:"#1a1a1a",margin:"0 0 12px"}}>📋 Sessions</h3>
             {loadingSessions?(
               <div style={{color:"#6b7280",fontSize:13}}>Chargement…</div>
             ):sessions.length===0?(
-              <div style={{color:"#9ca3af",fontSize:13,textAlign:"center",padding:"20px 0"}}>Aucune session enregistrée</div>
+              <div style={{color:"#8a9ab8",fontSize:13,textAlign:"center",padding:"20px 0"}}>Aucune session enregistrée</div>
             ):(
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
                 {sessions.map(s=>{
@@ -3194,9 +3194,9 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                   const dur=isActive?elapsed/3600:Number(s.duree_heures)||0;
                   const started=s.started_at?new Date(s.started_at):null;
                   return(
-                    <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:isActive?"#fefce8":"#f9fafb",borderRadius:10,border:`1px solid ${isActive?"#fcd34d":"#e5e7eb"}`}}>
+                    <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:isActive?"#fefce8":"#f9fafb",borderRadius:10,border:`1px solid ${isActive?"#fcd34d":"#e0e0d8"}`}}>
                       <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontSize:12,color:"#374151",fontWeight:600,display:"flex",gap:6,flexWrap:"wrap"}}>
+                        <div style={{fontSize:12,color:"#555",fontWeight:600,display:"flex",gap:6,flexWrap:"wrap"}}>
                           <span>{s.type||"—"}</span>
                           {started&&<span style={{color:"#6b7280"}}>· {started.toLocaleDateString("fr-FR")} {started.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</span>}
                           {s.technicien&&<span style={{color:"#6b7280"}}>· {s.technicien}</span>}
@@ -3206,14 +3206,14 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                             ?<span style={{color:"#92400e",fontWeight:700}}>⏱ En cours…</span>
                             :<><strong>{dur.toFixed(2)} h</strong>{s.ended_at&&<span style={{marginLeft:6}}>→ {new Date(s.ended_at).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}</span>}{tarifsMap[s.technicien]&&dur>0&&<span style={{marginLeft:8,color:"#059669",fontWeight:700}}>= {(bill15(dur)*tarifsMap[s.technicien]).toFixed(2)} €</span>}</>}
                         </div>
-                        {s.description&&<div style={{fontSize:11,color:"#9ca3af",marginTop:1}}>{s.description}</div>}
+                        {s.description&&<div style={{fontSize:11,color:"#8a9ab8",marginTop:1}}>{s.description}</div>}
                       </div>
                       {!isActive&&<button onClick={()=>handleDelSession(s.id)}
                         style={{background:"none",border:"none",cursor:"pointer",color:"#dc2626",fontSize:16,padding:"4px 8px",flexShrink:0}}>🗑️</button>}
                     </div>
                   );
                 })}
-                <div style={{fontSize:13,fontWeight:700,color:"#111827",textAlign:"right",paddingTop:8,borderTop:"1px solid #e5e7eb",display:"flex",justifyContent:"flex-end",gap:16,flexWrap:"wrap"}}>
+                <div style={{fontSize:13,fontWeight:700,color:"#1a1a1a",textAlign:"right",paddingTop:8,borderTop:"1px solid #e0e0d8",display:"flex",justifyContent:"flex-end",gap:16,flexWrap:"wrap"}}>
                   <span>Total : {sessions.reduce((a,s)=>a+(s.statut==="en_cours"?elapsed/3600:Number(s.duree_heures)||0),0).toFixed(2)} h</span>
                   {sessions.some(s=>tarifsMap[s.technicien])&&(
                     <span style={{color:"#059669"}}>
@@ -3375,11 +3375,11 @@ function GenerateurCodebarres({ products, stockOverrides }) {
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
         <div>
-          <h1 style={{fontSize:22,fontWeight:900,color:"#111827",margin:0}}>🔲 Codes-barres</h1>
+          <h1 style={{fontSize:22,fontWeight:900,color:"#1a1a1a",margin:0}}>🔲 Codes-barres</h1>
           <p style={{color:"#6b7280",fontSize:13,margin:"4px 0 0"}}>{selected.length} article{selected.length>1?"s":""} sélectionné{selected.length>1?"s":""}</p>
         </div>
         {selected.length>0&&(
-          <button onClick={handlePrint} style={{background:"#111827",color:"#fff",border:"none",borderRadius:10,padding:"11px 22px",fontWeight:700,cursor:"pointer",fontSize:14}}>
+          <button onClick={handlePrint} style={{background:"#1e2330",color:"#fff",border:"none",borderRadius:10,padding:"11px 22px",fontWeight:700,cursor:"pointer",fontSize:14}}>
             🖨️ Imprimer {selected.length*(parseInt(qtyParEtiquette)||1)} étiquette{selected.length*(parseInt(qtyParEtiquette)||1)>1?"s":""}
           </button>
         )}
@@ -3391,16 +3391,16 @@ function GenerateurCodebarres({ products, stockOverrides }) {
         <div style={{display:"flex",flexDirection:"column",gap:12}}>
 
           {/* Recherche */}
-          <div style={{background:"#fff",borderRadius:14,border:"1px solid #e5e7eb",padding:18}}>
-            <h3 style={{fontSize:14,fontWeight:800,color:"#111827",marginBottom:12}}>🔍 Sélectionner des articles</h3>
+          <div style={{background:"#fff",borderRadius:14,border:"1px solid #e0e0d8",padding:18}}>
+            <h3 style={{fontSize:14,fontWeight:800,color:"#1a1a1a",marginBottom:12}}>🔍 Sélectionner des articles</h3>
             <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher SKU, nom…"
-              style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",marginBottom:10}}/>
-            {search.length>=2&&filtered.length===0&&<div style={{fontSize:12,color:"#9ca3af",textAlign:"center",padding:"10px 0"}}>Aucun article trouvé</div>}
+              style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",marginBottom:10}}/>
+            {search.length>=2&&filtered.length===0&&<div style={{fontSize:12,color:"#8a9ab8",textAlign:"center",padding:"10px 0"}}>Aucun article trouvé</div>}
             {filtered.map(p=>(
-              <div key={p.id} onClick={()=>toggleSelect(p)} style={{padding:"9px 12px",borderRadius:9,marginBottom:5,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",background:isSelected(p)?"#dbeafe":"#f9fafb",border:`1px solid ${isSelected(p)?"#3b82f6":"#e5e7eb"}`}}>
+              <div key={p.id} onClick={()=>toggleSelect(p)} style={{padding:"9px 12px",borderRadius:9,marginBottom:5,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",background:isSelected(p)?"#dbeafe":"#f9fafb",border:`1px solid ${isSelected(p)?"#3b82f6":"#e0e0d8"}`}}>
                 <div>
-                  <div style={{fontWeight:600,fontSize:12,color:"#111827"}}>{p.name.slice(0,32)}{p.name.length>32?"…":""}</div>
-                  <div style={{fontSize:10,color:"#9ca3af",fontFamily:"monospace",marginTop:2}}>{p.id}</div>
+                  <div style={{fontWeight:600,fontSize:12,color:"#1a1a1a"}}>{p.name.slice(0,32)}{p.name.length>32?"…":""}</div>
+                  <div style={{fontSize:10,color:"#8a9ab8",fontFamily:"monospace",marginTop:2}}>{p.id}</div>
                 </div>
                 <div style={{width:20,height:20,borderRadius:5,border:`2px solid ${isSelected(p)?"#3b82f6":"#d1d5db"}`,background:isSelected(p)?"#3b82f6":"#fff",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                   {isSelected(p)&&<span style={{color:"#fff",fontSize:12,fontWeight:900}}>✓</span>}
@@ -3411,36 +3411,36 @@ function GenerateurCodebarres({ products, stockOverrides }) {
           </div>
 
           {/* Options */}
-          <div style={{background:"#fff",borderRadius:14,border:"1px solid #e5e7eb",padding:18}}>
-            <h3 style={{fontSize:14,fontWeight:800,color:"#111827",marginBottom:14}}>⚙️ Options</h3>
+          <div style={{background:"#fff",borderRadius:14,border:"1px solid #e0e0d8",padding:18}}>
+            <h3 style={{fontSize:14,fontWeight:800,color:"#1a1a1a",marginBottom:14}}>⚙️ Options</h3>
 
             <div style={{marginBottom:14}}>
-              <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:6}}>Quantité par article</label>
+              <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:6}}>Quantité par article</label>
               <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                <button onClick={()=>setQtyParEtiquette(q=>Math.max(1,q-1))} style={{width:36,height:36,background:"#f3f4f6",border:"1px solid #e5e7eb",borderRadius:8,fontSize:18,cursor:"pointer",fontWeight:700}}>−</button>
+                <button onClick={()=>setQtyParEtiquette(q=>Math.max(1,q-1))} style={{width:36,height:36,background:"#f3f4f6",border:"1px solid #e0e0d8",borderRadius:8,fontSize:18,cursor:"pointer",fontWeight:700}}>−</button>
                 <input type="number" min="1" max="100" value={qtyParEtiquette} onChange={e=>setQtyParEtiquette(parseInt(e.target.value)||1)}
-                  style={{flex:1,padding:"8px",border:"1px solid #e5e7eb",borderRadius:8,fontSize:16,fontWeight:700,textAlign:"center",outline:"none"}}/>
-                <button onClick={()=>setQtyParEtiquette(q=>Math.min(100,q+1))} style={{width:36,height:36,background:"#f3f4f6",border:"1px solid #e5e7eb",borderRadius:8,fontSize:18,cursor:"pointer",fontWeight:700}}>+</button>
+                  style={{flex:1,padding:"8px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:16,fontWeight:700,textAlign:"center",outline:"none"}}/>
+                <button onClick={()=>setQtyParEtiquette(q=>Math.min(100,q+1))} style={{width:36,height:36,background:"#f3f4f6",border:"1px solid #e0e0d8",borderRadius:8,fontSize:18,cursor:"pointer",fontWeight:700}}>+</button>
               </div>
             </div>
 
             <div style={{marginBottom:14}}>
-              <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:6}}>Taille étiquette</label>
+              <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:6}}>Taille étiquette</label>
               <div style={{display:"flex",gap:6}}>
                 {[{v:"small",l:"Petite"},{v:"medium",l:"Moyenne"},{v:"large",l:"Grande"}].map(s=>(
-                  <button key={s.v} onClick={()=>setTaille(s.v)} style={{flex:1,padding:"7px",borderRadius:8,border:`2px solid ${taille===s.v?"#111827":"#e5e7eb"}`,background:taille===s.v?"#111827":"#fff",color:taille===s.v?"#fff":"#374151",fontWeight:600,cursor:"pointer",fontSize:11}}>{s.l}</button>
+                  <button key={s.v} onClick={()=>setTaille(s.v)} style={{flex:1,padding:"7px",borderRadius:8,border:`2px solid ${taille===s.v?"#1e2330":"#e0e0d8"}`,background:taille===s.v?"#1e2330":"#fff",color:taille===s.v?"#fff":"#555",fontWeight:600,cursor:"pointer",fontSize:11}}>{s.l}</button>
                 ))}
               </div>
             </div>
 
             <div>
-              <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:8}}>Informations à afficher</label>
+              <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:8}}>Informations à afficher</label>
               {[{label:"Nom de l'article",val:showName,set:setShowName},{label:"Emplacement",val:showLocation,set:setShowLocation},{label:"Prix HT",val:showPrice,set:setShowPrice}].map(opt=>(
                 <div key={opt.label} onClick={()=>opt.set(v=>!v)} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",cursor:"pointer",borderBottom:"1px solid #f3f4f6"}}>
-                  <div style={{width:20,height:20,borderRadius:5,border:`2px solid ${opt.val?"#111827":"#d1d5db"}`,background:opt.val?"#111827":"#fff",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  <div style={{width:20,height:20,borderRadius:5,border:`2px solid ${opt.val?"#1e2330":"#d1d5db"}`,background:opt.val?"#1e2330":"#fff",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                     {opt.val&&<span style={{color:"#fff",fontSize:12,fontWeight:900}}>✓</span>}
                   </div>
-                  <span style={{fontSize:13,color:"#374151"}}>{opt.label}</span>
+                  <span style={{fontSize:13,color:"#555"}}>{opt.label}</span>
                 </div>
               ))}
             </div>
@@ -3448,28 +3448,28 @@ function GenerateurCodebarres({ products, stockOverrides }) {
         </div>
 
         {/* Aperçu */}
-        <div style={{background:"#fff",borderRadius:14,border:"1px solid #e5e7eb",padding:20,minHeight:300}}>
+        <div style={{background:"#fff",borderRadius:14,border:"1px solid #e0e0d8",padding:20,minHeight:300}}>
           {selected.length===0?(
-            <div style={{textAlign:"center",padding:60,color:"#9ca3af"}}>
+            <div style={{textAlign:"center",padding:60,color:"#8a9ab8"}}>
               <div style={{fontSize:48,marginBottom:14}}>🔲</div>
-              <div style={{fontWeight:700,fontSize:16,color:"#374151",marginBottom:8}}>Aucun article sélectionné</div>
+              <div style={{fontWeight:700,fontSize:16,color:"#555",marginBottom:8}}>Aucun article sélectionné</div>
               <div style={{fontSize:13}}>Recherchez et sélectionnez des articles à gauche</div>
             </div>
           ):(
             <>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-                <h3 style={{fontSize:14,fontWeight:800,color:"#111827"}}>Aperçu des étiquettes</h3>
+                <h3 style={{fontSize:14,fontWeight:800,color:"#1a1a1a"}}>Aperçu des étiquettes</h3>
                 <div style={{fontSize:12,color:"#6b7280"}}>{selected.length*(parseInt(qtyParEtiquette)||1)} étiquette{selected.length*(parseInt(qtyParEtiquette)||1)>1?"s":""} au total</div>
               </div>
               <div style={{display:"flex",flexWrap:"wrap",gap:12}}>
                 {selected.map(p=>(
-                  <div key={p.id} style={{border:"1px solid #e5e7eb",borderRadius:10,padding:12,textAlign:"center",background:"#fafafa",position:"relative",maxWidth:t.w+24}}>
+                  <div key={p.id} style={{border:"1px solid #e0e0d8",borderRadius:10,padding:12,textAlign:"center",background:"#fafafa",position:"relative",maxWidth:t.w+24}}>
                     <button onClick={()=>toggleSelect(p)} style={{position:"absolute",top:4,right:4,width:18,height:18,background:"#fee2e2",border:"none",borderRadius:4,cursor:"pointer",fontSize:10,color:"#dc2626",lineHeight:"18px",fontWeight:700}}>✕</button>
                     <BarcodeDisplay value={p.id} width={t.w} height={t.h} fontSize={t.fs}/>
-                    {showName&&<div style={{fontSize:t.fs-1,fontWeight:600,color:"#111827",marginTop:4,maxWidth:t.w,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.name}</div>}
+                    {showName&&<div style={{fontSize:t.fs-1,fontWeight:600,color:"#1a1a1a",marginTop:4,maxWidth:t.w,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.name}</div>}
                     {showLocation&&p.location&&<div style={{fontSize:t.fs-2,color:"#6b7280",marginTop:2}}>📍 {p.location}</div>}
                     {showPrice&&p.prix>0&&<div style={{fontSize:t.fs-1,fontWeight:700,color:"#1e40af",marginTop:2}}>{p.prix.toFixed(2)} €</div>}
-                    {qtyParEtiquette>1&&<div style={{fontSize:10,color:"#9ca3af",marginTop:4,fontStyle:"italic"}}>×{qtyParEtiquette} exemplaires</div>}
+                    {qtyParEtiquette>1&&<div style={{fontSize:10,color:"#8a9ab8",marginTop:4,fontStyle:"italic"}}>×{qtyParEtiquette} exemplaires</div>}
                   </div>
                 ))}
               </div>
@@ -3632,17 +3632,17 @@ function ScannerArticles({ products, stockOverrides, setStockOverrides, mouvemen
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 600, margin: "0 auto" }}>
       <div>
-        <h1 style={{ fontSize: 22, fontWeight: 900, color: "#111827", margin: 0 }}>📷 Scanner articles</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 900, color: "#1a1a1a", margin: 0 }}>📷 Scanner articles</h1>
         <p style={{ color: "#6b7280", fontSize: 13, margin: "4px 0 0" }}>Scannez un code-barres ou saisissez un code manuellement</p>
       </div>
 
       {/* Bouton scanner caméra */}
-      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+      <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e0e0d8", overflow: "hidden" }}>
         {!scanning ? (
-          <button onClick={startScanner} style={{ width: "100%", padding: "28px", background: "linear-gradient(135deg,#111827,#1f2937)", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+          <button onClick={startScanner} style={{ width: "100%", padding: "28px", background: "linear-gradient(135deg,#1e2330,#2d3d5c)", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
             <div style={{ fontSize: 52 }}>📷</div>
             <div style={{ color: "#fff", fontWeight: 800, fontSize: 17 }}>Scanner avec la caméra</div>
-            <div style={{ color: "#9ca3af", fontSize: 13 }}>Pointez vers un code-barres EAN / Code-128 / QR</div>
+            <div style={{ color: "#8a9ab8", fontSize: 13 }}>Pointez vers un code-barres EAN / Code-128 / QR</div>
           </button>
         ) : (
           <div style={{ position: "relative" }}>
@@ -3675,15 +3675,15 @@ function ScannerArticles({ products, stockOverrides, setStockOverrides, mouvemen
       </div>
 
       {/* Saisie manuelle */}
-      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: 18 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: "#111827", marginBottom: 10 }}>⌨️ Saisie manuelle</div>
+      <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e0e0d8", padding: 18 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "#1a1a1a", marginBottom: 10 }}>⌨️ Saisie manuelle</div>
         <div style={{ display: "flex", gap: 8 }}>
           <input
             value={manualCode} onChange={e => setManualCode(e.target.value)} onKeyDown={handleKeyDown}
             placeholder="SKU, ID article, code-barres…"
-            style={{ flex: 1, padding: "11px 14px", border: "1.5px solid #e5e7eb", borderRadius: 10, fontSize: 14, outline: "none", fontFamily: "monospace", letterSpacing: 1 }}
+            style={{ flex: 1, padding: "11px 14px", border: "1.5px solid #e0e0d8", borderRadius: 10, fontSize: 14, outline: "none", fontFamily: "monospace", letterSpacing: 1 }}
           />
-          <button onClick={handleManualSearch} disabled={!manualCode} style={{ padding: "11px 18px", background: manualCode ? "#111827" : "#e5e7eb", color: manualCode ? "#fff" : "#9ca3af", border: "none", borderRadius: 10, fontWeight: 700, cursor: manualCode ? "pointer" : "not-allowed", fontSize: 14 }}>
+          <button onClick={handleManualSearch} disabled={!manualCode} style={{ padding: "11px 18px", background: manualCode ? "#1e2330" : "#e0e0d8", color: manualCode ? "#fff" : "#8a9ab8", border: "none", borderRadius: 10, fontWeight: 700, cursor: manualCode ? "pointer" : "not-allowed", fontSize: 14 }}>
             🔍
           </button>
         </div>
@@ -3712,7 +3712,7 @@ function ScannerArticles({ products, stockOverrides, setStockOverrides, mouvemen
         <div style={{ background: "#fff", borderRadius: 16, border: `2px solid ${st === "rupture" ? "#fca5a5" : st === "warning" ? "#fde68a" : "#6ee7b7"}`, overflow: "hidden" }}>
           {/* Header fiche */}
           <div style={{ background: st === "rupture" ? "#fee2e2" : st === "warning" ? "#fef3c7" : "#d1fae5", padding: "16px 20px" }}>
-            <div style={{ fontWeight: 900, fontSize: 16, color: "#111827", marginBottom: 4 }}>{foundArticle.name}</div>
+            <div style={{ fontWeight: 900, fontSize: 16, color: "#1a1a1a", marginBottom: 4 }}>{foundArticle.name}</div>
             <div style={{ fontSize: 12, color: "#6b7280", fontFamily: "monospace" }}>{foundArticle.id} {foundArticle.sku && foundArticle.sku !== foundArticle.id ? `· ${foundArticle.sku}` : ""}</div>
           </div>
 
@@ -3720,15 +3720,15 @@ function ScannerArticles({ products, stockOverrides, setStockOverrides, mouvemen
           <div style={{ padding: "16px 20px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
             <div style={{ textAlign: "center", padding: "12px 8px", background: "#f9fafb", borderRadius: 10 }}>
               <div style={{ fontSize: 28, fontWeight: 900, color: s === 0 ? "#dc2626" : s < foundArticle.min ? "#d97706" : "#059669" }}>{s}</div>
-              <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>En stock</div>
+              <div style={{ fontSize: 11, color: "#8a9ab8", marginTop: 2 }}>En stock</div>
             </div>
             <div style={{ textAlign: "center", padding: "12px 8px", background: "#f9fafb", borderRadius: 10 }}>
-              <div style={{ fontSize: 20, fontWeight: 800, color: "#374151" }}>{foundArticle.min || 0}</div>
-              <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>Minimum</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: "#555" }}>{foundArticle.min || 0}</div>
+              <div style={{ fontSize: 11, color: "#8a9ab8", marginTop: 2 }}>Minimum</div>
             </div>
             <div style={{ textAlign: "center", padding: "12px 8px", background: "#f9fafb", borderRadius: 10 }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: "#3b82f6" }}>{foundArticle.prix > 0 ? foundArticle.prix.toFixed(2) + " €" : "—"}</div>
-              <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>Prix HT</div>
+              <div style={{ fontSize: 11, color: "#8a9ab8", marginTop: 2 }}>Prix HT</div>
             </div>
           </div>
 
@@ -3742,18 +3742,18 @@ function ScannerArticles({ products, stockOverrides, setStockOverrides, mouvemen
             {!actionMode ? (
               <div style={{ display: "flex", gap: 10 }}>
                 <button onClick={() => setActionMode("entree")} style={{ flex: 1, padding: "13px", background: "#059669", color: "#fff", border: "none", borderRadius: 11, fontWeight: 800, cursor: "pointer", fontSize: 15 }}>📥 Entrée</button>
-                <button onClick={() => setActionMode("sortie")} disabled={s === 0} style={{ flex: 1, padding: "13px", background: s === 0 ? "#e5e7eb" : "#dc2626", color: s === 0 ? "#9ca3af" : "#fff", border: "none", borderRadius: 11, fontWeight: 800, cursor: s === 0 ? "not-allowed" : "pointer", fontSize: 15 }}>📤 Sortie</button>
+                <button onClick={() => setActionMode("sortie")} disabled={s === 0} style={{ flex: 1, padding: "13px", background: s === 0 ? "#e0e0d8" : "#dc2626", color: s === 0 ? "#8a9ab8" : "#fff", border: "none", borderRadius: 11, fontWeight: 800, cursor: s === 0 ? "not-allowed" : "pointer", fontSize: 15 }}>📤 Sortie</button>
               </div>
             ) : (
               <div style={{ background: actionMode === "entree" ? "#f0fdf4" : "#fff1f2", borderRadius: 12, padding: 16, border: `1px solid ${actionMode === "entree" ? "#bbf7d0" : "#fecaca"}` }}>
-                <div style={{ fontWeight: 700, fontSize: 14, color: "#111827", marginBottom: 12 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: "#1a1a1a", marginBottom: 12 }}>
                   {actionMode === "entree" ? "📥 Quantité à ajouter" : "📤 Quantité à retirer"}
                 </div>
                 <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 12 }}>
-                  <button onClick={() => setQuantite(q => String(Math.max(1, parseInt(q) - 1)))} style={{ width: 44, height: 44, background: "#fff", border: "1.5px solid #e5e7eb", borderRadius: 10, fontSize: 20, fontWeight: 700, cursor: "pointer" }}>−</button>
+                  <button onClick={() => setQuantite(q => String(Math.max(1, parseInt(q) - 1)))} style={{ width: 44, height: 44, background: "#fff", border: "1.5px solid #e0e0d8", borderRadius: 10, fontSize: 20, fontWeight: 700, cursor: "pointer" }}>−</button>
                   <input type="number" min="1" value={quantite} onChange={e => setQuantite(e.target.value)}
-                    style={{ flex: 1, padding: "10px", border: "1.5px solid #e5e7eb", borderRadius: 10, fontSize: 22, fontWeight: 900, textAlign: "center", outline: "none" }} />
-                  <button onClick={() => setQuantite(q => String(parseInt(q) + 1))} style={{ width: 44, height: 44, background: "#fff", border: "1.5px solid #e5e7eb", borderRadius: 10, fontSize: 20, fontWeight: 700, cursor: "pointer" }}>+</button>
+                    style={{ flex: 1, padding: "10px", border: "1.5px solid #e0e0d8", borderRadius: 10, fontSize: 22, fontWeight: 900, textAlign: "center", outline: "none" }} />
+                  <button onClick={() => setQuantite(q => String(parseInt(q) + 1))} style={{ width: 44, height: 44, background: "#fff", border: "1.5px solid #e0e0d8", borderRadius: 10, fontSize: 20, fontWeight: 700, cursor: "pointer" }}>+</button>
                 </div>
                 <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 12, padding: "6px 10px", background: "#fff", borderRadius: 8 }}>
                   Stock après : <strong style={{ color: actionMode === "entree" ? "#059669" : "#dc2626", fontSize: 16 }}>
@@ -3762,7 +3762,7 @@ function ScannerArticles({ products, stockOverrides, setStockOverrides, mouvemen
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={() => setActionMode(null)} style={{ flex: 1, padding: "11px", background: "#f3f4f6", border: "none", borderRadius: 10, fontWeight: 600, cursor: "pointer" }}>Annuler</button>
-                  <button onClick={handleAction} disabled={saving} style={{ flex: 2, padding: "11px", background: saving ? "#9ca3af" : actionMode === "entree" ? "#059669" : "#dc2626", color: "#fff", border: "none", borderRadius: 10, fontWeight: 800, cursor: saving ? "not-allowed" : "pointer", fontSize: 14 }}>
+                  <button onClick={handleAction} disabled={saving} style={{ flex: 2, padding: "11px", background: saving ? "#8a9ab8" : actionMode === "entree" ? "#059669" : "#dc2626", color: "#fff", border: "none", borderRadius: 10, fontWeight: 800, cursor: saving ? "not-allowed" : "pointer", fontSize: 14 }}>
                     {saving ? "⏳…" : actionMode === "entree" ? "✅ Confirmer l'entrée" : "✅ Confirmer la sortie"}
                   </button>
                 </div>
@@ -3783,17 +3783,17 @@ function ScannerArticles({ products, stockOverrides, setStockOverrides, mouvemen
 
       {/* Historique des scans */}
       {scanHistory.length > 0 && (
-        <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+        <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e0e0d8", overflow: "hidden" }}>
           <div style={{ padding: "14px 18px", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontWeight: 700, fontSize: 14, color: "#111827" }}>🕐 Derniers scans</div>
-            <button onClick={() => setScanHistory([])} style={{ fontSize: 11, color: "#9ca3af", background: "none", border: "none", cursor: "pointer" }}>Effacer</button>
+            <div style={{ fontWeight: 700, fontSize: 14, color: "#1a1a1a" }}>🕐 Derniers scans</div>
+            <button onClick={() => setScanHistory([])} style={{ fontSize: 11, color: "#8a9ab8", background: "none", border: "none", cursor: "pointer" }}>Effacer</button>
           </div>
           {scanHistory.map((h, i) => (
             <div key={i} onClick={() => searchByCode(h.id)} style={{ padding: "11px 18px", borderBottom: i < scanHistory.length - 1 ? "1px solid #f3f4f6" : "none", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
               onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"} onMouseLeave={e => e.currentTarget.style.background = "#fff"}>
               <div>
-                <div style={{ fontWeight: 600, fontSize: 13, color: "#111827" }}>{h.name}</div>
-                <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 1 }}>{h.id} · {h.time}</div>
+                <div style={{ fontWeight: 600, fontSize: 13, color: "#1a1a1a" }}>{h.name}</div>
+                <div style={{ fontSize: 11, color: "#8a9ab8", marginTop: 1 }}>{h.id} · {h.time}</div>
               </div>
               <div style={{ fontWeight: 800, fontSize: 16, color: h.stock === 0 ? "#dc2626" : "#059669" }}>{h.stock}</div>
             </div>
@@ -3804,56 +3804,56 @@ function ScannerArticles({ products, stockOverrides, setStockOverrides, mouvemen
         {/* ── ONGLET TEMPS PASSÉ ── */}
         {tabFiche==="temps"&&(
           <div style={{padding:"22px 26px",display:"flex",flexDirection:"column",gap:20}}>
-            <div style={{background:"#1f2937",borderRadius:16,padding:22}}>
-              <h3 style={{fontSize:14,fontWeight:800,color:"#f9fafb",margin:"0 0 16px"}}>➕ Saisir un temps</h3>
+            <div style={{background:"#f8f8f3",borderRadius:16,padding:22}}>
+              <h3 style={{fontSize:14,fontWeight:800,color:"#1a1a1a",margin:"0 0 16px"}}>➕ Saisir un temps</h3>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
                 <div>
-                  <label style={{fontSize:11,fontWeight:600,color:"#9ca3af",display:"block",marginBottom:5}}>Type</label>
-                  <select value={formTemps.type} onChange={e=>setFormTemps(f=>({...f,type:e.target.value}))} style={{width:"100%",padding:"9px 12px",border:"1px solid #4b5563",borderRadius:9,fontSize:13,outline:"none",background:"#374151",color:"#f9fafb",cursor:"pointer"}}>
+                  <label style={{fontSize:11,fontWeight:600,color:"#8a9ab8",display:"block",marginBottom:5}}>Type</label>
+                  <select value={formTemps.type} onChange={e=>setFormTemps(f=>({...f,type:e.target.value}))} style={{width:"100%",padding:"9px 12px",border:"1px solid #e0e0d8",borderRadius:9,fontSize:13,outline:"none",background:"#ffffff",color:"#1a1a1a",cursor:"pointer"}}>
                     {["Révision","Panne","Remplacement pneu","Autre"].map(t=><option key={t}>{t}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{fontSize:11,fontWeight:600,color:"#9ca3af",display:"block",marginBottom:5}}>Technicien *</label>
-                  <input value={formTemps.technicien} onChange={e=>setFormTemps(f=>({...f,technicien:e.target.value}))} placeholder="Prénom Nom…" style={{width:"100%",padding:"9px 12px",border:"1px solid #4b5563",borderRadius:9,fontSize:13,outline:"none",background:"#374151",color:"#f9fafb",boxSizing:"border-box"}}/>
+                  <label style={{fontSize:11,fontWeight:600,color:"#8a9ab8",display:"block",marginBottom:5}}>Technicien *</label>
+                  <input value={formTemps.technicien} onChange={e=>setFormTemps(f=>({...f,technicien:e.target.value}))} placeholder="Prénom Nom…" style={{width:"100%",padding:"9px 12px",border:"1px solid #e0e0d8",borderRadius:9,fontSize:13,outline:"none",background:"#ffffff",color:"#1a1a1a",boxSizing:"border-box"}}/>
                 </div>
                 <div>
-                  <label style={{fontSize:11,fontWeight:600,color:"#9ca3af",display:"block",marginBottom:5}}>Date</label>
-                  <input type="date" value={formTemps.date} onChange={e=>setFormTemps(f=>({...f,date:e.target.value}))} style={{width:"100%",padding:"9px 12px",border:"1px solid #4b5563",borderRadius:9,fontSize:13,outline:"none",background:"#374151",color:"#f9fafb",boxSizing:"border-box"}}/>
+                  <label style={{fontSize:11,fontWeight:600,color:"#8a9ab8",display:"block",marginBottom:5}}>Date</label>
+                  <input type="date" value={formTemps.date} onChange={e=>setFormTemps(f=>({...f,date:e.target.value}))} style={{width:"100%",padding:"9px 12px",border:"1px solid #e0e0d8",borderRadius:9,fontSize:13,outline:"none",background:"#ffffff",color:"#1a1a1a",boxSizing:"border-box"}}/>
                 </div>
                 <div>
-                  <label style={{fontSize:11,fontWeight:600,color:"#9ca3af",display:"block",marginBottom:5}}>Durée (heures) *</label>
-                  <input type="number" min="0.25" step="0.25" value={formTemps.duree_heures} onChange={e=>setFormTemps(f=>({...f,duree_heures:e.target.value}))} placeholder="ex : 1.5" style={{width:"100%",padding:"9px 12px",border:"1px solid #4b5563",borderRadius:9,fontSize:13,outline:"none",background:"#374151",color:"#f9fafb",boxSizing:"border-box"}}/>
+                  <label style={{fontSize:11,fontWeight:600,color:"#8a9ab8",display:"block",marginBottom:5}}>Durée (heures) *</label>
+                  <input type="number" min="0.25" step="0.25" value={formTemps.duree_heures} onChange={e=>setFormTemps(f=>({...f,duree_heures:e.target.value}))} placeholder="ex : 1.5" style={{width:"100%",padding:"9px 12px",border:"1px solid #e0e0d8",borderRadius:9,fontSize:13,outline:"none",background:"#ffffff",color:"#1a1a1a",boxSizing:"border-box"}}/>
                 </div>
                 <div style={{gridColumn:"span 2"}}>
-                  <label style={{fontSize:11,fontWeight:600,color:"#9ca3af",display:"block",marginBottom:5}}>Description</label>
-                  <input value={formTemps.description} onChange={e=>setFormTemps(f=>({...f,description:e.target.value}))} placeholder="Détails de l'intervention…" style={{width:"100%",padding:"9px 12px",border:"1px solid #4b5563",borderRadius:9,fontSize:13,outline:"none",background:"#374151",color:"#f9fafb",boxSizing:"border-box"}}/>
+                  <label style={{fontSize:11,fontWeight:600,color:"#8a9ab8",display:"block",marginBottom:5}}>Description</label>
+                  <input value={formTemps.description} onChange={e=>setFormTemps(f=>({...f,description:e.target.value}))} placeholder="Détails de l'intervention…" style={{width:"100%",padding:"9px 12px",border:"1px solid #e0e0d8",borderRadius:9,fontSize:13,outline:"none",background:"#ffffff",color:"#1a1a1a",boxSizing:"border-box"}}/>
                 </div>
               </div>
               <button onClick={handleAddTemps} disabled={savingTemps||!formTemps.technicien||!formTemps.duree_heures} style={{padding:"11px 22px",background:savingTemps||!formTemps.technicien||!formTemps.duree_heures?"#4b5563":"#3b82f6",color:"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:13}}>
                 {savingTemps?"⏳ Enregistrement…":"💾 Ajouter"}
               </button>
             </div>
-            <div style={{background:"#fff",borderRadius:14,border:"1px solid #e5e7eb",overflow:"hidden"}}>
-              <div style={{padding:"14px 18px",background:"#f9fafb",borderBottom:"1px solid #e5e7eb",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <div style={{fontWeight:700,fontSize:14,color:"#111827"}}>⏱️ Temps enregistrés</div>
-                {!loadingTemps&&tempsPasses.length>0&&<div style={{background:"#111827",color:"#fff",padding:"4px 14px",borderRadius:99,fontSize:13,fontWeight:700}}>Total : {tempsPasses.reduce((s,t)=>s+(parseFloat(t.duree_heures)||0),0).toLocaleString("fr-FR",{minimumFractionDigits:2})} h</div>}
+            <div style={{background:"#fff",borderRadius:14,border:"1px solid #e0e0d8",overflow:"hidden"}}>
+              <div style={{padding:"14px 18px",background:"#f9fafb",borderBottom:"1px solid #e0e0d8",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div style={{fontWeight:700,fontSize:14,color:"#1a1a1a"}}>⏱️ Temps enregistrés</div>
+                {!loadingTemps&&tempsPasses.length>0&&<div style={{background:"#1e2330",color:"#fff",padding:"4px 14px",borderRadius:99,fontSize:13,fontWeight:700}}>Total : {tempsPasses.reduce((s,t)=>s+(parseFloat(t.duree_heures)||0),0).toLocaleString("fr-FR",{minimumFractionDigits:2})} h</div>}
               </div>
               {loadingTemps?(
-                <div style={{padding:40,textAlign:"center",color:"#9ca3af",fontSize:13}}>Chargement…</div>
+                <div style={{padding:40,textAlign:"center",color:"#8a9ab8",fontSize:13}}>Chargement…</div>
               ):tempsPasses.length===0?(
-                <div style={{padding:40,textAlign:"center",color:"#9ca3af"}}>
+                <div style={{padding:40,textAlign:"center",color:"#8a9ab8"}}>
                   <div style={{fontSize:32,marginBottom:10}}>⏱️</div>
-                  <div style={{fontWeight:700,color:"#374151"}}>Aucun temps saisi</div>
+                  <div style={{fontWeight:700,color:"#555"}}>Aucun temps saisi</div>
                   <div style={{fontSize:12,marginTop:4}}>Utilisez le formulaire ci-dessus.</div>
                 </div>
               ):(
                 <>
                   <div style={{overflowX:"auto"}}>
                     <table style={{width:"100%",borderCollapse:"collapse"}}>
-                      <thead><tr style={{background:"#111827"}}>
+                      <thead><tr style={{background:"#1e2330"}}>
                         {["Date","Type","Technicien","Durée","Description",""].map(h=>(
-                          <th key={h} style={{padding:"10px 14px",textAlign:"left",fontSize:10,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:0.5,whiteSpace:"nowrap"}}>{h}</th>
+                          <th key={h} style={{padding:"10px 14px",textAlign:"left",fontSize:10,fontWeight:700,color:"#8a9ab8",textTransform:"uppercase",letterSpacing:0.5,whiteSpace:"nowrap"}}>{h}</th>
                         ))}
                       </tr></thead>
                       <tbody>
@@ -3861,18 +3861,18 @@ function ScannerArticles({ products, stockOverrides, setStockOverrides, mouvemen
                           <tr key={t.id} style={{borderBottom:"1px solid #f3f4f6",background:i%2===0?"#fff":"#fafafa"}}>
                             <td style={{padding:"10px 14px",fontSize:12,color:"#6b7280",whiteSpace:"nowrap"}}>{t.date?new Date(t.date).toLocaleDateString("fr-FR"):"—"}</td>
                             <td style={{padding:"10px 14px"}}><span style={{background:"#dbeafe",color:"#1e40af",padding:"2px 9px",borderRadius:99,fontSize:11,fontWeight:700}}>{t.type}</span></td>
-                            <td style={{padding:"10px 14px",fontSize:13,fontWeight:600,color:"#111827"}}>{t.technicien||"—"}</td>
+                            <td style={{padding:"10px 14px",fontSize:13,fontWeight:600,color:"#1a1a1a"}}>{t.technicien||"—"}</td>
                             <td style={{padding:"10px 14px",textAlign:"right",fontWeight:800,color:"#059669",fontSize:14,whiteSpace:"nowrap"}}>{parseFloat(t.duree_heures).toLocaleString("fr-FR",{minimumFractionDigits:2})} h</td>
-                            <td style={{padding:"10px 14px",fontSize:12,color:"#374151",maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.description||"—"}</td>
+                            <td style={{padding:"10px 14px",fontSize:12,color:"#555",maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.description||"—"}</td>
                             <td style={{padding:"10px 14px"}}><button onClick={()=>handleDelTemps(t.id)} style={{background:"#fee2e2",border:"1px solid #fca5a5",borderRadius:7,padding:"3px 10px",cursor:"pointer",fontSize:12,color:"#dc2626",fontWeight:700}}>🗑</button></td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
-                  <div style={{padding:"12px 18px",background:"#f9fafb",borderTop:"2px solid #e5e7eb",display:"flex",justifyContent:"flex-end",alignItems:"center",gap:16}}>
+                  <div style={{padding:"12px 18px",background:"#f9fafb",borderTop:"2px solid #e0e0d8",display:"flex",justifyContent:"flex-end",alignItems:"center",gap:16}}>
                     <span style={{fontSize:13,color:"#6b7280"}}>{tempsPasses.length} entrée{tempsPasses.length>1?"s":""}</span>
-                    <span style={{fontSize:16,fontWeight:900,color:"#111827"}}>Total : {tempsPasses.reduce((s,t)=>s+(parseFloat(t.duree_heures)||0),0).toLocaleString("fr-FR",{minimumFractionDigits:2})} h</span>
+                    <span style={{fontSize:16,fontWeight:900,color:"#1a1a1a"}}>Total : {tempsPasses.reduce((s,t)=>s+(parseFloat(t.duree_heures)||0),0).toLocaleString("fr-FR",{minimumFractionDigits:2})} h</span>
                   </div>
                 </>
               )}
@@ -4045,7 +4045,7 @@ function LocationMateriel({ locations, setLocations, siteId, products, parc=[] }
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
         <div>
-          <h1 style={{fontSize:22,fontWeight:900,color:"#111827",margin:0}}>🔑 Location de matériel</h1>
+          <h1 style={{fontSize:22,fontWeight:900,color:"#1a1a1a",margin:0}}>🔑 Location de matériel</h1>
           <p style={{color:"#6b7280",fontSize:13,margin:"4px 0 0"}}>{locations.length} location{locations.length!==1?"s":""} · CA total : <strong style={{color:"#059669"}}>{totalCA.toLocaleString("fr-FR",{minimumFractionDigits:2})} €</strong></p>
         </div>
         <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
@@ -4053,7 +4053,7 @@ function LocationMateriel({ locations, setLocations, siteId, products, parc=[] }
             {importing?"⏳ Import…":"📊 Importer Excel"}
             <input type="file" accept=".xlsx,.xls" onChange={handleImportExcelLoc} style={{display:"none"}} disabled={importing}/>
           </label>
-          <button onClick={openAdd} style={{background:"#111827",color:"#fff",border:"none",borderRadius:10,padding:"10px 20px",fontWeight:700,cursor:"pointer",fontSize:13}}>+ Nouvelle location</button>
+          <button onClick={openAdd} style={{background:"#1e2330",color:"#fff",border:"none",borderRadius:10,padding:"10px 20px",fontWeight:700,cursor:"pointer",fontSize:13}}>+ Nouvelle location</button>
         </div>
       </div>
 
@@ -4067,7 +4067,7 @@ function LocationMateriel({ locations, setLocations, siteId, products, parc=[] }
       {/* KPIs */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))",gap:12}}>
         {Object.entries(STATUTS_LOC).map(([s,c])=>(
-          <div key={s} onClick={()=>setFilterStatut(s===filterStatut?"tous":s)} style={{background:filterStatut===s?c.bg:"#fff",borderRadius:14,padding:"14px 16px",border:`2px solid ${filterStatut===s?c.color:"#e5e7eb"}`,cursor:"pointer",transition:"all 0.15s"}}>
+          <div key={s} onClick={()=>setFilterStatut(s===filterStatut?"tous":s)} style={{background:filterStatut===s?c.bg:"#fff",borderRadius:14,padding:"14px 16px",border:`2px solid ${filterStatut===s?c.color:"#e0e0d8"}`,cursor:"pointer",transition:"all 0.15s"}}>
             <div style={{fontSize:20,marginBottom:4}}>{c.icon}</div>
             <div style={{fontSize:24,fontWeight:900,color:c.color}}>{counts[s]||0}</div>
             <div style={{fontSize:11,color:"#6b7280",marginTop:2}}>{c.label}</div>
@@ -4078,25 +4078,25 @@ function LocationMateriel({ locations, setLocations, siteId, products, parc=[] }
       {/* Liste */}
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
         {filtered.length===0 ? (
-          <div style={{background:"#fff",borderRadius:14,border:"1px solid #e5e7eb",padding:50,textAlign:"center"}}>
+          <div style={{background:"#fff",borderRadius:14,border:"1px solid #e0e0d8",padding:50,textAlign:"center"}}>
             <div style={{fontSize:44,marginBottom:12}}>🔑</div>
-            <div style={{fontWeight:700,color:"#374151",fontSize:16}}>Aucune location</div>
-            <div style={{color:"#9ca3af",fontSize:13,marginTop:6}}>Cliquez sur "+ Nouvelle location" pour commencer</div>
+            <div style={{fontWeight:700,color:"#555",fontSize:16}}>Aucune location</div>
+            <div style={{color:"#8a9ab8",fontSize:13,marginTop:6}}>Cliquez sur "+ Nouvelle location" pour commencer</div>
           </div>
         ) : filtered.map(loc => {
           const st = getStatutEffectif(loc);
           const conf = STATUTS_LOC[st]||STATUTS_LOC.en_cours;
           const nbJours = jours(loc);
           return (
-            <div key={loc.id} style={{background:"#fff",borderRadius:14,border:`2px solid ${st==="en_retard"?"#fca5a5":st==="en_cours"?"#93c5fd":"#e5e7eb"}`,padding:18,display:"flex",gap:16,flexWrap:"wrap",alignItems:"flex-start"}}>
+            <div key={loc.id} style={{background:"#fff",borderRadius:14,border:`2px solid ${st==="en_retard"?"#fca5a5":st==="en_cours"?"#93c5fd":"#e0e0d8"}`,padding:18,display:"flex",gap:16,flexWrap:"wrap",alignItems:"flex-start"}}>
               <div style={{flex:1,minWidth:240}}>
                 <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
                   <span style={{background:conf.bg,color:conf.color,padding:"3px 10px",borderRadius:99,fontSize:11,fontWeight:700}}>{conf.icon} {conf.label}</span>
                   <span style={{background:loc.type==="vehicule"?"#f3e8ff":"#dbeafe",color:loc.type==="vehicule"?"#7c3aed":"#1e40af",padding:"3px 10px",borderRadius:99,fontSize:11,fontWeight:700}}>{loc.type==="vehicule"?"🚗 Véhicule":"📦 Article"}</span>
                 </div>
-                <div style={{fontWeight:800,fontSize:16,color:"#111827",marginBottom:4}}>{loc.materiel_nom}</div>
-                {loc.materiel_id&&<div style={{fontSize:11,color:"#9ca3af",fontFamily:"monospace",marginBottom:8}}>ID: {loc.materiel_id}</div>}
-                <div style={{fontSize:13,color:"#374151"}}><strong>👤 {loc.locataire_nom}</strong>{loc.locataire_entreprise?` — ${loc.locataire_entreprise}`:""}</div>
+                <div style={{fontWeight:800,fontSize:16,color:"#1a1a1a",marginBottom:4}}>{loc.materiel_nom}</div>
+                {loc.materiel_id&&<div style={{fontSize:11,color:"#8a9ab8",fontFamily:"monospace",marginBottom:8}}>ID: {loc.materiel_id}</div>}
+                <div style={{fontSize:13,color:"#555"}}><strong>👤 {loc.locataire_nom}</strong>{loc.locataire_entreprise?` — ${loc.locataire_entreprise}`:""}</div>
                 {loc.locataire_tel&&<div style={{fontSize:12,color:"#6b7280",marginTop:2}}>📞 {loc.locataire_tel}</div>}
               </div>
               <div style={{display:"flex",flexDirection:"column",gap:6,minWidth:160}}>
@@ -4121,54 +4121,54 @@ function LocationMateriel({ locations, setLocations, siteId, products, parc=[] }
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:16}}>
           <div style={{background:"#fff",borderRadius:20,padding:28,width:"min(96vw,560px)",maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-              <h2 style={{fontSize:17,fontWeight:800,color:"#111827",margin:0}}>{editLoc?"✏️ Modifier":"🔑 Nouvelle location"}</h2>
+              <h2 style={{fontSize:17,fontWeight:800,color:"#1a1a1a",margin:0}}>{editLoc?"✏️ Modifier":"🔑 Nouvelle location"}</h2>
               <button onClick={()=>setShowForm(false)} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:15}}>✕</button>
             </div>
 
             {/* Type matériel */}
             <div style={{marginBottom:14}}>
-              <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:6}}>Type de matériel</label>
+              <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:6}}>Type de matériel</label>
               <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                 {[{v:"vehicule",l:"🚗 Véhicule/Engin"},{v:"article",l:"📦 Article stock"},{v:"equipement",l:"🔧 Équipement ONE-KEY"}].map(t=>(
-                  <button key={t.v} onClick={()=>{setForm(f=>({...f,type:t.v,materiel_id:"",materiel_nom:""}));setParcSearch("");setArticleSearch("");setEquipSearch("");setEquipSugg([]);}} style={{flex:1,minWidth:120,padding:"10px",borderRadius:10,border:`2px solid ${form.type===t.v?"#111827":"#e5e7eb"}`,background:form.type===t.v?"#111827":"#fff",color:form.type===t.v?"#fff":"#374151",fontWeight:600,cursor:"pointer",fontSize:12}}>{t.l}</button>
+                  <button key={t.v} onClick={()=>{setForm(f=>({...f,type:t.v,materiel_id:"",materiel_nom:""}));setParcSearch("");setArticleSearch("");setEquipSearch("");setEquipSugg([]);}} style={{flex:1,minWidth:120,padding:"10px",borderRadius:10,border:`2px solid ${form.type===t.v?"#1e2330":"#e0e0d8"}`,background:form.type===t.v?"#1e2330":"#fff",color:form.type===t.v?"#fff":"#555",fontWeight:600,cursor:"pointer",fontSize:12}}>{t.l}</button>
                 ))}
               </div>
             </div>
 
             {/* Recherche matériel */}
             <div style={{marginBottom:14}}>
-              <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:6}}>
+              <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:6}}>
                 {form.type==="vehicule"?"Véhicule / Engin":form.type==="equipement"?"Équipement ONE-KEY (Disponible)":"Article du stock"} *
               </label>
               {form.type==="vehicule" ? (
                 <>
-                  <input value={parcSearch||form.materiel_nom} onChange={e=>{setParcSearch(e.target.value);setParcSugg(parc.filter(v=>(v.immat||v.name||v.designation||"").toLowerCase().includes(e.target.value.toLowerCase())&&e.target.value).slice(0,6));}} placeholder="Rechercher immatriculation, désignation…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
-                  {parcSugg.length>0&&<div style={{border:"1px solid #e5e7eb",borderRadius:10,overflow:"hidden",marginTop:4}}>
+                  <input value={parcSearch||form.materiel_nom} onChange={e=>{setParcSearch(e.target.value);setParcSugg(parc.filter(v=>(v.immat||v.name||v.designation||"").toLowerCase().includes(e.target.value.toLowerCase())&&e.target.value).slice(0,6));}} placeholder="Rechercher immatriculation, désignation…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  {parcSugg.length>0&&<div style={{border:"1px solid #e0e0d8",borderRadius:10,overflow:"hidden",marginTop:4}}>
                     {parcSugg.map((v,i)=><div key={i} onClick={()=>{setForm(f=>({...f,materiel_id:v.immat||v.id||"",materiel_nom:(v.designation||v.immat||"")}));setParcSearch("");setParcSugg([]);}} style={{padding:"10px 14px",cursor:"pointer",fontSize:13,borderBottom:"1px solid #f3f4f6",background:"#fff"}} onMouseEnter={e=>e.target.style.background="#f9fafb"} onMouseLeave={e=>e.target.style.background="#fff"}>
                       <div style={{fontWeight:600}}>{v.designation||v.immat}</div>
-                      <div style={{fontSize:11,color:"#9ca3af"}}>{v.immat} {v.type?" · "+v.type:""}</div>
+                      <div style={{fontSize:11,color:"#8a9ab8"}}>{v.immat} {v.type?" · "+v.type:""}</div>
                     </div>)}
                   </div>}
                 </>
               ) : form.type==="equipement" ? (
                 <>
-                  <input value={equipSearch||form.materiel_nom} onChange={e=>{const q=e.target.value;setEquipSearch(q);setEquipSugg(equipements.filter(eq=>(`${eq.code||""} ${eq.fabricant||""} ${eq.nom||""}`).toLowerCase().includes(q.toLowerCase())&&q).slice(0,8));}} placeholder="Rechercher code, fabricant, désignation…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
-                  {equipSugg.length>0&&<div style={{border:"1px solid #e5e7eb",borderRadius:10,overflow:"hidden",marginTop:4,maxHeight:240,overflowY:"auto"}}>
+                  <input value={equipSearch||form.materiel_nom} onChange={e=>{const q=e.target.value;setEquipSearch(q);setEquipSugg(equipements.filter(eq=>(`${eq.code||""} ${eq.fabricant||""} ${eq.nom||""}`).toLowerCase().includes(q.toLowerCase())&&q).slice(0,8));}} placeholder="Rechercher code, fabricant, désignation…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  {equipSugg.length>0&&<div style={{border:"1px solid #e0e0d8",borderRadius:10,overflow:"hidden",marginTop:4,maxHeight:240,overflowY:"auto"}}>
                     {equipSugg.map(eq=><div key={eq.id} onClick={()=>{setForm(f=>({...f,materiel_id:eq.id,materiel_nom:`${eq.code||""} — ${eq.fabricant||""} — ${eq.nom}`}));setEquipSearch("");setEquipSugg([]);}} style={{padding:"10px 14px",cursor:"pointer",fontSize:13,borderBottom:"1px solid #f3f4f6",background:"#fff"}} onMouseEnter={e=>e.currentTarget.style.background="#f9fafb"} onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
                       <div style={{fontWeight:700,color:"#7c3aed",fontFamily:"monospace"}}>{eq.code||"—"}</div>
                       <div style={{fontWeight:600,fontSize:13}}>{eq.nom}</div>
-                      <div style={{fontSize:11,color:"#9ca3af"}}>{eq.fabricant}</div>
+                      <div style={{fontSize:11,color:"#8a9ab8"}}>{eq.fabricant}</div>
                     </div>)}
                   </div>}
                   {equipements.length===0&&<div style={{marginTop:6,padding:"8px 12px",background:"#fef3c7",borderRadius:8,fontSize:12,color:"#92400e"}}>⚠️ Aucun équipement disponible</div>}
                 </>
               ) : (
                 <>
-                  <input value={articleSearch||form.materiel_nom} onChange={e=>{setArticleSearch(e.target.value);setArticleSugg((products||ALL_PRODUCTS).filter(p=>(p.name||"").toLowerCase().includes(e.target.value.toLowerCase())&&e.target.value).slice(0,6));}} placeholder="Rechercher article…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
-                  {articleSugg.length>0&&<div style={{border:"1px solid #e5e7eb",borderRadius:10,overflow:"hidden",marginTop:4}}>
+                  <input value={articleSearch||form.materiel_nom} onChange={e=>{setArticleSearch(e.target.value);setArticleSugg((products||ALL_PRODUCTS).filter(p=>(p.name||"").toLowerCase().includes(e.target.value.toLowerCase())&&e.target.value).slice(0,6));}} placeholder="Rechercher article…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  {articleSugg.length>0&&<div style={{border:"1px solid #e0e0d8",borderRadius:10,overflow:"hidden",marginTop:4}}>
                     {articleSugg.map((p,i)=><div key={i} onClick={()=>{setForm(f=>({...f,materiel_id:p.id,materiel_nom:p.name}));setArticleSearch("");setArticleSugg([]);}} style={{padding:"10px 14px",cursor:"pointer",fontSize:13,borderBottom:"1px solid #f3f4f6",background:"#fff"}} onMouseEnter={e=>e.target.style.background="#f9fafb"} onMouseLeave={e=>e.target.style.background="#fff"}>
                       <div style={{fontWeight:600}}>{p.name}</div>
-                      <div style={{fontSize:11,color:"#9ca3af"}}>{p.id}</div>
+                      <div style={{fontSize:11,color:"#8a9ab8"}}>{p.id}</div>
                     </div>)}
                   </div>}
                 </>
@@ -4178,12 +4178,12 @@ function LocationMateriel({ locations, setLocations, siteId, products, parc=[] }
 
             {/* Locataire */}
             <div style={{background:"#f9fafb",borderRadius:12,padding:14,marginBottom:14}}>
-              <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:10}}>👤 Informations locataire</div>
+              <div style={{fontSize:12,fontWeight:700,color:"#555",marginBottom:10}}>👤 Informations locataire</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                 {[{l:"Nom *",k:"locataire_nom",ph:"Dupont Jean"},{l:"Entreprise",k:"locataire_entreprise",ph:"SARL..."},{l:"Téléphone",k:"locataire_tel",ph:"06 00 00 00 00"},{l:"Email",k:"locataire_email",ph:"contact@..."}].map(f=>(
                   <div key={f.k}>
                     <label style={{fontSize:11,fontWeight:600,color:"#6b7280",display:"block",marginBottom:4}}>{f.l}</label>
-                    <input value={form[f.k]} onChange={e=>setForm(p=>({...p,[f.k]:e.target.value}))} placeholder={f.ph} style={{width:"100%",padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                    <input value={form[f.k]} onChange={e=>setForm(p=>({...p,[f.k]:e.target.value}))} placeholder={f.ph} style={{width:"100%",padding:"9px 12px",border:"1px solid #e0e0d8",borderRadius:9,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                   </div>
                 ))}
               </div>
@@ -4193,29 +4193,29 @@ function LocationMateriel({ locations, setLocations, siteId, products, parc=[] }
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
               {[{l:"Date début *",k:"date_debut",t:"date"},{l:"Date fin prévue *",k:"date_fin_prevue",t:"date"},{l:"Prix/jour (€)",k:"prix_jour",t:"number"},{l:"Caution (€)",k:"caution",t:"number"}].map(f=>(
                 <div key={f.k}>
-                  <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>{f.l}</label>
-                  <input type={f.t} value={form[f.k]} onChange={e=>setForm(p=>({...p,[f.k]:e.target.value}))} step={f.t==="number"?"0.01":undefined} style={{width:"100%",padding:"10px 12px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>{f.l}</label>
+                  <input type={f.t} value={form[f.k]} onChange={e=>setForm(p=>({...p,[f.k]:e.target.value}))} step={f.t==="number"?"0.01":undefined} style={{width:"100%",padding:"10px 12px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                 </div>
               ))}
             </div>
 
             {editLoc&&<div style={{marginBottom:14}}>
-              <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:6}}>Statut</label>
+              <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:6}}>Statut</label>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                 {Object.entries(STATUTS_LOC).map(([s,c])=>(
-                  <button key={s} onClick={()=>setForm(f=>({...f,statut:s}))} style={{padding:"7px 14px",borderRadius:9,border:`2px solid ${form.statut===s?c.color:"#e5e7eb"}`,background:form.statut===s?c.bg:"#fff",color:form.statut===s?c.color:"#374151",fontWeight:600,cursor:"pointer",fontSize:12}}>{c.icon} {c.label}</button>
+                  <button key={s} onClick={()=>setForm(f=>({...f,statut:s}))} style={{padding:"7px 14px",borderRadius:9,border:`2px solid ${form.statut===s?c.color:"#e0e0d8"}`,background:form.statut===s?c.bg:"#fff",color:form.statut===s?c.color:"#555",fontWeight:600,cursor:"pointer",fontSize:12}}>{c.icon} {c.label}</button>
                 ))}
               </div>
             </div>}
 
             <div style={{marginBottom:18}}>
-              <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Notes</label>
-              <textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} placeholder="Observations, conditions particulières…" rows={2} style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box"}}/>
+              <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Notes</label>
+              <textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} placeholder="Observations, conditions particulières…" rows={2} style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box"}}/>
             </div>
 
             <div style={{display:"flex",gap:10}}>
               <button onClick={()=>setShowForm(false)} style={{flex:1,padding:"12px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer"}}>Annuler</button>
-              <button onClick={handleSave} disabled={saving||!form.materiel_nom||!form.locataire_nom} style={{flex:2,padding:"12px",background:saving||!form.materiel_nom||!form.locataire_nom?"#e5e7eb":"#111827",color:saving||!form.materiel_nom||!form.locataire_nom?"#9ca3af":"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>
+              <button onClick={handleSave} disabled={saving||!form.materiel_nom||!form.locataire_nom} style={{flex:2,padding:"12px",background:saving||!form.materiel_nom||!form.locataire_nom?"#e0e0d8":"#1e2330",color:saving||!form.materiel_nom||!form.locataire_nom?"#8a9ab8":"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>
                 {saving?"⏳ Enregistrement…":"💾 Enregistrer"}
               </button>
             </div>
@@ -4378,7 +4378,7 @@ function PretMateriel({ prets, setPrets, siteId, products, parc=[] }) {
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
         <div>
-          <h1 style={{fontSize:22,fontWeight:900,color:"#111827",margin:0}}>🤝 Prêt de matériels</h1>
+          <h1 style={{fontSize:22,fontWeight:900,color:"#1a1a1a",margin:0}}>🤝 Prêt de matériels</h1>
           <p style={{color:"#6b7280",fontSize:13,margin:"4px 0 0"}}>{prets.length} prêt{prets.length!==1?"s":""} enregistré{prets.length!==1?"s":""}</p>
         </div>
         <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
@@ -4386,14 +4386,14 @@ function PretMateriel({ prets, setPrets, siteId, products, parc=[] }) {
             {importing?"⏳ Import…":"📊 Importer Excel"}
             <input type="file" accept=".xlsx,.xls" onChange={handleImportExcelPret} style={{display:"none"}} disabled={importing}/>
           </label>
-          <button onClick={openAdd} style={{background:"#111827",color:"#fff",border:"none",borderRadius:10,padding:"10px 20px",fontWeight:700,cursor:"pointer",fontSize:13}}>+ Nouveau prêt</button>
+          <button onClick={openAdd} style={{background:"#1e2330",color:"#fff",border:"none",borderRadius:10,padding:"10px 20px",fontWeight:700,cursor:"pointer",fontSize:13}}>+ Nouveau prêt</button>
         </div>
       </div>
 
       {/* KPIs */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))",gap:12}}>
         {Object.entries(STATUTS_PRET).map(([s,c])=>(
-          <div key={s} onClick={()=>setFilterStatut(s===filterStatut?"tous":s)} style={{background:filterStatut===s?c.bg:"#fff",borderRadius:14,padding:"14px 16px",border:`2px solid ${filterStatut===s?c.color:"#e5e7eb"}`,cursor:"pointer"}}>
+          <div key={s} onClick={()=>setFilterStatut(s===filterStatut?"tous":s)} style={{background:filterStatut===s?c.bg:"#fff",borderRadius:14,padding:"14px 16px",border:`2px solid ${filterStatut===s?c.color:"#e0e0d8"}`,cursor:"pointer"}}>
             <div style={{fontSize:20,marginBottom:4}}>{c.icon}</div>
             <div style={{fontSize:24,fontWeight:900,color:c.color}}>{counts[s]||0}</div>
             <div style={{fontSize:11,color:"#6b7280",marginTop:2}}>{c.label}</div>
@@ -4404,25 +4404,25 @@ function PretMateriel({ prets, setPrets, siteId, products, parc=[] }) {
       {/* Liste */}
       <div style={{display:"flex",flexDirection:"column",gap:10}}>
         {filtered.length===0 ? (
-          <div style={{background:"#fff",borderRadius:14,border:"1px solid #e5e7eb",padding:50,textAlign:"center"}}>
+          <div style={{background:"#fff",borderRadius:14,border:"1px solid #e0e0d8",padding:50,textAlign:"center"}}>
             <div style={{fontSize:44,marginBottom:12}}>🤝</div>
-            <div style={{fontWeight:700,color:"#374151",fontSize:16}}>Aucun prêt enregistré</div>
-            <div style={{color:"#9ca3af",fontSize:13,marginTop:6}}>Cliquez sur "+ Nouveau prêt" pour commencer</div>
+            <div style={{fontWeight:700,color:"#555",fontSize:16}}>Aucun prêt enregistré</div>
+            <div style={{color:"#8a9ab8",fontSize:13,marginTop:6}}>Cliquez sur "+ Nouveau prêt" pour commencer</div>
           </div>
         ) : filtered.map(p => {
           const st = getStatutEffectif(p);
           const conf = STATUTS_PRET[st]||STATUTS_PRET.en_cours;
           const nbJours = jours(p);
           return (
-            <div key={p.id} style={{background:"#fff",borderRadius:14,border:`2px solid ${st==="en_retard"?"#fca5a5":st==="en_cours"?"#93c5fd":"#e5e7eb"}`,padding:18,display:"flex",gap:16,flexWrap:"wrap",alignItems:"flex-start"}}>
+            <div key={p.id} style={{background:"#fff",borderRadius:14,border:`2px solid ${st==="en_retard"?"#fca5a5":st==="en_cours"?"#93c5fd":"#e0e0d8"}`,padding:18,display:"flex",gap:16,flexWrap:"wrap",alignItems:"flex-start"}}>
               <div style={{flex:1,minWidth:240}}>
                 <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
                   <span style={{background:conf.bg,color:conf.color,padding:"3px 10px",borderRadius:99,fontSize:11,fontWeight:700}}>{conf.icon} {conf.label}</span>
                   <span style={{background:p.type==="vehicule"?"#f3e8ff":"#dbeafe",color:p.type==="vehicule"?"#7c3aed":"#1e40af",padding:"3px 10px",borderRadius:99,fontSize:11,fontWeight:700}}>{p.type==="vehicule"?"🚗 Véhicule":"📦 Article"}</span>
                 </div>
-                <div style={{fontWeight:800,fontSize:16,color:"#111827",marginBottom:4}}>{p.materiel_nom}</div>
-                {p.materiel_id&&<div style={{fontSize:11,color:"#9ca3af",fontFamily:"monospace",marginBottom:8}}>{p.materiel_id}</div>}
-                <div style={{fontSize:13,color:"#374151"}}><strong>👤 {p.emprunteur_nom}</strong>{p.emprunteur_service?` — ${p.emprunteur_service}`:""}</div>
+                <div style={{fontWeight:800,fontSize:16,color:"#1a1a1a",marginBottom:4}}>{p.materiel_nom}</div>
+                {p.materiel_id&&<div style={{fontSize:11,color:"#8a9ab8",fontFamily:"monospace",marginBottom:8}}>{p.materiel_id}</div>}
+                <div style={{fontSize:13,color:"#555"}}><strong>👤 {p.emprunteur_nom}</strong>{p.emprunteur_service?` — ${p.emprunteur_service}`:""}</div>
                 {p.emprunteur_tel&&<div style={{fontSize:12,color:"#6b7280",marginTop:2}}>📞 {p.emprunteur_tel}</div>}
               </div>
               <div style={{display:"flex",flexDirection:"column",gap:6,minWidth:160}}>
@@ -4447,34 +4447,34 @@ function PretMateriel({ prets, setPrets, siteId, products, parc=[] }) {
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,padding:16}}>
           <div style={{background:"#fff",borderRadius:20,padding:28,width:"min(96vw,520px)",maxHeight:"90vh",overflowY:"auto",boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-              <h2 style={{fontSize:17,fontWeight:800,color:"#111827",margin:0}}>{editPret?"✏️ Modifier":"🤝 Nouveau prêt"}</h2>
+              <h2 style={{fontSize:17,fontWeight:800,color:"#1a1a1a",margin:0}}>{editPret?"✏️ Modifier":"🤝 Nouveau prêt"}</h2>
               <button onClick={()=>setShowForm(false)} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:15}}>✕</button>
             </div>
 
             <div style={{marginBottom:14}}>
-              <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:6}}>Type de matériel</label>
+              <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:6}}>Type de matériel</label>
               <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                 {[{v:"vehicule",l:"🚗 Véhicule/Engin"},{v:"article",l:"📦 Article stock"},{v:"equipement",l:"🔧 Équipement ONE-KEY"}].map(t=>(
-                  <button key={t.v} onClick={()=>{setForm(f=>({...f,type:t.v,materiel_id:"",materiel_nom:""}));setParcSearch("");setArticleSearch("");setEquipSearch("");setEquipSugg([]);}} style={{flex:1,minWidth:120,padding:"10px",borderRadius:10,border:`2px solid ${form.type===t.v?"#111827":"#e5e7eb"}`,background:form.type===t.v?"#111827":"#fff",color:form.type===t.v?"#fff":"#374151",fontWeight:600,cursor:"pointer",fontSize:12}}>{t.l}</button>
+                  <button key={t.v} onClick={()=>{setForm(f=>({...f,type:t.v,materiel_id:"",materiel_nom:""}));setParcSearch("");setArticleSearch("");setEquipSearch("");setEquipSugg([]);}} style={{flex:1,minWidth:120,padding:"10px",borderRadius:10,border:`2px solid ${form.type===t.v?"#1e2330":"#e0e0d8"}`,background:form.type===t.v?"#1e2330":"#fff",color:form.type===t.v?"#fff":"#555",fontWeight:600,cursor:"pointer",fontSize:12}}>{t.l}</button>
                 ))}
               </div>
             </div>
 
             <div style={{marginBottom:14}}>
-              <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:6}}>
+              <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:6}}>
                 {form.type==="vehicule"?"Véhicule / Engin":form.type==="equipement"?"Équipement ONE-KEY (Disponible)":"Article du stock"} *
               </label>
               {form.type==="vehicule" ? (
                 <>
-                  <input value={parcSearch||form.materiel_nom} onChange={e=>{setParcSearch(e.target.value);setParcSugg(parc.filter(v=>(v.immat||v.name||v.designation||"").toLowerCase().includes(e.target.value.toLowerCase())&&e.target.value).slice(0,6));}} placeholder="Rechercher…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
-                  {parcSugg.length>0&&<div style={{border:"1px solid #e5e7eb",borderRadius:10,overflow:"hidden",marginTop:4}}>
-                    {parcSugg.map((v,i)=><div key={i} onClick={()=>{setForm(f=>({...f,materiel_id:v.immat||v.id||"",materiel_nom:(v.designation||v.immat||"")}));setParcSearch("");setParcSugg([]);}} style={{padding:"10px 14px",cursor:"pointer",fontSize:13,borderBottom:"1px solid #f3f4f6",background:"#fff"}}><div style={{fontWeight:600}}>{v.designation||v.immat}</div><div style={{fontSize:11,color:"#9ca3af"}}>{v.immat}</div></div>)}
+                  <input value={parcSearch||form.materiel_nom} onChange={e=>{setParcSearch(e.target.value);setParcSugg(parc.filter(v=>(v.immat||v.name||v.designation||"").toLowerCase().includes(e.target.value.toLowerCase())&&e.target.value).slice(0,6));}} placeholder="Rechercher…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  {parcSugg.length>0&&<div style={{border:"1px solid #e0e0d8",borderRadius:10,overflow:"hidden",marginTop:4}}>
+                    {parcSugg.map((v,i)=><div key={i} onClick={()=>{setForm(f=>({...f,materiel_id:v.immat||v.id||"",materiel_nom:(v.designation||v.immat||"")}));setParcSearch("");setParcSugg([]);}} style={{padding:"10px 14px",cursor:"pointer",fontSize:13,borderBottom:"1px solid #f3f4f6",background:"#fff"}}><div style={{fontWeight:600}}>{v.designation||v.immat}</div><div style={{fontSize:11,color:"#8a9ab8"}}>{v.immat}</div></div>)}
                   </div>}
                 </>
               ) : form.type==="equipement" ? (
                 <>
-                  <input value={equipSearch||form.materiel_nom} onChange={e=>{const q=e.target.value;setEquipSearch(q);setEquipSugg(equipements.filter(eq=>(`${eq.code||""} ${eq.fabricant||""} ${eq.nom||""}`).toLowerCase().includes(q.toLowerCase())&&q).slice(0,8));}} placeholder="Rechercher code, fabricant, désignation…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
-                  {equipSugg.length>0&&<div style={{border:"1px solid #e5e7eb",borderRadius:10,overflow:"hidden",marginTop:4,maxHeight:240,overflowY:"auto"}}>
+                  <input value={equipSearch||form.materiel_nom} onChange={e=>{const q=e.target.value;setEquipSearch(q);setEquipSugg(equipements.filter(eq=>(`${eq.code||""} ${eq.fabricant||""} ${eq.nom||""}`).toLowerCase().includes(q.toLowerCase())&&q).slice(0,8));}} placeholder="Rechercher code, fabricant, désignation…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  {equipSugg.length>0&&<div style={{border:"1px solid #e0e0d8",borderRadius:10,overflow:"hidden",marginTop:4,maxHeight:240,overflowY:"auto"}}>
                     {equipSugg.map(eq=>{const nonDispo=eq.statut!=="Disponible";return(<div key={eq.id} onClick={()=>{setForm(f=>({...f,materiel_id:eq.id,materiel_nom:`${eq.code||""} — ${eq.fabricant||""} — ${eq.nom}`}));setEquipSearch("");setEquipSugg([]);}} style={{padding:"10px 14px",cursor:"pointer",fontSize:13,borderBottom:"1px solid #f3f4f6",background:nonDispo?"#fffbeb":"#fff"}} onMouseEnter={e=>e.currentTarget.style.background=nonDispo?"#fef3c7":"#f9fafb"} onMouseLeave={e=>e.currentTarget.style.background=nonDispo?"#fffbeb":"#fff"}>
                       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
                         <span style={{fontWeight:700,color:"#7c3aed",fontFamily:"monospace"}}>{eq.code||"—"}</span>
@@ -4488,9 +4488,9 @@ function PretMateriel({ prets, setPrets, siteId, products, parc=[] }) {
                 </>
               ) : (
                 <>
-                  <input value={articleSearch||form.materiel_nom} onChange={e=>{setArticleSearch(e.target.value);setArticleSugg((products||ALL_PRODUCTS).filter(p=>(p.name||"").toLowerCase().includes(e.target.value.toLowerCase())&&e.target.value).slice(0,6));}} placeholder="Rechercher article…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
-                  {articleSugg.length>0&&<div style={{border:"1px solid #e5e7eb",borderRadius:10,overflow:"hidden",marginTop:4}}>
-                    {articleSugg.map((p,i)=><div key={i} onClick={()=>{setForm(f=>({...f,materiel_id:p.id,materiel_nom:p.name}));setArticleSearch("");setArticleSugg([]);}} style={{padding:"10px 14px",cursor:"pointer",fontSize:13,borderBottom:"1px solid #f3f4f6",background:"#fff"}}><div style={{fontWeight:600}}>{p.name}</div><div style={{fontSize:11,color:"#9ca3af"}}>{p.id}</div></div>)}
+                  <input value={articleSearch||form.materiel_nom} onChange={e=>{setArticleSearch(e.target.value);setArticleSugg((products||ALL_PRODUCTS).filter(p=>(p.name||"").toLowerCase().includes(e.target.value.toLowerCase())&&e.target.value).slice(0,6));}} placeholder="Rechercher article…" style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  {articleSugg.length>0&&<div style={{border:"1px solid #e0e0d8",borderRadius:10,overflow:"hidden",marginTop:4}}>
+                    {articleSugg.map((p,i)=><div key={i} onClick={()=>{setForm(f=>({...f,materiel_id:p.id,materiel_nom:p.name}));setArticleSearch("");setArticleSugg([]);}} style={{padding:"10px 14px",cursor:"pointer",fontSize:13,borderBottom:"1px solid #f3f4f6",background:"#fff"}}><div style={{fontWeight:600}}>{p.name}</div><div style={{fontSize:11,color:"#8a9ab8"}}>{p.id}</div></div>)}
                   </div>}
                 </>
               )}
@@ -4498,12 +4498,12 @@ function PretMateriel({ prets, setPrets, siteId, products, parc=[] }) {
             </div>
 
             <div style={{background:"#f9fafb",borderRadius:12,padding:14,marginBottom:14}}>
-              <div style={{fontSize:12,fontWeight:700,color:"#374151",marginBottom:10}}>👤 Emprunteur</div>
+              <div style={{fontSize:12,fontWeight:700,color:"#555",marginBottom:10}}>👤 Emprunteur</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                 {[{l:"Nom *",k:"emprunteur_nom",ph:"Dupont Jean"},{l:"Service / Entreprise",k:"emprunteur_service",ph:"Atelier..."},{l:"Téléphone",k:"emprunteur_tel",ph:"06 00 00 00 00"}].map(f=>(
                   <div key={f.k}>
                     <label style={{fontSize:11,fontWeight:600,color:"#6b7280",display:"block",marginBottom:4}}>{f.l}</label>
-                    <input value={form[f.k]} onChange={e=>setForm(p=>({...p,[f.k]:e.target.value}))} placeholder={f.ph} style={{width:"100%",padding:"9px 12px",border:"1px solid #e5e7eb",borderRadius:9,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                    <input value={form[f.k]} onChange={e=>setForm(p=>({...p,[f.k]:e.target.value}))} placeholder={f.ph} style={{width:"100%",padding:"9px 12px",border:"1px solid #e0e0d8",borderRadius:9,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                   </div>
                 ))}
               </div>
@@ -4512,29 +4512,29 @@ function PretMateriel({ prets, setPrets, siteId, products, parc=[] }) {
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
               {[{l:"Date de prêt *",k:"date_pret",t:"date"},{l:"Date retour prévue *",k:"date_retour_prevue",t:"date"}].map(f=>(
                 <div key={f.k}>
-                  <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>{f.l}</label>
-                  <input type={f.t} value={form[f.k]} onChange={e=>setForm(p=>({...p,[f.k]:e.target.value}))} style={{width:"100%",padding:"10px 12px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>{f.l}</label>
+                  <input type={f.t} value={form[f.k]} onChange={e=>setForm(p=>({...p,[f.k]:e.target.value}))} style={{width:"100%",padding:"10px 12px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                 </div>
               ))}
             </div>
 
             {editPret&&<div style={{marginBottom:14}}>
-              <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:6}}>Statut</label>
+              <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:6}}>Statut</label>
               <div style={{display:"flex",gap:6}}>
                 {Object.entries(STATUTS_PRET).map(([s,c])=>(
-                  <button key={s} onClick={()=>setForm(f=>({...f,statut:s}))} style={{flex:1,padding:"8px",borderRadius:9,border:`2px solid ${form.statut===s?c.color:"#e5e7eb"}`,background:form.statut===s?c.bg:"#fff",color:form.statut===s?c.color:"#374151",fontWeight:600,cursor:"pointer",fontSize:12}}>{c.icon} {c.label}</button>
+                  <button key={s} onClick={()=>setForm(f=>({...f,statut:s}))} style={{flex:1,padding:"8px",borderRadius:9,border:`2px solid ${form.statut===s?c.color:"#e0e0d8"}`,background:form.statut===s?c.bg:"#fff",color:form.statut===s?c.color:"#555",fontWeight:600,cursor:"pointer",fontSize:12}}>{c.icon} {c.label}</button>
                 ))}
               </div>
             </div>}
 
             <div style={{marginBottom:18}}>
-              <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Notes</label>
-              <textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} placeholder="État du matériel, conditions…" rows={2} style={{width:"100%",padding:"10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box"}}/>
+              <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Notes</label>
+              <textarea value={form.notes} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} placeholder="État du matériel, conditions…" rows={2} style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box"}}/>
             </div>
 
             <div style={{display:"flex",gap:10}}>
               <button onClick={()=>setShowForm(false)} style={{flex:1,padding:"12px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer"}}>Annuler</button>
-              <button onClick={handleSave} disabled={saving||!form.materiel_nom||!form.emprunteur_nom} style={{flex:2,padding:"12px",background:saving||!form.materiel_nom||!form.emprunteur_nom?"#e5e7eb":"#111827",color:saving||!form.materiel_nom||!form.emprunteur_nom?"#9ca3af":"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>
+              <button onClick={handleSave} disabled={saving||!form.materiel_nom||!form.emprunteur_nom} style={{flex:2,padding:"12px",background:saving||!form.materiel_nom||!form.emprunteur_nom?"#e0e0d8":"#1e2330",color:saving||!form.materiel_nom||!form.emprunteur_nom?"#8a9ab8":"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>
                 {saving?"⏳ Enregistrement…":"💾 Enregistrer"}
               </button>
             </div>
@@ -4554,7 +4554,7 @@ function GestionCatalogue({ siteId, catalogue, setCatalogue }) {
 
   if(siteId==="clmtp_sable") return (
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
-      <h1 style={{fontSize:22,fontWeight:900,color:"#111827",margin:0}}>Catalogue articles</h1>
+      <h1 style={{fontSize:22,fontWeight:900,color:"#1a1a1a",margin:0}}>Catalogue articles</h1>
       <div style={{background:"#dbeafe",borderRadius:12,padding:"16px 20px",fontSize:14,color:"#1e40af"}}>
         ℹ️ Le site <strong>CLMTP SABLÉ</strong> utilise un catalogue statique de <strong>{ALL_PRODUCTS.length.toLocaleString("fr-FR")} références</strong> importé depuis votre fichier Excel d'origine.
       </div>
@@ -4615,7 +4615,7 @@ function GestionCatalogue({ siteId, catalogue, setCatalogue }) {
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
         <div>
-          <h1 style={{fontSize:22,fontWeight:900,color:"#111827",margin:0}}>Catalogue — {site.label}</h1>
+          <h1 style={{fontSize:22,fontWeight:900,color:"#1a1a1a",margin:0}}>Catalogue — {site.label}</h1>
           <p style={{color:"#6b7280",fontSize:13,margin:"4px 0 0"}}>{catalogue.length} article{catalogue.length!==1?"s":""} dans le catalogue</p>
         </div>
         <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
@@ -4647,8 +4647,8 @@ function GestionCatalogue({ siteId, catalogue, setCatalogue }) {
       {catalogue.length > 0 && (
         <>
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Rechercher…"
-            style={{padding:"10px 16px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none"}}/>
-          <div style={{background:"#fff",borderRadius:14,border:"1px solid #e5e7eb",overflow:"hidden"}}>
+            style={{padding:"10px 16px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none"}}/>
+          <div style={{background:"#fff",borderRadius:14,border:"1px solid #e0e0d8",overflow:"hidden"}}>
             <table style={{width:"100%",borderCollapse:"collapse"}}>
               <thead><tr style={{background:site.color}}>
                 {["SKU","Désignation","Fournisseur","Emplacement","Stock","Min.","Prix HT","Statut"].map(h=>(
@@ -4659,27 +4659,27 @@ function GestionCatalogue({ siteId, catalogue, setCatalogue }) {
                 {filtered.slice(0,100).map((a,i)=>(
                   <tr key={a.id+i} style={{borderBottom:"1px solid #f3f4f6",background:i%2===0?"#fff":"#fafafa"}}>
                     <td style={{padding:"9px 13px",fontFamily:"monospace",fontSize:11,color:"#6b7280"}}>{a.id}</td>
-                    <td style={{padding:"9px 13px",fontWeight:600,fontSize:13,color:"#111827",maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.name}</td>
+                    <td style={{padding:"9px 13px",fontWeight:600,fontSize:13,color:"#1a1a1a",maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.name}</td>
                     <td style={{padding:"9px 13px",fontSize:12,color:"#6b7280"}}>{a.fournisseur||"—"}</td>
-                    <td style={{padding:"9px 13px",fontFamily:"monospace",fontSize:12,color:"#374151"}}>{a.location||"—"}</td>
+                    <td style={{padding:"9px 13px",fontFamily:"monospace",fontSize:12,color:"#555"}}>{a.location||"—"}</td>
                     <td style={{padding:"9px 13px",textAlign:"center",fontWeight:900,fontSize:16,color:a.stock===0?"#dc2626":"#059669"}}>{a.stock}</td>
-                    <td style={{padding:"9px 13px",textAlign:"center",fontSize:12,color:"#9ca3af"}}>{a.min}</td>
-                    <td style={{padding:"9px 13px",textAlign:"right",fontSize:12,fontWeight:600,color:"#374151"}}>{a.prix>0?a.prix.toFixed(2)+" €":"—"}</td>
+                    <td style={{padding:"9px 13px",textAlign:"center",fontSize:12,color:"#8a9ab8"}}>{a.min}</td>
+                    <td style={{padding:"9px 13px",textAlign:"right",fontSize:12,fontWeight:600,color:"#555"}}>{a.prix>0?a.prix.toFixed(2)+" €":"—"}</td>
                     <td style={{padding:"9px 13px"}}><Badge status={a.status}/></td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {filtered.length>100&&<div style={{padding:"10px",textAlign:"center",fontSize:12,color:"#9ca3af"}}>Affichage limité à 100 résultats — affinez la recherche</div>}
+            {filtered.length>100&&<div style={{padding:"10px",textAlign:"center",fontSize:12,color:"#8a9ab8"}}>Affichage limité à 100 résultats — affinez la recherche</div>}
           </div>
         </>
       )}
 
       {catalogue.length===0&&(
-        <div style={{background:"#fff",borderRadius:14,border:"1px solid #e5e7eb",padding:60,textAlign:"center"}}>
+        <div style={{background:"#fff",borderRadius:14,border:"1px solid #e0e0d8",padding:60,textAlign:"center"}}>
           <div style={{fontSize:48,marginBottom:14}}>{site.icon}</div>
-          <div style={{fontWeight:700,fontSize:17,color:"#374151",marginBottom:8}}>Aucun article dans le catalogue</div>
-          <div style={{color:"#9ca3af",fontSize:13,marginBottom:24}}>Importez votre fichier Excel pour créer le catalogue de {site.label}</div>
+          <div style={{fontWeight:700,fontSize:17,color:"#555",marginBottom:8}}>Aucun article dans le catalogue</div>
+          <div style={{color:"#8a9ab8",fontSize:13,marginBottom:24}}>Importez votre fichier Excel pour créer le catalogue de {site.label}</div>
           <button onClick={()=>setShowImport(true)} style={{padding:"12px 24px",background:site.color,color:"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>📊 Importer mon catalogue Excel</button>
         </div>
       )}
@@ -4688,14 +4688,14 @@ function GestionCatalogue({ siteId, catalogue, setCatalogue }) {
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}}>
           <div style={{background:"#fff",borderRadius:20,padding:30,width:"min(96vw,460px)",boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-              <h2 style={{fontSize:17,fontWeight:800,color:"#111827",margin:0}}>📊 Import catalogue Excel</h2>
+              <h2 style={{fontSize:17,fontWeight:800,color:"#1a1a1a",margin:0}}>📊 Import catalogue Excel</h2>
               <button onClick={()=>setShowImport(false)} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:15}}>✕</button>
             </div>
             <div style={{background:site.bg,borderRadius:10,padding:"12px 14px",marginBottom:16,fontSize:12}}>
               <div style={{fontWeight:700,color:site.color,marginBottom:8}}>Colonnes Excel reconnues :</div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
                 {["SKU *","Nom *","Fournisseur","Catégorie","Stock","Min","Emplacement","Prix HT","Unité"].map(c=>(
-                  <div key={c} style={{background:"#fff",border:"1px solid #e5e7eb",borderRadius:6,padding:"5px 8px",fontSize:11,fontWeight:c.includes("*")?"700":"400",color:c.includes("*")?site.color:"#6b7280"}}>{c}</div>
+                  <div key={c} style={{background:"#fff",border:"1px solid #e0e0d8",borderRadius:6,padding:"5px 8px",fontSize:11,fontWeight:c.includes("*")?"700":"400",color:c.includes("*")?site.color:"#6b7280"}}>{c}</div>
                 ))}
               </div>
             </div>
@@ -4825,7 +4825,7 @@ function LoginPage({ onLogin }) {
   const handleKey = e => { if(e.key==="Enter") { if(step==="site") setStep("login"); else handleLogin(); } };
 
   return (
-    <div style={{minHeight:"100vh",background:"#111827",display:"flex",alignItems:"center",justifyContent:"center",padding:20,fontFamily:"'DM Sans',sans-serif"}}>
+    <div style={{minHeight:"100vh",background:"#1e2330",display:"flex",alignItems:"center",justifyContent:"center",padding:20,fontFamily:"'DM Sans',sans-serif"}}>
       <div style={{width:"min(100%,440px)"}}>
 
         {/* Logo */}
@@ -4840,11 +4840,11 @@ function LoginPage({ onLogin }) {
         {/* Sélection site */}
         {step === "site" && (
           <div style={{background:"#fff",borderRadius:20,padding:28,boxShadow:"0 24px 64px rgba(0,0,0,0.4)"}}>
-            <h2 style={{fontSize:16,fontWeight:800,color:"#111827",margin:"0 0 20px",textAlign:"center"}}>Choisissez votre site</h2>
+            <h2 style={{fontSize:16,fontWeight:800,color:"#1a1a1a",margin:"0 0 20px",textAlign:"center"}}>Choisissez votre site</h2>
             <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
               {Object.entries(SITES).map(([id,s])=>(
                 <button key={id} onClick={()=>setSiteId(id)} style={{
-                  padding:"16px 18px", borderRadius:14, border:`2px solid ${siteId===id?s.color:"#e5e7eb"}`,
+                  padding:"16px 18px", borderRadius:14, border:`2px solid ${siteId===id?s.color:"#e0e0d8"}`,
                   background:siteId===id?s.bg:"#fff", cursor:"pointer", display:"flex", alignItems:"center", gap:14,
                   textAlign:"left", transition:"all 0.15s", fontFamily:"'DM Sans',sans-serif",
                 }}>
@@ -4852,8 +4852,8 @@ function LoginPage({ onLogin }) {
                     {s.icon}
                   </div>
                   <div>
-                    <div style={{fontWeight:800,fontSize:15,color:siteId===id?s.color:"#111827"}}>{s.label}</div>
-                    <div style={{fontSize:11,color:"#9ca3af",marginTop:2}}>Accès sécurisé · Données séparées</div>
+                    <div style={{fontWeight:800,fontSize:15,color:siteId===id?s.color:"#1a1a1a"}}>{s.label}</div>
+                    <div style={{fontSize:11,color:"#8a9ab8",marginTop:2}}>Accès sécurisé · Données séparées</div>
                   </div>
                   {siteId===id&&<div style={{marginLeft:"auto",color:s.color,fontSize:18}}>✓</div>}
                 </button>
@@ -4871,7 +4871,7 @@ function LoginPage({ onLogin }) {
             <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
               <button onClick={()=>setStep("site")} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"6px 10px",cursor:"pointer",fontSize:14,color:"#6b7280"}}>←</button>
               <div>
-                <div style={{fontWeight:800,fontSize:16,color:"#111827"}}>🔐 Connexion</div>
+                <div style={{fontWeight:800,fontSize:16,color:"#1a1a1a"}}>🔐 Connexion</div>
                 <div style={{fontSize:12,color:site.color,fontWeight:600}}>{site.icon} {site.label}</div>
               </div>
             </div>
@@ -4879,23 +4879,23 @@ function LoginPage({ onLogin }) {
             {error&&<div style={{background:"#fee2e2",border:"1px solid #fca5a5",borderRadius:10,padding:"10px 14px",fontSize:13,color:"#991b1b",fontWeight:600,marginBottom:16}}>⚠️ {error}</div>}
 
             <div style={{marginBottom:14}}>
-              <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:6}}>Adresse email</label>
+              <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:6}}>Adresse email</label>
               <input type="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={handleKey}
                 placeholder="votre@email.fr"
-                style={{width:"100%",padding:"12px 14px",border:"1.5px solid #e5e7eb",borderRadius:10,fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:"'DM Sans',sans-serif"}}/>
+                style={{width:"100%",padding:"12px 14px",border:"1.5px solid #e0e0d8",borderRadius:10,fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:"'DM Sans',sans-serif"}}/>
             </div>
             <div style={{marginBottom:20}}>
-              <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:6}}>Mot de passe</label>
+              <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:6}}>Mot de passe</label>
               <div style={{position:"relative"}}>
                 <input type={showPwd?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={handleKey}
                   placeholder="••••••••"
-                  style={{width:"100%",padding:"12px 44px 12px 14px",border:"1.5px solid #e5e7eb",borderRadius:10,fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:"'DM Sans',sans-serif"}}/>
-                <button onClick={()=>setShowPwd(s=>!s)} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",fontSize:16,color:"#9ca3af"}}>
+                  style={{width:"100%",padding:"12px 44px 12px 14px",border:"1.5px solid #e0e0d8",borderRadius:10,fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:"'DM Sans',sans-serif"}}/>
+                <button onClick={()=>setShowPwd(s=>!s)} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",fontSize:16,color:"#8a9ab8"}}>
                   {showPwd?"🙈":"👁"}
                 </button>
               </div>
             </div>
-            <button onClick={handleLogin} disabled={loading} style={{width:"100%",padding:"14px",background:loading?"#9ca3af":site.color,color:"#fff",border:"none",borderRadius:12,fontWeight:800,fontSize:15,cursor:loading?"not-allowed":"pointer",fontFamily:"'DM Sans',sans-serif"}}>
+            <button onClick={handleLogin} disabled={loading} style={{width:"100%",padding:"14px",background:loading?"#8a9ab8":site.color,color:"#fff",border:"none",borderRadius:12,fontWeight:800,fontSize:15,cursor:loading?"not-allowed":"pointer",fontFamily:"'DM Sans',sans-serif"}}>
               {loading?"⏳ Connexion…":"Se connecter →"}
             </button>
           </div>
@@ -4937,11 +4937,11 @@ const DEFAULT_PERMISSIONS = {
 // ── BOUTON VOIR MOT DE PASSE (super admin uniquement) ────────────────────────
 function ShowPasswordBtn({ pwd }) {
   const [show, setShow] = useState(false);
-  if (!pwd) return <span style={{fontSize:11,color:"#9ca3af",fontStyle:"italic"}}>—</span>;
+  if (!pwd) return <span style={{fontSize:11,color:"#8a9ab8",fontStyle:"italic"}}>—</span>;
   return (
     <button
       onClick={()=>setShow(s=>!s)}
-      style={{padding:"4px 10px",background:show?"#dbeafe":"#f3f4f6",border:`1px solid ${show?"#93c5fd":"#e5e7eb"}`,borderRadius:7,cursor:"pointer",fontSize:11,color:show?"#1e40af":"#6b7280",fontWeight:600,maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+      style={{padding:"4px 10px",background:show?"#dbeafe":"#f3f4f6",border:`1px solid ${show?"#93c5fd":"#e0e0d8"}`,borderRadius:7,cursor:"pointer",fontSize:11,color:show?"#1e40af":"#6b7280",fontWeight:600,maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
       {show ? pwd : "👁 Voir"}
     </button>
   );
@@ -5092,22 +5092,22 @@ function GestionUtilisateurs({ currentUser, siteId }) {
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
         <div>
-          <h1 style={{fontSize:22,fontWeight:900,color:"#111827",margin:0}}>Gestion des utilisateurs</h1>
+          <h1 style={{fontSize:22,fontWeight:900,color:"#1a1a1a",margin:0}}>Gestion des utilisateurs</h1>
           <p style={{color:"#6b7280",fontSize:13,margin:"4px 0 0"}}>{site.icon} <span style={{color:site.color,fontWeight:700}}>{site.label}</span> · {users.length} compte{users.length!==1?"s":""}</p>
         </div>
-        <button onClick={openAdd} style={{background:"#111827",color:"#fff",border:"none",borderRadius:10,padding:"10px 18px",fontWeight:700,cursor:"pointer",fontSize:13}}>+ Nouvel utilisateur</button>
+        <button onClick={openAdd} style={{background:"#1e2330",color:"#fff",border:"none",borderRadius:10,padding:"10px 18px",fontWeight:700,cursor:"pointer",fontSize:13}}>+ Nouvel utilisateur</button>
       </div>
 
       {/* KPIs */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:12}}>
         {Object.entries(ROLES).map(([role,conf])=>(
-          <div key={role} style={{background:"#fff",borderRadius:14,padding:"16px 18px",border:"1px solid #e5e7eb"}}>
+          <div key={role} style={{background:"#fff",borderRadius:14,padding:"16px 18px",border:"1px solid #e0e0d8"}}>
             <div style={{fontSize:22,marginBottom:6}}>{conf.icon}</div>
             <div style={{fontSize:22,fontWeight:900,color:conf.color}}>{users.filter(u=>u.role===role&&u.actif).length}</div>
             <div style={{fontSize:12,color:"#6b7280",marginTop:3}}>{conf.label}s</div>
           </div>
         ))}
-        <div style={{background:"#fff",borderRadius:14,padding:"16px 18px",border:"1px solid #e5e7eb"}}>
+        <div style={{background:"#fff",borderRadius:14,padding:"16px 18px",border:"1px solid #e0e0d8"}}>
           <div style={{fontSize:22,marginBottom:6}}>🔴</div>
           <div style={{fontSize:22,fontWeight:900,color:"#dc2626"}}>{users.filter(u=>!u.actif).length}</div>
           <div style={{fontSize:12,color:"#6b7280",marginTop:3}}>Inactifs</div>
@@ -5115,17 +5115,17 @@ function GestionUtilisateurs({ currentUser, siteId }) {
       </div>
 
       {/* Table */}
-      <div style={{background:"#fff",borderRadius:16,border:"1px solid #e5e7eb",overflow:"hidden"}}>
+      <div style={{background:"#fff",borderRadius:16,border:"1px solid #e0e0d8",overflow:"hidden"}}>
         {loading ? <Spinner/> : users.length===0 ? (
-          <div style={{padding:40,textAlign:"center",color:"#9ca3af"}}>
+          <div style={{padding:40,textAlign:"center",color:"#8a9ab8"}}>
             <div style={{fontSize:36,marginBottom:10}}>👥</div>
-            <div style={{fontWeight:700,color:"#374151"}}>Aucun utilisateur sur ce site</div>
+            <div style={{fontWeight:700,color:"#555"}}>Aucun utilisateur sur ce site</div>
           </div>
         ) : (
           <table style={{width:"100%",borderCollapse:"collapse"}}>
-            <thead><tr style={{background:"#111827"}}>
+            <thead><tr style={{background:"#1e2330"}}>
               {["Utilisateur","Email","Site","Rôle","Accès","Taux horaire","Statut","Dernière connexion","Actions"].map(h=>(
-                <th key={h} style={{padding:"11px 14px",textAlign:"left",fontSize:11,fontWeight:700,color:"#9ca3af",textTransform:"uppercase",letterSpacing:0.5,whiteSpace:"nowrap"}}>{h}</th>
+                <th key={h} style={{padding:"11px 14px",textAlign:"left",fontSize:11,fontWeight:700,color:"#8a9ab8",textTransform:"uppercase",letterSpacing:0.5,whiteSpace:"nowrap"}}>{h}</th>
               ))}
             </tr></thead>
             <tbody>
@@ -5142,12 +5142,12 @@ function GestionUtilisateurs({ currentUser, siteId }) {
                           {u.prenom?.[0]?.toUpperCase()}{u.nom?.[0]?.toUpperCase()}
                         </div>
                         <div>
-                          <div style={{fontWeight:700,fontSize:13,color:"#111827"}}>{u.prenom} {u.nom} {isMe&&<span style={{fontSize:10,background:"#dbeafe",color:"#1e40af",padding:"1px 6px",borderRadius:99,fontWeight:700}}>vous</span>}</div>
-                          <div style={{fontSize:11,color:"#9ca3af",marginTop:1}}>ID #{u.id}</div>
+                          <div style={{fontWeight:700,fontSize:13,color:"#1a1a1a"}}>{u.prenom} {u.nom} {isMe&&<span style={{fontSize:10,background:"#dbeafe",color:"#1e40af",padding:"1px 6px",borderRadius:99,fontWeight:700}}>vous</span>}</div>
+                          <div style={{fontSize:11,color:"#8a9ab8",marginTop:1}}>ID #{u.id}</div>
                         </div>
                       </div>
                     </td>
-                    <td style={{padding:"12px 14px",fontSize:13,color:"#374151"}}>{u.email}</td>
+                    <td style={{padding:"12px 14px",fontSize:13,color:"#555"}}>{u.email}</td>
                     <td style={{padding:"12px 14px"}}>
                       {SITES[u.site_id]&&<span style={{background:SITES[u.site_id].bg,color:SITES[u.site_id].color,padding:"3px 10px",borderRadius:99,fontSize:11,fontWeight:700,whiteSpace:"nowrap"}}>{SITES[u.site_id].icon} {SITES[u.site_id].label}</span>}
                     </td>
@@ -5155,7 +5155,7 @@ function GestionUtilisateurs({ currentUser, siteId }) {
                       <span style={{background:role.bg,color:role.color,padding:"3px 10px",borderRadius:99,fontSize:11,fontWeight:700}}>{role.icon} {role.label}</span>
                     </td>
                     <td style={{padding:"12px 14px"}}>
-                      <button onClick={()=>openPerms(u)} style={{display:"flex",alignItems:"center",gap:6,padding:"5px 10px",background:hasCustomPerms?"#f3e8ff":"#f3f4f6",border:`1px solid ${hasCustomPerms?"#7c3aed":"#e5e7eb"}`,borderRadius:8,cursor:"pointer",fontSize:11,fontWeight:600,color:hasCustomPerms?"#7c3aed":"#374151"}}>
+                      <button onClick={()=>openPerms(u)} style={{display:"flex",alignItems:"center",gap:6,padding:"5px 10px",background:hasCustomPerms?"#f3e8ff":"#f3f4f6",border:`1px solid ${hasCustomPerms?"#7c3aed":"#e0e0d8"}`,borderRadius:8,cursor:"pointer",fontSize:11,fontWeight:600,color:hasCustomPerms?"#7c3aed":"#555"}}>
                         🔑 {u.role==="admin"?"Tous":`${nbAcces} module${nbAcces>1?"s":""}`}
                         {hasCustomPerms&&<span style={{background:"#7c3aed",color:"#fff",fontSize:9,padding:"1px 5px",borderRadius:99}}>Perso</span>}
                       </button>
@@ -5168,7 +5168,7 @@ function GestionUtilisateurs({ currentUser, siteId }) {
                       })()}
                     </td>
                     <td style={{padding:"12px 14px"}}>
-                      <span style={{background:u.actif?"#d1fae5":"#f3f4f6",color:u.actif?"#065f46":"#9ca3af",padding:"3px 10px",borderRadius:99,fontSize:11,fontWeight:700}}>
+                      <span style={{background:u.actif?"#d1fae5":"#f3f4f6",color:u.actif?"#065f46":"#8a9ab8",padding:"3px 10px",borderRadius:99,fontSize:11,fontWeight:700}}>
                         {u.actif?"🟢 Actif":"⚫ Inactif"}
                       </span>
                     </td>
@@ -5182,7 +5182,7 @@ function GestionUtilisateurs({ currentUser, siteId }) {
                         <button onClick={()=>handleToggle(u)} disabled={isMe} style={{padding:"5px 11px",background:u.actif?"#fef3c7":"#d1fae5",border:"none",borderRadius:7,cursor:isMe?"not-allowed":"pointer",fontSize:12,fontWeight:600,color:u.actif?"#92400e":"#065f46"}}>
                           {u.actif?"🔒":"🔓"}
                         </button>
-                        <button onClick={()=>handleDelete(u)} disabled={isMe} style={{padding:"5px 10px",background:isMe?"#f3f4f6":"#fee2e2",border:"none",borderRadius:7,cursor:isMe?"not-allowed":"pointer",fontSize:12,color:isMe?"#9ca3af":"#dc2626"}}>🗑</button>
+                        <button onClick={()=>handleDelete(u)} disabled={isMe} style={{padding:"5px 10px",background:isMe?"#f3f4f6":"#fee2e2",border:"none",borderRadius:7,cursor:isMe?"not-allowed":"pointer",fontSize:12,color:isMe?"#8a9ab8":"#dc2626"}}>🗑</button>
                       </div>
                     </td>
                   </tr>
@@ -5199,7 +5199,7 @@ function GestionUtilisateurs({ currentUser, siteId }) {
           <div style={{background:"#fff",borderRadius:16}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
               <div>
-                <h2 style={{fontSize:17,fontWeight:800,color:"#111827",margin:0}}>🔑 Accès personnalisés</h2>
+                <h2 style={{fontSize:17,fontWeight:800,color:"#1a1a1a",margin:0}}>🔑 Accès personnalisés</h2>
                 <div style={{fontSize:13,color:"#6b7280",marginTop:3}}>{showPerms.prenom} {showPerms.nom} · <span style={{color:ROLES[showPerms.role]?.color}}>{ROLES[showPerms.role]?.icon} {ROLES[showPerms.role]?.label}</span></div>
               </div>
               <button onClick={()=>setShowPerms(null)} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:15}}>✕</button>
@@ -5213,12 +5213,12 @@ function GestionUtilisateurs({ currentUser, siteId }) {
               {MODULES_PERMISSIONS.map(mod=>{
                 const isChecked = customPerms.includes(mod.id);
                 return (
-                  <label key={mod.id} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",borderRadius:10,border:`2px solid ${isChecked?"#7c3aed":"#e5e7eb"}`,background:isChecked?"#f3e8ff":"#f9fafb",cursor:"pointer",userSelect:"none"}}>
+                  <label key={mod.id} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",borderRadius:10,border:`2px solid ${isChecked?"#7c3aed":"#e0e0d8"}`,background:isChecked?"#f3e8ff":"#f9fafb",cursor:"pointer",userSelect:"none"}}>
                     <input type="checkbox" checked={isChecked} onChange={()=>togglePerm(mod.id)} style={{width:18,height:18,accentColor:"#7c3aed",cursor:"pointer",flexShrink:0}}/>
                     <span style={{fontSize:18}}>{mod.icon}</span>
                     <div style={{flex:1}}>
-                      <div style={{fontWeight:600,fontSize:13,color:isChecked?"#6b21a8":"#374151"}}>{mod.label}</div>
-                      <div style={{fontSize:10,color:"#9ca3af"}}>{mod.desc}</div>
+                      <div style={{fontWeight:600,fontSize:13,color:isChecked?"#6b21a8":"#555"}}>{mod.label}</div>
+                      <div style={{fontSize:10,color:"#8a9ab8"}}>{mod.desc}</div>
                     </div>
                   </label>
                 );
@@ -5228,7 +5228,7 @@ function GestionUtilisateurs({ currentUser, siteId }) {
             <div style={{display:"flex",gap:8,marginBottom:8}}>
               <button onClick={()=>setCustomPerms(MODULES_PERMISSIONS.map(m=>m.id))} style={{flex:1,padding:"9px",background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:9,cursor:"pointer",fontWeight:600,fontSize:12,color:"#065f46"}}>✅ Tout cocher</button>
               <button onClick={()=>setCustomPerms([])} style={{flex:1,padding:"9px",background:"#fff1f2",border:"1px solid #fecaca",borderRadius:9,cursor:"pointer",fontWeight:600,fontSize:12,color:"#dc2626"}}>❌ Tout décocher</button>
-              <button onClick={handleResetPerms} style={{flex:1,padding:"9px",background:"#f9fafb",border:"1px solid #e5e7eb",borderRadius:9,cursor:"pointer",fontWeight:600,fontSize:12,color:"#374151"}}>🔄 Par défaut</button>
+              <button onClick={handleResetPerms} style={{flex:1,padding:"9px",background:"#f9fafb",border:"1px solid #e0e0d8",borderRadius:9,cursor:"pointer",fontWeight:600,fontSize:12,color:"#555"}}>🔄 Par défaut</button>
             </div>
             <div style={{display:"flex",gap:10,marginTop:4,alignItems:"center"}}>
               <button onClick={()=>setShowPerms(null)} style={{flex:1,padding:"12px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer",fontSize:13}}>✕ Fermer</button>
@@ -5245,40 +5245,40 @@ function GestionUtilisateurs({ currentUser, siteId }) {
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(2px)"}}>
           <div style={{background:"#fff",borderRadius:20,padding:30,width:"min(96vw,460px)",boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
-              <h2 style={{fontSize:17,fontWeight:800,color:"#111827",margin:0}}>{editUser?"✏️ Modifier":"➕ Nouvel"} utilisateur</h2>
+              <h2 style={{fontSize:17,fontWeight:800,color:"#1a1a1a",margin:0}}>{editUser?"✏️ Modifier":"➕ Nouvel"} utilisateur</h2>
               <button onClick={()=>setShowForm(false)} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:15}}>✕</button>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:13}}>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                 {[{l:"Prénom *",k:"prenom",ph:"Jean"},{l:"Nom *",k:"nom",ph:"DUPONT"}].map(f=>(
                   <div key={f.k}>
-                    <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>{f.l}</label>
+                    <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>{f.l}</label>
                     <input value={form[f.k]} onChange={e=>setForm(p=>({...p,[f.k]:e.target.value}))} placeholder={f.ph}
-                      style={{width:"100%",padding:"10px 13px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                      style={{width:"100%",padding:"10px 13px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                   </div>
                 ))}
               </div>
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Email *</label>
+                <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Email *</label>
                 <input type="email" value={form.email} onChange={e=>setForm(p=>({...p,email:e.target.value}))} placeholder="jean.dupont@email.fr"
-                  style={{width:"100%",padding:"10px 13px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  style={{width:"100%",padding:"10px 13px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
               </div>
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>{editUser?"Nouveau mot de passe":"Mot de passe *"}</label>
+                <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>{editUser?"Nouveau mot de passe":"Mot de passe *"}</label>
                 <div style={{position:"relative"}}>
                   <input type={showPwd?"text":"password"} value={form.motDePasse} onChange={e=>setForm(p=>({...p,motDePasse:e.target.value}))} placeholder="••••••••"
-                    style={{width:"100%",padding:"10px 40px 10px 13px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
-                  <button onClick={()=>setShowPwd(s=>!s)} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",fontSize:15,color:"#9ca3af"}}>{showPwd?"🙈":"👁"}</button>
+                    style={{width:"100%",padding:"10px 40px 10px 13px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                  <button onClick={()=>setShowPwd(s=>!s)} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",fontSize:15,color:"#8a9ab8"}}>{showPwd?"🙈":"👁"}</button>
                 </div>
               </div>
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:8}}>Site *</label>
+                <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:8}}>Site *</label>
                 <div style={{display:"flex",flexDirection:"column",gap:8}}>
                   {Object.entries(SITES).map(([id,s])=>(
-                    <button key={id} onClick={()=>setForm(p=>({...p,site:id}))} style={{padding:"12px 16px",borderRadius:12,border:`2px solid ${form.site===id?s.color:"#e5e7eb"}`,background:form.site===id?s.bg:"#fff",cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"left",fontFamily:"'DM Sans',sans-serif"}}>
+                    <button key={id} onClick={()=>setForm(p=>({...p,site:id}))} style={{padding:"12px 16px",borderRadius:12,border:`2px solid ${form.site===id?s.color:"#e0e0d8"}`,background:form.site===id?s.bg:"#fff",cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"left",fontFamily:"'DM Sans',sans-serif"}}>
                       <span style={{fontSize:22}}>{s.icon}</span>
                       <div>
-                        <div style={{fontWeight:700,fontSize:14,color:form.site===id?s.color:"#111827"}}>{s.label}</div>
+                        <div style={{fontWeight:700,fontSize:14,color:form.site===id?s.color:"#1a1a1a"}}>{s.label}</div>
                       </div>
                       {form.site===id&&<div style={{marginLeft:"auto",color:s.color,fontSize:16}}>✓</div>}
                     </button>
@@ -5286,10 +5286,10 @@ function GestionUtilisateurs({ currentUser, siteId }) {
                 </div>
               </div>
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:8}}>Rôle</label>
+                <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:8}}>Rôle</label>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                   {Object.entries(ROLES).map(([role,conf])=>(
-                    <button key={role} onClick={()=>setForm(p=>({...p,role}))} style={{padding:"10px 8px",borderRadius:10,border:`2px solid ${form.role===role?conf.color:"#e5e7eb"}`,background:form.role===role?conf.bg:"#fff",color:form.role===role?conf.color:"#6b7280",fontWeight:600,cursor:"pointer",fontSize:12,textAlign:"center"}}>
+                    <button key={role} onClick={()=>setForm(p=>({...p,role}))} style={{padding:"10px 8px",borderRadius:10,border:`2px solid ${form.role===role?conf.color:"#e0e0d8"}`,background:form.role===role?conf.bg:"#fff",color:form.role===role?conf.color:"#6b7280",fontWeight:600,cursor:"pointer",fontSize:12,textAlign:"center"}}>
                       <div style={{fontSize:18,marginBottom:3}}>{conf.icon}</div>
                       <div>{conf.label}</div>
                     </button>
@@ -5297,12 +5297,12 @@ function GestionUtilisateurs({ currentUser, siteId }) {
                 </div>
               </div>
               <div>
-                <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>Taux horaire (€/h)</label>
+                <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Taux horaire (€/h)</label>
                 <input type="number" min="0" step="0.5" value={form.tauxHoraire}
                   onChange={e=>setForm(p=>({...p,tauxHoraire:e.target.value}))}
                   placeholder="Ex : 35.00"
-                  style={{width:"100%",padding:"10px 13px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
-                <div style={{fontSize:11,color:"#9ca3af",marginTop:4}}>Utilisé pour calculer le coût des sessions de travail dans les ORs</div>
+                  style={{width:"100%",padding:"10px 13px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                <div style={{fontSize:11,color:"#8a9ab8",marginTop:4}}>Utilisé pour calculer le coût des sessions de travail dans les ORs</div>
               </div>
               <div style={{padding:"10px 14px",background:"#f9fafb",borderRadius:10,fontSize:12,color:"#6b7280"}}>
                 <strong>Accès par défaut :</strong> {form.role==="admin"?"Tous les modules":
@@ -5315,7 +5315,7 @@ function GestionUtilisateurs({ currentUser, siteId }) {
               </div>
               <div style={{display:"flex",gap:10,marginTop:4}}>
                 <button onClick={()=>setShowForm(false)} style={{flex:1,padding:"12px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer"}}>Annuler</button>
-                <button onClick={handleSave} disabled={saving||!form.nom||!form.prenom||!form.email} style={{flex:2,padding:"12px",background:form.nom&&form.prenom&&form.email?"#111827":"#e5e7eb",color:form.nom&&form.prenom&&form.email?"#fff":"#9ca3af",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>
+                <button onClick={handleSave} disabled={saving||!form.nom||!form.prenom||!form.email} style={{flex:2,padding:"12px",background:form.nom&&form.prenom&&form.email?"#1e2330":"#e0e0d8",color:form.nom&&form.prenom&&form.email?"#fff":"#8a9ab8",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>
                   {saving?"⏳…":editUser?"💾 Modifier":"➕ Créer"}
                 </button>
               </div>
@@ -5361,7 +5361,7 @@ function ChangerMotDePasse({ user, onClose, onSuccess }) {
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:2000,padding:16}}>
       <div style={{background:"#fff",borderRadius:20,padding:28,width:"min(96vw,420px)",boxShadow:"0 20px 60px rgba(0,0,0,0.3)"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-          <h2 style={{fontSize:16,fontWeight:800,color:"#111827",margin:0}}>🔒 Changer mon mot de passe</h2>
+          <h2 style={{fontSize:16,fontWeight:800,color:"#1a1a1a",margin:0}}>🔒 Changer mon mot de passe</h2>
           <button onClick={onClose} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:15}}>✕</button>
         </div>
 
@@ -5371,10 +5371,10 @@ function ChangerMotDePasse({ user, onClose, onSuccess }) {
           {l:"Confirmer le nouveau",v:confirmer,set:setConfirmer,show:showNew,toggleShow:()=>setShowNew(s=>!s)},
         ].map((f,i)=>(
           <div key={i} style={{marginBottom:14}}>
-            <label style={{fontSize:12,fontWeight:600,color:"#374151",display:"block",marginBottom:5}}>{f.l}</label>
+            <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>{f.l}</label>
             <div style={{position:"relative"}}>
               <input type={f.show?"text":"password"} value={f.v} onChange={e=>f.set(e.target.value)}
-                style={{width:"100%",padding:"10px 40px 10px 14px",border:"1px solid #e5e7eb",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                style={{width:"100%",padding:"10px 40px 10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
               <button onClick={f.toggleShow} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",fontSize:15,color:"#6b7280"}}>{f.show?"🙈":"👁"}</button>
             </div>
           </div>
@@ -5384,7 +5384,7 @@ function ChangerMotDePasse({ user, onClose, onSuccess }) {
 
         <div style={{display:"flex",gap:10}}>
           <button onClick={onClose} style={{flex:1,padding:"12px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer"}}>Annuler</button>
-          <button onClick={handleSave} disabled={saving||!actuel||!nouveau||!confirmer} style={{flex:2,padding:"12px",background:saving||!actuel||!nouveau||!confirmer?"#e5e7eb":"#111827",color:saving||!actuel||!nouveau||!confirmer?"#9ca3af":"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>
+          <button onClick={handleSave} disabled={saving||!actuel||!nouveau||!confirmer} style={{flex:2,padding:"12px",background:saving||!actuel||!nouveau||!confirmer?"#e0e0d8":"#1e2330",color:saving||!actuel||!nouveau||!confirmer?"#8a9ab8":"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>
             {saving?"⏳ Sauvegarde…":"💾 Changer le mot de passe"}
           </button>
         </div>
@@ -5558,7 +5558,7 @@ export default function App() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
         *{box-sizing:border-box;margin:0;padding:0;}
-        body{font-family:'DM Sans',sans-serif;background:#f1f5f9;}
+        body{font-family:'DM Sans',sans-serif;background:#f5f5f0;}
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes scanline{0%,100%{top:10%}50%{top:90%}}
         @keyframes slideIn{from{transform:translateX(-100%)}to{transform:translateX(0)}}
@@ -5590,11 +5590,11 @@ export default function App() {
       `}</style>
 
       {/* MOBILE HEADER */}
-      <div className="mobile-header" style={{position:"fixed",top:0,left:0,right:0,zIndex:200,background:"#111827",padding:"12px 16px",alignItems:"center",justifyContent:"space-between",height:56}}>
-        <button onClick={()=>setSidebar(s=>!s)} style={{background:"none",border:"none",color:"#fff",cursor:"pointer",fontSize:22,padding:"4px",display:"flex",alignItems:"center"}}>☰</button>
+      <div className="mobile-header" style={{position:"fixed",top:0,left:0,right:0,zIndex:200,background:"#ffffff",borderBottom:"1px solid #e0e0d8",padding:"12px 16px",alignItems:"center",justifyContent:"space-between",height:56}}>
+        <button onClick={()=>setSidebar(s=>!s)} style={{background:"none",border:"none",color:"#1a1a1a",cursor:"pointer",fontSize:22,padding:"4px",display:"flex",alignItems:"center"}}>☰</button>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           <div style={{width:28,height:28,background:`linear-gradient(135deg,${site.color},${site.color}99)`,borderRadius:7,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:"#fff",fontWeight:900}}>{site.logo}</div>
-          <span style={{color:"#fff",fontWeight:800,fontSize:14}}>{site.label}</span>
+          <span style={{color:"#1a1a1a",fontWeight:800,fontSize:14}}>{site.label}</span>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           {showInstall&&<button onClick={handleInstall} style={{background:"#3b82f6",border:"none",borderRadius:7,color:"#fff",padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>⬇️ Installer</button>}
@@ -5611,10 +5611,10 @@ export default function App() {
 
       <div style={{display:"flex",height:"100vh",overflow:"hidden"}}>
         {/* SIDEBAR DESKTOP + MOBILE DRAWER */}
-        <div className="desktop-sidebar" style={{width:sidebar?230:60,flexShrink:0,background:"#111827",display:"flex",flexDirection:"column",transition:"width 0.25s ease",overflow:"hidden"}}>
+        <div className="desktop-sidebar" style={{width:sidebar?230:60,flexShrink:0,background:"#1e2330",display:"flex",flexDirection:"column",transition:"width 0.25s ease",overflow:"hidden"}}>
           <div style={{padding:sidebar?"22px 18px 18px":"22px 10px 18px",borderBottom:"1px solid rgba(255,255,255,.08)",display:"flex",alignItems:"center",gap:10}}>
             <div style={{width:34,height:34,background:`linear-gradient(135deg,${site.color},${site.color}99)`,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,flexShrink:0,color:"#fff",fontWeight:900,letterSpacing:-0.5}}>{site.logo}</div>
-            {sidebar&&<div><div style={{color:"#fff",fontWeight:900,fontSize:13}}>CLMTP WMS</div><div style={{color:"#9ca3af",fontSize:10,marginTop:2}}>{user?.prenom} {user?.nom}</div></div>}
+            {sidebar&&<div><div style={{color:"#fff",fontWeight:900,fontSize:13}}>CLMTP WMS</div><div style={{color:"#8a9ab8",fontSize:10,marginTop:2}}>{user?.prenom} {user?.nom}</div></div>}
           </div>
           <nav style={{flex:1,padding:"8px 8px",display:"flex",flexDirection:"column",gap:1,overflowY:"auto"}}>
             {NAV_FILTERED_SECTIONS.map(section=>{
@@ -5624,7 +5624,7 @@ export default function App() {
                   const badge=item.id==="ordres"&&orEnCours>0?orEnCours:item.id==="mouvements"&&mouvJour>0?mouvJour:0;
                   return(
                     <button key={item.id} onClick={()=>setPage(item.id)} title={!sidebar?item.label:""}
-                      style={{display:"flex",alignItems:"center",gap:10,padding:sidebar?"10px 12px":"10px",borderRadius:9,border:"none",cursor:"pointer",background:active?"rgba(59,130,246,.15)":"transparent",color:active?"#60a5fa":"#9ca3af",fontWeight:active?700:500,fontSize:13,textAlign:"left",width:"100%",borderLeft:active?"3px solid #3b82f6":"3px solid transparent"}}>
+                      style={{display:"flex",alignItems:"center",gap:10,padding:sidebar?"10px 12px":"10px",borderRadius:9,border:"none",cursor:"pointer",background:active?"#2d3d5c":"transparent",color:active?"#90b4f0":"#8a9ab8",fontWeight:active?700:500,fontSize:13,textAlign:"left",width:"100%",borderLeft:active?"3px solid #90b4f0":"3px solid transparent"}}>
                       <span style={{fontSize:17,flexShrink:0}}>{item.icon}</span>
                       {sidebar&&item.label}
                       {sidebar&&badge>0&&<span style={{marginLeft:"auto",background:"#f59e0b",color:"#fff",borderRadius:99,padding:"1px 7px",fontSize:10,fontWeight:700}}>{badge}</span>}
@@ -5637,7 +5637,7 @@ export default function App() {
                 <div key={section.id} style={{marginTop:4}}>
                   <button onClick={()=>sidebar&&setOpenSections(prev=>({...prev,[section.id]:!isOpen}))}
                     title={!sidebar?section.label:""}
-                    style={{display:"flex",alignItems:"center",gap:10,padding:sidebar?"7px 12px":"7px 10px",borderRadius:8,border:"none",cursor:"pointer",background:"transparent",color:"#4b5563",fontWeight:700,fontSize:10,textAlign:"left",width:"100%",letterSpacing:0.8,textTransform:"uppercase",userSelect:"none"}}>
+                    style={{display:"flex",alignItems:"center",gap:10,padding:sidebar?"7px 12px":"7px 10px",borderRadius:8,border:"none",cursor:"pointer",background:"transparent",color:"#6a7a9a",fontWeight:700,fontSize:10,textAlign:"left",width:"100%",letterSpacing:0.8,textTransform:"uppercase",userSelect:"none"}}>
                     <span style={{fontSize:14,flexShrink:0,opacity:.8}}>{section.icon}</span>
                     {sidebar&&<><span style={{flex:1}}>{section.label}</span><span style={{fontSize:9,opacity:.6,transition:"transform 0.2s",display:"inline-block",transform:isOpen?"rotate(90deg)":"rotate(0deg)"}}>▶</span></>}
                   </button>
@@ -5647,7 +5647,7 @@ export default function App() {
                       const badge=item.id==="ordres"&&orEnCours>0?orEnCours:item.id==="mouvements"&&mouvJour>0?mouvJour:0;
                       return(
                         <button key={item.id} onClick={()=>setPage(item.id)} title={!sidebar?item.label:""}
-                          style={{display:"flex",alignItems:"center",gap:10,padding:sidebar?"8px 12px 8px 22px":"8px 10px",borderRadius:9,border:"none",cursor:"pointer",background:active?"rgba(59,130,246,.15)":"transparent",color:active?"#60a5fa":"#9ca3af",fontWeight:active?700:500,fontSize:12,textAlign:"left",width:"100%",borderLeft:active?"3px solid #3b82f6":"3px solid transparent"}}>
+                          style={{display:"flex",alignItems:"center",gap:10,padding:sidebar?"8px 12px 8px 22px":"8px 10px",borderRadius:9,border:"none",cursor:"pointer",background:active?"#2d3d5c":"transparent",color:active?"#90b4f0":"#8a9ab8",fontWeight:active?700:500,fontSize:12,textAlign:"left",width:"100%",borderLeft:active?"3px solid #90b4f0":"3px solid transparent"}}>
                           <span style={{fontSize:15,flexShrink:0}}>{item.icon}</span>
                           {sidebar&&<span style={{flex:1}}>{item.label}</span>}
                           {sidebar&&badge>0&&<span style={{background:item.id==="ordres"?"#7c3aed":"#f59e0b",color:"#fff",borderRadius:99,padding:"1px 7px",fontSize:10,fontWeight:700}}>{badge}</span>}
@@ -5660,7 +5660,7 @@ export default function App() {
             })}
           </nav>
           <div style={{borderTop:"1px solid rgba(255,255,255,.08)",padding:"10px 8px"}}>
-            <button onClick={()=>setSidebar(s=>!s)} style={{width:"100%",padding:"9px",background:"rgba(255,255,255,.05)",border:"none",borderRadius:9,color:"#9ca3af",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:sidebar?"flex-end":"center",gap:6}}>
+            <button onClick={()=>setSidebar(s=>!s)} style={{width:"100%",padding:"9px",background:"rgba(255,255,255,.05)",border:"none",borderRadius:9,color:"#8a9ab8",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:sidebar?"flex-end":"center",gap:6}}>
               {sidebar&&<span style={{fontSize:11}}>Réduire</span>}<span>{sidebar?"◀":"▶"}</span>
             </button>
             {sidebar&&(
@@ -5670,13 +5670,13 @@ export default function App() {
                     {user.prenom?.[0]}{user.nom?.[0]}
                   </div>
                   <div style={{overflow:"hidden"}}>
-                    <div style={{color:"#e5e7eb",fontSize:12,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{user.prenom} {user.nom}</div>
+                    <div style={{color:"#d0def5",fontSize:12,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{user.prenom} {user.nom}</div>
                     <div style={{fontSize:10,marginTop:1}}>
                       <span style={{background:ROLES[user.role]?.bg,color:ROLES[user.role]?.color,padding:"1px 6px",borderRadius:99,fontWeight:700}}>{ROLES[user.role]?.icon} {ROLES[user.role]?.label}</span>
                     </div>
                   </div>
                 </div>
-                <button onClick={()=>setShowChangePwd(true)} style={{width:"100%",padding:"7px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,color:"#9ca3af",cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",marginBottom:6}}>
+                <button onClick={()=>setShowChangePwd(true)} style={{width:"100%",padding:"7px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,color:"#8a9ab8",cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",marginBottom:6}}>
                   🔒 Changer mot de passe
                 </button>
                 <button onClick={handleLogout} style={{width:"100%",padding:"7px",background:"rgba(239,68,68,0.15)",border:"1px solid rgba(239,68,68,0.3)",borderRadius:8,color:"#fca5a5",cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif"}}>
@@ -5689,11 +5689,11 @@ export default function App() {
 
         {/* MOBILE DRAWER */}
         {sidebar && (
-          <div className="sidebar-overlay" style={{position:"fixed",top:0,left:0,bottom:0,width:280,background:"#111827",zIndex:400,display:"flex",flexDirection:"column",animation:"slideIn 0.25s ease",overflowY:"auto"}}>
+          <div className="sidebar-overlay" style={{position:"fixed",top:0,left:0,bottom:0,width:280,background:"#1e2330",zIndex:400,display:"flex",flexDirection:"column",animation:"slideIn 0.25s ease",overflowY:"auto"}}>
             <div style={{padding:"16px 18px",borderBottom:"1px solid rgba(255,255,255,.08)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <div style={{width:36,height:36,background:`linear-gradient(135deg,${site.color},${site.color}99)`,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#fff",fontWeight:900}}>{site.logo}</div>
-                <div><div style={{color:"#fff",fontWeight:900,fontSize:14}}>CLMTP WMS</div><div style={{color:"#9ca3af",fontSize:11,marginTop:2}}>{user?.prenom} {user?.nom}</div></div>
+                <div><div style={{color:"#fff",fontWeight:900,fontSize:14}}>CLMTP WMS</div><div style={{color:"#8a9ab8",fontSize:11,marginTop:2}}>{user?.prenom} {user?.nom}</div></div>
               </div>
               <button onClick={()=>setSidebar(false)} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#fff",cursor:"pointer",fontSize:18,padding:"4px 10px"}}>✕</button>
             </div>
@@ -5705,7 +5705,7 @@ export default function App() {
                     const badge=item.id==="ordres"&&orEnCours>0?orEnCours:item.id==="mouvements"&&mouvJour>0?mouvJour:0;
                     return(
                       <button key={item.id} onClick={()=>{setPage(item.id);setSidebar(false);}}
-                        style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",borderRadius:12,border:"none",cursor:"pointer",background:active?"rgba(59,130,246,.2)":"transparent",color:active?"#60a5fa":"#9ca3af",fontWeight:active?700:500,fontSize:15,textAlign:"left",width:"100%"}}>
+                        style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",borderRadius:12,border:"none",cursor:"pointer",background:active?"#2d3d5c":"transparent",color:active?"#90b4f0":"#8a9ab8",fontWeight:active?700:500,fontSize:15,textAlign:"left",width:"100%"}}>
                         <span style={{fontSize:20}}>{item.icon}</span>
                         <span style={{flex:1}}>{item.label}</span>
                         {badge>0&&<span style={{background:"#f59e0b",color:"#fff",borderRadius:99,padding:"2px 8px",fontSize:11,fontWeight:700}}>{badge}</span>}
@@ -5717,7 +5717,7 @@ export default function App() {
                 return(
                   <div key={section.id} style={{marginTop:6}}>
                     <button onClick={()=>setOpenSections(prev=>({...prev,[section.id]:!isOpen}))}
-                      style={{display:"flex",alignItems:"center",gap:10,padding:"8px 16px",borderRadius:10,border:"none",cursor:"pointer",background:"transparent",color:"#4b5563",fontWeight:700,fontSize:10,textAlign:"left",width:"100%",letterSpacing:0.8,textTransform:"uppercase",userSelect:"none"}}>
+                      style={{display:"flex",alignItems:"center",gap:10,padding:"8px 16px",borderRadius:10,border:"none",cursor:"pointer",background:"transparent",color:"#6a7a9a",fontWeight:700,fontSize:10,textAlign:"left",width:"100%",letterSpacing:0.8,textTransform:"uppercase",userSelect:"none"}}>
                       <span style={{fontSize:15}}>{section.icon}</span>
                       <span style={{flex:1}}>{section.label}</span>
                       <span style={{fontSize:10,opacity:.6,transition:"transform 0.2s",display:"inline-block",transform:isOpen?"rotate(90deg)":"rotate(0deg)"}}>▶</span>
@@ -5728,7 +5728,7 @@ export default function App() {
                         const badge=item.id==="ordres"&&orEnCours>0?orEnCours:item.id==="mouvements"&&mouvJour>0?mouvJour:0;
                         return(
                           <button key={item.id} onClick={()=>{setPage(item.id);setSidebar(false);}}
-                            style={{display:"flex",alignItems:"center",gap:12,padding:"11px 16px 11px 28px",borderRadius:12,border:"none",cursor:"pointer",background:active?"rgba(59,130,246,.2)":"transparent",color:active?"#60a5fa":"#9ca3af",fontWeight:active?700:500,fontSize:14,textAlign:"left",width:"100%"}}>
+                            style={{display:"flex",alignItems:"center",gap:12,padding:"11px 16px 11px 28px",borderRadius:12,border:"none",cursor:"pointer",background:active?"#2d3d5c":"transparent",color:active?"#90b4f0":"#8a9ab8",fontWeight:active?700:500,fontSize:14,textAlign:"left",width:"100%"}}>
                             <span style={{fontSize:18}}>{item.icon}</span>
                             <span style={{flex:1}}>{item.label}</span>
                             {badge>0&&<span style={{background:item.id==="ordres"?"#7c3aed":"#f59e0b",color:"#fff",borderRadius:99,padding:"2px 8px",fontSize:11,fontWeight:700}}>{badge}</span>}
@@ -5746,7 +5746,7 @@ export default function App() {
                   {user.prenom?.[0]}{user.nom?.[0]}
                 </div>
                 <div>
-                  <div style={{color:"#e5e7eb",fontSize:13,fontWeight:700}}>{user.prenom} {user.nom}</div>
+                  <div style={{color:"#d0def5",fontSize:13,fontWeight:700}}>{user.prenom} {user.nom}</div>
                   <span style={{background:ROLES[user.role]?.bg,color:ROLES[user.role]?.color,padding:"2px 8px",borderRadius:99,fontWeight:700,fontSize:11}}>{ROLES[user.role]?.icon} {ROLES[user.role]?.label}</span>
                 </div>
               </div>
@@ -5768,16 +5768,16 @@ export default function App() {
       </div>
 
       {/* BOTTOM NAV (mobile uniquement) */}
-      <div className="mobile-bottom-nav" style={{position:"fixed",bottom:0,left:0,right:0,background:"#111827",borderTop:"1px solid rgba(255,255,255,.1)",zIndex:200,padding:"6px 4px",paddingBottom:"env(safe-area-inset-bottom,6px)",alignItems:"center",justifyContent:"space-around"}}>
+      <div className="mobile-bottom-nav" style={{position:"fixed",bottom:0,left:0,right:0,background:"#1e2330",borderTop:"1px solid rgba(255,255,255,.1)",zIndex:200,padding:"6px 4px",paddingBottom:"env(safe-area-inset-bottom,6px)",alignItems:"center",justifyContent:"space-around"}}>
         {NAV.slice(0,5).map(item=>{
           const active=page===item.id;
           const badge=item.id==="ordres"&&orEnCours>0?orEnCours:item.id==="mouvements"&&mouvJour>0?mouvJour:0;
           return (
-            <button key={item.id} onClick={()=>setPage(item.id)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"6px 8px",background:"none",border:"none",cursor:"pointer",color:active?"#60a5fa":"#6b7280",minWidth:52,position:"relative"}}>
+            <button key={item.id} onClick={()=>setPage(item.id)} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"6px 8px",background:"none",border:"none",cursor:"pointer",color:active?"#90b4f0":"#8a9ab8",minWidth:52,position:"relative"}}>
               <span style={{fontSize:22}}>{item.icon}</span>
               <span style={{fontSize:9,fontWeight:active?700:500,letterSpacing:0.2}}>{item.label.split(" ")[0]}</span>
               {badge>0&&<span style={{position:"absolute",top:2,right:4,background:"#f59e0b",color:"#fff",borderRadius:99,padding:"0px 5px",fontSize:9,fontWeight:700}}>{badge}</span>}
-              {active&&<div style={{position:"absolute",bottom:-6,left:"50%",transform:"translateX(-50%)",width:20,height:3,background:"#3b82f6",borderRadius:99}}/>}
+              {active&&<div style={{position:"absolute",bottom:-6,left:"50%",transform:"translateX(-50%)",width:20,height:3,background:"#90b4f0",borderRadius:99}}/>}
             </button>
           );
         })}

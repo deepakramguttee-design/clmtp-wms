@@ -20,7 +20,7 @@ const CAN_WRITE = ["admin", "preparateur", "magasinier_preparateur"];
 
 // ── UI UTILS ──────────────────────────────────────────────────────────────────
 function StatutBadge({ statut }) {
-  const c = STATUTS[statut] || { bg: "#f3f4f6", text: "#374151", label: statut, icon: "?" };
+  const c = STATUTS[statut] || { bg: "#f3f4f6", text: "#555", label: statut, icon: "?" };
   return (
     <span style={{ background: c.bg, color: c.text, padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>
       {c.icon} {c.label}
@@ -31,7 +31,7 @@ function StatutBadge({ statut }) {
 function Spinner() {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 40, gap: 12, color: "#6b7280", fontSize: 14 }}>
-      <div style={{ width: 20, height: 20, border: "2px solid #e5e7eb", borderTopColor: "#3b82f6", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+      <div style={{ width: 20, height: 20, border: "2px solid #e0e0d8", borderTopColor: "#3b82f6", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
       Chargement…
     </div>
   );
@@ -140,7 +140,7 @@ function ChantierForm({ initial, siteId, onSave, onClose }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(2px)" }}>
       <div style={{ background: "#fff", borderRadius: 20, padding: 30, width: "min(96vw,580px)", boxShadow: "0 20px 60px rgba(0,0,0,0.25)", maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-          <h2 style={{ fontSize: 17, fontWeight: 800, color: "#111827", margin: 0 }}>
+          <h2 style={{ fontSize: 17, fontWeight: 800, color: "#1a1a1a", margin: 0 }}>
             {initial?.id ? "✏️ Modifier le chantier" : "🏗️ Nouveau chantier"}
           </h2>
           <button onClick={onClose} style={{ background: "#f3f4f6", border: "none", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontSize: 15 }}>✕</button>
@@ -149,34 +149,34 @@ function ChantierForm({ initial, siteId, onSave, onClose }) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 }}>
           {fields.map(f => (
             <div key={f.k} style={{ gridColumn: f.col === 2 ? "span 2" : undefined }}>
-              <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>{f.l}</label>
+              <label style={{ fontSize: 11, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>{f.l}</label>
               <input
                 type={f.t || "text"}
                 value={form[f.k]}
                 onChange={e => set(f.k, e.target.value)}
                 placeholder={f.ph}
                 step={f.t === "number" ? "0.01" : undefined}
-                style={{ width: "100%", padding: "9px 12px", border: "1px solid #e5e7eb", borderRadius: 9, fontSize: 13, outline: "none", boxSizing: "border-box" }}
+                style={{ width: "100%", padding: "9px 12px", border: "1px solid #e0e0d8", borderRadius: 9, fontSize: 13, outline: "none", boxSizing: "border-box" }}
               />
             </div>
           ))}
 
           <div>
-            <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Statut</label>
+            <label style={{ fontSize: 11, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>Statut</label>
             <select value={form.statut} onChange={e => set("statut", e.target.value)}
-              style={{ width: "100%", padding: "9px 12px", border: "1px solid #e5e7eb", borderRadius: 9, fontSize: 13, outline: "none" }}>
+              style={{ width: "100%", padding: "9px 12px", border: "1px solid #e0e0d8", borderRadius: 9, fontSize: 13, outline: "none" }}>
               {Object.entries(STATUTS).map(([k, v]) => <option key={k} value={k}>{v.icon} {v.label}</option>)}
             </select>
           </div>
 
           <div style={{ gridColumn: "span 2" }}>
-            <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Description</label>
+            <label style={{ fontSize: 11, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>Description</label>
             <textarea
               value={form.description}
               onChange={e => set("description", e.target.value)}
               placeholder="Détails du chantier, remarques…"
               rows={3}
-              style={{ width: "100%", padding: "9px 12px", border: "1px solid #e5e7eb", borderRadius: 9, fontSize: 13, outline: "none", boxSizing: "border-box", resize: "vertical" }}
+              style={{ width: "100%", padding: "9px 12px", border: "1px solid #e0e0d8", borderRadius: 9, fontSize: 13, outline: "none", boxSizing: "border-box", resize: "vertical" }}
             />
           </div>
         </div>
@@ -186,7 +186,7 @@ function ChantierForm({ initial, siteId, onSave, onClose }) {
             Annuler
           </button>
           <button onClick={handleSubmit} disabled={saving || !form.nom || !form.code}
-            style={{ flex: 2, padding: "11px", background: saving || !form.nom || !form.code ? "#e5e7eb" : "#111827", color: saving || !form.nom || !form.code ? "#9ca3af" : "#fff", border: "none", borderRadius: 10, fontWeight: 700, cursor: "pointer", fontSize: 14 }}>
+            style={{ flex: 2, padding: "11px", background: saving || !form.nom || !form.code ? "#e0e0d8" : "#1e2330", color: saving || !form.nom || !form.code ? "#8a9ab8" : "#fff", border: "none", borderRadius: 10, fontWeight: 700, cursor: "pointer", fontSize: 14 }}>
             {saving ? "⏳ Enregistrement…" : "💾 Enregistrer"}
           </button>
         </div>
@@ -238,12 +238,12 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <button onClick={onBack}
-          style={{ background: "#f3f4f6", border: "none", borderRadius: 9, padding: "8px 14px", cursor: "pointer", fontWeight: 700, fontSize: 13, color: "#374151", flexShrink: 0 }}>
+          style={{ background: "#f3f4f6", border: "none", borderRadius: 9, padding: "8px 14px", cursor: "pointer", fontWeight: 700, fontSize: 13, color: "#555", flexShrink: 0 }}>
           ← Retour
         </button>
         <div style={{ flex: 1 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <h1 style={{ fontSize: 20, fontWeight: 900, color: "#111827", margin: 0 }}>{chantier.nom}</h1>
+            <h1 style={{ fontSize: 20, fontWeight: 900, color: "#1a1a1a", margin: 0 }}>{chantier.nom}</h1>
             <StatutBadge statut={chantier.statut} />
           </div>
           <p style={{ color: "#6b7280", fontSize: 13, margin: "4px 0 0" }}>
@@ -255,7 +255,7 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
         {canWrite && (
           <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
             <button onClick={() => setShowEdit(true)}
-              style={{ padding: "8px 14px", background: "#f3f4f6", border: "none", borderRadius: 9, cursor: "pointer", fontWeight: 700, fontSize: 12, color: "#374151" }}>
+              style={{ padding: "8px 14px", background: "#f3f4f6", border: "none", borderRadius: 9, cursor: "pointer", fontWeight: 700, fontSize: 12, color: "#555" }}>
               ✏️ Modifier
             </button>
             <button onClick={() => { if (window.confirm(`Supprimer "${chantier.nom}" ?`)) onDelete(chantier.id); }}
@@ -267,7 +267,7 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
       </div>
 
       {/* Onglets */}
-      <div style={{ display: "flex", gap: 4, borderBottom: "2px solid #e5e7eb", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 4, borderBottom: "2px solid #e0e0d8", flexWrap: "wrap" }}>
         {TABS_LABELS.map((label, i) => (
           <button key={i} onClick={() => setTab(i)}
             style={{ padding: "9px 16px", background: "none", border: "none", borderBottom: `3px solid ${tab === i ? "#3b82f6" : "transparent"}`, marginBottom: -2, cursor: "pointer", fontWeight: tab === i ? 700 : 500, fontSize: 13, color: tab === i ? "#1d4ed8" : "#6b7280", whiteSpace: "nowrap" }}>
@@ -281,7 +281,7 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
       {/* ── TAB 0 : INFOS ── */}
       {!loading && tab === 0 && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: 20 }}>
+          <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e0e0d8", padding: 20 }}>
             <h3 style={{ fontSize: 12, fontWeight: 800, color: "#6b7280", margin: "0 0 14px", textTransform: "uppercase", letterSpacing: 0.5 }}>Informations générales</h3>
             {[
               { l: "Code",        v: chantier.code,        mono: true },
@@ -291,13 +291,13 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
             ].filter(r => r.v).map(r => (
               <div key={r.l} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #f3f4f6", fontSize: 13 }}>
                 <span style={{ color: "#6b7280" }}>{r.l}</span>
-                <span style={{ fontWeight: 600, color: "#111827", fontFamily: r.mono ? "monospace" : undefined }}>{r.v}</span>
+                <span style={{ fontWeight: 600, color: "#1a1a1a", fontFamily: r.mono ? "monospace" : undefined }}>{r.v}</span>
               </div>
             ))}
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: 20 }}>
+            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e0e0d8", padding: 20 }}>
               <h3 style={{ fontSize: 12, fontWeight: 800, color: "#6b7280", margin: "0 0 14px", textTransform: "uppercase", letterSpacing: 0.5 }}>Planning & Budget</h3>
               {[
                 { l: "Date début",       v: chantier.date_debut ? new Date(chantier.date_debut).toLocaleDateString("fr-FR") : "—" },
@@ -307,14 +307,14 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
               ].map(r => (
                 <div key={r.l} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #f3f4f6", fontSize: 13 }}>
                   <span style={{ color: "#6b7280" }}>{r.l}</span>
-                  <span style={{ fontWeight: 600, color: "#111827" }}>{r.v}</span>
+                  <span style={{ fontWeight: 600, color: "#1a1a1a" }}>{r.v}</span>
                 </div>
               ))}
             </div>
             {chantier.description && (
-              <div style={{ background: "#f9fafb", borderRadius: 14, border: "1px solid #e5e7eb", padding: 16 }}>
+              <div style={{ background: "#f9fafb", borderRadius: 14, border: "1px solid #e0e0d8", padding: 16 }}>
                 <h3 style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", margin: "0 0 8px", textTransform: "uppercase" }}>Description</h3>
-                <p style={{ fontSize: 13, color: "#374151", margin: 0, lineHeight: 1.6 }}>{chantier.description}</p>
+                <p style={{ fontSize: 13, color: "#555", margin: 0, lineHeight: 1.6 }}>{chantier.description}</p>
               </div>
             )}
           </div>
@@ -327,10 +327,10 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px,1fr))", gap: 10 }}>
             {[
               { l: "Sorties liées",     v: stockConsomme.length,                                                               icon: "📤", color: "#dc2626" },
-              { l: "Pièces utilisées",  v: stockConsomme.reduce((a, m) => a + m.quantite, 0),                                  icon: "🔩", color: "#374151" },
+              { l: "Pièces utilisées",  v: stockConsomme.reduce((a, m) => a + m.quantite, 0),                                  icon: "🔩", color: "#555" },
               { l: "Coût FIFO total",   v: totalStockVal > 0 ? `${totalStockVal.toFixed(2)} €` : "—",                          icon: "💶", color: "#3b82f6" },
             ].map(s => (
-              <div key={s.l} style={{ background: "#fff", borderRadius: 12, padding: "14px 16px", border: "1px solid #e5e7eb" }}>
+              <div key={s.l} style={{ background: "#fff", borderRadius: 12, padding: "14px 16px", border: "1px solid #e0e0d8" }}>
                 <div style={{ fontSize: 20, marginBottom: 6 }}>{s.icon}</div>
                 <div style={{ fontSize: 20, fontWeight: 900, color: s.color }}>{s.v}</div>
                 <div style={{ fontSize: 11, color: "#6b7280", marginTop: 3 }}>{s.l}</div>
@@ -339,19 +339,19 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
           </div>
 
           {stockConsomme.length === 0 ? (
-            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: 40, textAlign: "center", color: "#9ca3af" }}>
+            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e0e0d8", padding: 40, textAlign: "center", color: "#8a9ab8" }}>
               <div style={{ fontSize: 32, marginBottom: 10 }}>📦</div>
-              <div style={{ fontWeight: 700, color: "#374151", marginBottom: 6 }}>Aucun stock consommé</div>
+              <div style={{ fontWeight: 700, color: "#555", marginBottom: 6 }}>Aucun stock consommé</div>
               <div style={{ fontSize: 12 }}>
                 Les sorties enregistrées avec <strong>N° chantier = {chantier.code}</strong> apparaîtront ici automatiquement.
               </div>
             </div>
           ) : (
-            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e0e0d8", overflow: "hidden" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead><tr style={{ background: "#111827" }}>
+                <thead><tr style={{ background: "#1e2330" }}>
                   {["Date", "Article", "Qté", "Avant", "Après", "Motif", "Coût FIFO"].map(h => (
-                    <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: 0.5, whiteSpace: "nowrap" }}>{h}</th>
+                    <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#8a9ab8", textTransform: "uppercase", letterSpacing: 0.5, whiteSpace: "nowrap" }}>{h}</th>
                   ))}
                 </tr></thead>
                 <tbody>
@@ -359,13 +359,13 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
                     <tr key={m.id || i} style={{ borderBottom: "1px solid #f3f4f6", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
                       <td style={{ padding: "9px 12px", fontSize: 11, color: "#6b7280", whiteSpace: "nowrap" }}>{new Date(m.created_at || m.date).toLocaleDateString("fr-FR")}</td>
                       <td style={{ padding: "9px 12px", maxWidth: 200 }}>
-                        <div style={{ fontWeight: 600, fontSize: 12, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.article_name || m.articleName}</div>
-                        <div style={{ fontSize: 10, color: "#9ca3af" }}>{m.article_id || m.articleId}</div>
+                        <div style={{ fontWeight: 600, fontSize: 12, color: "#1a1a1a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.article_name || m.articleName}</div>
+                        <div style={{ fontSize: 10, color: "#8a9ab8" }}>{m.article_id || m.articleId}</div>
                       </td>
                       <td style={{ padding: "9px 12px", textAlign: "center" }}><span style={{ fontSize: 14, fontWeight: 900, color: "#dc2626" }}>-{m.quantite}</span></td>
                       <td style={{ padding: "9px 12px", textAlign: "center", fontSize: 12, color: "#6b7280" }}>{m.stock_avant ?? m.stockAvant}</td>
                       <td style={{ padding: "9px 12px", textAlign: "center", fontSize: 13, fontWeight: 700, color: (m.stock_apres ?? m.stockApres) === 0 ? "#dc2626" : "#059669" }}>{m.stock_apres ?? m.stockApres}</td>
-                      <td style={{ padding: "9px 12px", fontSize: 11, color: "#374151" }}>{m.motif || "—"}</td>
+                      <td style={{ padding: "9px 12px", fontSize: 11, color: "#555" }}>{m.motif || "—"}</td>
                       <td style={{ padding: "9px 12px", fontSize: 12, fontWeight: 700, color: "#3b82f6", textAlign: "right", whiteSpace: "nowrap" }}>
                         {m.cout_fifo ? `${parseFloat(m.cout_fifo).toFixed(2)} €` : m.prix_unitaire && m.quantite ? `${(m.prix_unitaire * m.quantite).toFixed(2)} €` : "—"}
                       </td>
@@ -384,7 +384,7 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
           {canWrite && (
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <button onClick={() => setShowMatForm(true)}
-                style={{ background: "#111827", color: "#fff", border: "none", borderRadius: 10, padding: "9px 18px", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>
+                style={{ background: "#1e2330", color: "#fff", border: "none", borderRadius: 10, padding: "9px 18px", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>
                 + Ajouter un matériel
               </button>
             </div>
@@ -401,12 +401,12 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
                   { l: "Notes",         k: "notes", ph: "Immat., référence…" },
                 ].map(f => (
                   <div key={f.k}>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>{f.l}</label>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>{f.l}</label>
                     {f.isSelect
-                      ? <select value={matForm[f.k]} onChange={e => setMatForm(p => ({ ...p, [f.k]: e.target.value }))} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, outline: "none" }}>
+                      ? <select value={matForm[f.k]} onChange={e => setMatForm(p => ({ ...p, [f.k]: e.target.value }))} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e0e0d8", borderRadius: 8, fontSize: 13, outline: "none" }}>
                           {f.opts.map(o => <option key={o}>{o}</option>)}
                         </select>
-                      : <input type={f.t || "text"} min={f.t === "number" ? 1 : undefined} value={matForm[f.k]} onChange={e => setMatForm(p => ({ ...p, [f.k]: e.target.value }))} placeholder={f.ph || ""} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+                      : <input type={f.t || "text"} min={f.t === "number" ? 1 : undefined} value={matForm[f.k]} onChange={e => setMatForm(p => ({ ...p, [f.k]: e.target.value }))} placeholder={f.ph || ""} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e0e0d8", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
                     }
                   </div>
                 ))}
@@ -417,32 +417,32 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
                   if (!matForm.nom) return;
                   const saved = await db.addMateriel({ ...matForm, chantier_id: chantier.id, qte: parseInt(matForm.qte) || 1 });
                   if (saved) { setMateriels(p => [...p, saved]); setMatForm({ nom: "", type: "Machine", qte: 1, notes: "" }); setShowMatForm(false); }
-                }} style={{ padding: "8px 16px", background: "#111827", color: "#fff", border: "none", borderRadius: 9, cursor: "pointer", fontWeight: 700 }}>💾 Ajouter</button>
+                }} style={{ padding: "8px 16px", background: "#1e2330", color: "#fff", border: "none", borderRadius: 9, cursor: "pointer", fontWeight: 700 }}>💾 Ajouter</button>
               </div>
             </div>
           )}
 
           {materiels.length === 0 ? (
-            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: 40, textAlign: "center", color: "#9ca3af" }}>
+            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e0e0d8", padding: 40, textAlign: "center", color: "#8a9ab8" }}>
               <div style={{ fontSize: 32, marginBottom: 10 }}>🔧</div>
-              <div style={{ fontWeight: 700, color: "#374151" }}>Aucun matériel assigné</div>
+              <div style={{ fontWeight: 700, color: "#555" }}>Aucun matériel assigné</div>
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
               {materiels.map(m => (
-                <div key={m.id} style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: 14 }}>
+                <div key={m.id} style={{ background: "#fff", borderRadius: 12, border: "1px solid #e0e0d8", padding: 14 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13, color: "#111827" }}>{m.nom}</div>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: "#1a1a1a" }}>{m.nom}</div>
                     {canWrite && (
                       <button onClick={async () => { await db.delMateriel(m.id); setMateriels(p => p.filter(x => x.id !== m.id)); }}
                         style={{ background: "#fee2e2", border: "none", borderRadius: 6, padding: "2px 8px", cursor: "pointer", fontSize: 12, color: "#dc2626", fontWeight: 700 }}>✕</button>
                     )}
                   </div>
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                    <span style={{ background: "#f3f4f6", color: "#374151", padding: "2px 8px", borderRadius: 99, fontSize: 11, fontWeight: 600 }}>{m.type}</span>
+                    <span style={{ background: "#f3f4f6", color: "#555", padding: "2px 8px", borderRadius: 99, fontSize: 11, fontWeight: 600 }}>{m.type}</span>
                     <span style={{ background: "#eff6ff", color: "#1e40af", padding: "2px 8px", borderRadius: 99, fontSize: 11, fontWeight: 600 }}>Qté: {m.qte}</span>
                   </div>
-                  {m.notes && <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 6 }}>{m.notes}</div>}
+                  {m.notes && <div style={{ fontSize: 11, color: "#8a9ab8", marginTop: 6 }}>{m.notes}</div>}
                 </div>
               ))}
             </div>
@@ -456,7 +456,7 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
           {canWrite && (
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <button onClick={() => setShowAgentForm(true)}
-                style={{ background: "#111827", color: "#fff", border: "none", borderRadius: 10, padding: "9px 18px", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>
+                style={{ background: "#1e2330", color: "#fff", border: "none", borderRadius: 10, padding: "9px 18px", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>
                 + Ajouter un agent
               </button>
             </div>
@@ -473,12 +473,12 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
                   { l: "Date départ",  k: "date_fin",   t: "date" },
                 ].map(f => (
                   <div key={f.k}>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>{f.l}</label>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>{f.l}</label>
                     {f.isSelect
-                      ? <select value={agentForm[f.k]} onChange={e => setAgentForm(p => ({ ...p, [f.k]: e.target.value }))} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, outline: "none" }}>
+                      ? <select value={agentForm[f.k]} onChange={e => setAgentForm(p => ({ ...p, [f.k]: e.target.value }))} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e0e0d8", borderRadius: 8, fontSize: 13, outline: "none" }}>
                           {f.opts.map(o => <option key={o}>{o}</option>)}
                         </select>
-                      : <input type={f.t || "text"} value={agentForm[f.k]} onChange={e => setAgentForm(p => ({ ...p, [f.k]: e.target.value }))} placeholder={f.ph || ""} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+                      : <input type={f.t || "text"} value={agentForm[f.k]} onChange={e => setAgentForm(p => ({ ...p, [f.k]: e.target.value }))} placeholder={f.ph || ""} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e0e0d8", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
                     }
                   </div>
                 ))}
@@ -489,26 +489,26 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
                   if (!agentForm.nom) return;
                   const saved = await db.addAgent({ ...agentForm, chantier_id: chantier.id });
                   if (saved) { setAgents(p => [...p, saved]); setAgentForm({ nom: "", role: "Technicien", date_debut: "", date_fin: "" }); setShowAgentForm(false); }
-                }} style={{ padding: "8px 16px", background: "#111827", color: "#fff", border: "none", borderRadius: 9, cursor: "pointer", fontWeight: 700 }}>💾 Ajouter</button>
+                }} style={{ padding: "8px 16px", background: "#1e2330", color: "#fff", border: "none", borderRadius: 9, cursor: "pointer", fontWeight: 700 }}>💾 Ajouter</button>
               </div>
             </div>
           )}
 
           {agents.length === 0 ? (
-            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: 40, textAlign: "center", color: "#9ca3af" }}>
+            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e0e0d8", padding: 40, textAlign: "center", color: "#8a9ab8" }}>
               <div style={{ fontSize: 32, marginBottom: 10 }}>👷</div>
-              <div style={{ fontWeight: 700, color: "#374151" }}>Aucun agent assigné</div>
+              <div style={{ fontWeight: 700, color: "#555" }}>Aucun agent assigné</div>
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
               {agents.map(a => (
-                <div key={a.id} style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: 14 }}>
+                <div key={a.id} style={{ background: "#fff", borderRadius: 12, border: "1px solid #e0e0d8", padding: 14 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <div style={{ width: 32, height: 32, background: "linear-gradient(135deg,#b45309,#d97706)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
                         {a.nom?.[0]?.toUpperCase()}
                       </div>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: "#111827" }}>{a.nom}</div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#1a1a1a" }}>{a.nom}</div>
                     </div>
                     {canWrite && (
                       <button onClick={async () => { await db.delAgent(a.id); setAgents(p => p.filter(x => x.id !== a.id)); }}
@@ -517,7 +517,7 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
                   </div>
                   <span style={{ background: "#fef3c7", color: "#92400e", padding: "2px 8px", borderRadius: 99, fontSize: 11, fontWeight: 600 }}>{a.role}</span>
                   {(a.date_debut || a.date_fin) && (
-                    <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 6 }}>
+                    <div style={{ fontSize: 11, color: "#8a9ab8", marginTop: 6 }}>
                       {a.date_debut && `Du ${new Date(a.date_debut).toLocaleDateString("fr-FR")}`}
                       {a.date_fin   && ` au ${new Date(a.date_fin).toLocaleDateString("fr-FR")}`}
                     </div>
@@ -533,9 +533,9 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
       {!loading && tab === 4 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-            <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb", padding: "12px 20px", display: "flex", gap: 24 }}>
+            <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #e0e0d8", padding: "12px 20px", display: "flex", gap: 24 }}>
               <div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: "#111827" }}>{totalDepenses.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €</div>
+                <div style={{ fontSize: 20, fontWeight: 900, color: "#1a1a1a" }}>{totalDepenses.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €</div>
                 <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>Total dépenses</div>
               </div>
               {chantier.budget > 0 && (
@@ -549,7 +549,7 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
             </div>
             {canWrite && (
               <button onClick={() => setShowDepForm(true)}
-                style={{ background: "#111827", color: "#fff", border: "none", borderRadius: 10, padding: "9px 18px", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>
+                style={{ background: "#1e2330", color: "#fff", border: "none", borderRadius: 10, padding: "9px 18px", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>
                 + Ajouter une dépense
               </button>
             )}
@@ -566,20 +566,20 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
                   { l: "Type",          k: "type",         isSelect: true, opts: ["Main d'œuvre", "Fournitures", "Location", "Transport", "Sous-traitance", "Autre"] },
                 ].map(f => (
                   <div key={f.k}>
-                    <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>{f.l}</label>
+                    <label style={{ fontSize: 11, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>{f.l}</label>
                     {f.isSelect
-                      ? <select value={depForm[f.k]} onChange={e => setDepForm(p => ({ ...p, [f.k]: e.target.value }))} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, outline: "none" }}>
+                      ? <select value={depForm[f.k]} onChange={e => setDepForm(p => ({ ...p, [f.k]: e.target.value }))} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e0e0d8", borderRadius: 8, fontSize: 13, outline: "none" }}>
                           {f.opts.map(o => <option key={o}>{o}</option>)}
                         </select>
-                      : <input type={f.t || "text"} value={depForm[f.k]} onChange={e => setDepForm(p => ({ ...p, [f.k]: e.target.value }))} placeholder={f.ph || ""} step={f.t === "number" ? "0.01" : undefined} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+                      : <input type={f.t || "text"} value={depForm[f.k]} onChange={e => setDepForm(p => ({ ...p, [f.k]: e.target.value }))} placeholder={f.ph || ""} step={f.t === "number" ? "0.01" : undefined} style={{ width: "100%", padding: "8px 10px", border: "1px solid #e0e0d8", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
                     }
                   </div>
                 ))}
               </div>
               <div style={{ marginBottom: 12 }}>
-                <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", display: "block", marginBottom: 4 }}>Notes</label>
+                <label style={{ fontSize: 11, fontWeight: 600, color: "#555", display: "block", marginBottom: 4 }}>Notes</label>
                 <input value={depForm.notes} onChange={e => setDepForm(p => ({ ...p, notes: e.target.value }))} placeholder="Fournisseur, référence bon…"
-                  style={{ width: "100%", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+                  style={{ width: "100%", padding: "8px 10px", border: "1px solid #e0e0d8", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
               </div>
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={() => setShowDepForm(false)} style={{ padding: "8px 16px", background: "#f3f4f6", border: "none", borderRadius: 9, cursor: "pointer", fontWeight: 600 }}>Annuler</button>
@@ -587,32 +587,32 @@ function ChantierDetail({ chantier, mouvements, user, onBack, onUpdate, onDelete
                   if (!depForm.designation || !depForm.montant) return;
                   const saved = await db.addDepense({ ...depForm, chantier_id: chantier.id, montant: parseFloat(depForm.montant) });
                   if (saved) { setDepenses(p => [saved, ...p]); setDepForm({ designation: "", montant: "", date: new Date().toISOString().split("T")[0], type: "Fournitures", notes: "" }); setShowDepForm(false); }
-                }} style={{ padding: "8px 16px", background: "#111827", color: "#fff", border: "none", borderRadius: 9, cursor: "pointer", fontWeight: 700 }}>💾 Ajouter</button>
+                }} style={{ padding: "8px 16px", background: "#1e2330", color: "#fff", border: "none", borderRadius: 9, cursor: "pointer", fontWeight: 700 }}>💾 Ajouter</button>
               </div>
             </div>
           )}
 
           {depenses.length === 0 ? (
-            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: 40, textAlign: "center", color: "#9ca3af" }}>
+            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e0e0d8", padding: 40, textAlign: "center", color: "#8a9ab8" }}>
               <div style={{ fontSize: 32, marginBottom: 10 }}>💶</div>
-              <div style={{ fontWeight: 700, color: "#374151" }}>Aucune dépense enregistrée</div>
+              <div style={{ fontWeight: 700, color: "#555" }}>Aucune dépense enregistrée</div>
             </div>
           ) : (
-            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", overflow: "hidden" }}>
+            <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e0e0d8", overflow: "hidden" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead><tr style={{ background: "#111827" }}>
+                <thead><tr style={{ background: "#1e2330" }}>
                   {["Date", "Désignation", "Type", "Montant", "Notes", ""].map(h => (
-                    <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: 0.5, whiteSpace: "nowrap" }}>{h}</th>
+                    <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontSize: 10, fontWeight: 700, color: "#8a9ab8", textTransform: "uppercase", letterSpacing: 0.5, whiteSpace: "nowrap" }}>{h}</th>
                   ))}
                 </tr></thead>
                 <tbody>
                   {depenses.map((d, i) => (
                     <tr key={d.id || i} style={{ borderBottom: "1px solid #f3f4f6", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
                       <td style={{ padding: "9px 12px", fontSize: 12, color: "#6b7280", whiteSpace: "nowrap" }}>{d.date ? new Date(d.date).toLocaleDateString("fr-FR") : "—"}</td>
-                      <td style={{ padding: "9px 12px", fontWeight: 600, fontSize: 13, color: "#111827" }}>{d.designation}</td>
-                      <td style={{ padding: "9px 12px" }}><span style={{ background: "#f3f4f6", color: "#374151", padding: "2px 8px", borderRadius: 99, fontSize: 11, fontWeight: 600 }}>{d.type}</span></td>
-                      <td style={{ padding: "9px 12px", textAlign: "right", fontWeight: 800, color: "#374151", fontSize: 14, whiteSpace: "nowrap" }}>{parseFloat(d.montant).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €</td>
-                      <td style={{ padding: "9px 12px", fontSize: 11, color: "#9ca3af" }}>{d.notes || "—"}</td>
+                      <td style={{ padding: "9px 12px", fontWeight: 600, fontSize: 13, color: "#1a1a1a" }}>{d.designation}</td>
+                      <td style={{ padding: "9px 12px" }}><span style={{ background: "#f3f4f6", color: "#555", padding: "2px 8px", borderRadius: 99, fontSize: 11, fontWeight: 600 }}>{d.type}</span></td>
+                      <td style={{ padding: "9px 12px", textAlign: "right", fontWeight: 800, color: "#555", fontSize: 14, whiteSpace: "nowrap" }}>{parseFloat(d.montant).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €</td>
+                      <td style={{ padding: "9px 12px", fontSize: 11, color: "#8a9ab8" }}>{d.notes || "—"}</td>
                       <td style={{ padding: "9px 12px" }}>
                         {canWrite && (
                           <button onClick={async () => { await db.delDepense(d.id); setDepenses(p => p.filter(x => x.id !== d.id)); }}
@@ -701,14 +701,14 @@ export default function Chantiers({ user, siteId, mouvements = [] }) {
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 10 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 900, color: "#111827", margin: 0 }}>Chantiers</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: "#1a1a1a", margin: 0 }}>Chantiers</h1>
           <p style={{ color: "#6b7280", fontSize: 13, margin: "4px 0 0" }}>
             {chantiers.length} chantier{chantiers.length !== 1 ? "s" : ""} · {stats.en_cours} en cours
           </p>
         </div>
         {canWrite && (
           <button onClick={() => setShowForm(true)}
-            style={{ background: "#111827", color: "#fff", border: "none", borderRadius: 10, padding: "10px 18px", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>
+            style={{ background: "#1e2330", color: "#fff", border: "none", borderRadius: 10, padding: "10px 18px", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>
             🏗️ Nouveau chantier
           </button>
         )}
@@ -717,13 +717,13 @@ export default function Chantiers({ user, siteId, mouvements = [] }) {
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12 }}>
         {[
-          { l: "Total",        v: stats.total,    icon: "🏗️", color: "#111827" },
+          { l: "Total",        v: stats.total,    icon: "🏗️", color: "#1a1a1a" },
           { l: "En cours",     v: stats.en_cours, icon: "🔨", color: "#92400e" },
           { l: "Planifiés",    v: stats.planifie, icon: "📋", color: "#1e40af" },
           { l: "Terminés",     v: stats.termine,  icon: "✅", color: "#065f46" },
           { l: "Budget total", v: stats.budget > 0 ? `${stats.budget.toLocaleString("fr-FR", { maximumFractionDigits: 0 })} €` : "—", icon: "💶", color: "#3b82f6" },
         ].map(k => (
-          <div key={k.l} style={{ background: "#fff", borderRadius: 14, padding: "16px 18px", border: "1px solid #e5e7eb", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+          <div key={k.l} style={{ background: "#fff", borderRadius: 14, padding: "16px 18px", border: "1px solid #e0e0d8", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
             <div style={{ fontSize: 22, marginBottom: 6 }}>{k.icon}</div>
             <div style={{ fontSize: 22, fontWeight: 900, color: k.color, letterSpacing: -0.5 }}>{k.v}</div>
             <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>{k.l}</div>
@@ -737,12 +737,12 @@ export default function Chantiers({ user, siteId, mouvements = [] }) {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="🔍  Rechercher par nom, code, client…"
-          style={{ flex: 1, minWidth: 240, padding: "10px 16px", border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 14, outline: "none" }}
+          style={{ flex: 1, minWidth: 240, padding: "10px 16px", border: "1px solid #e0e0d8", borderRadius: 10, fontSize: 14, outline: "none" }}
         />
         <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
           {[{ v: "tous", l: "Tous" }, ...Object.entries(STATUTS).map(([k, s]) => ({ v: k, l: `${s.icon} ${s.label}` }))].map(btn => (
             <button key={btn.v} onClick={() => setFilterStatut(btn.v)}
-              style={{ padding: "8px 14px", borderRadius: 9, border: `2px solid ${filterStatut === btn.v ? "#111827" : "#e5e7eb"}`, background: filterStatut === btn.v ? "#111827" : "#fff", color: filterStatut === btn.v ? "#fff" : "#374151", fontWeight: 600, cursor: "pointer", fontSize: 12 }}>
+              style={{ padding: "8px 14px", borderRadius: 9, border: `2px solid ${filterStatut === btn.v ? "#1e2330" : "#e0e0d8"}`, background: filterStatut === btn.v ? "#1e2330" : "#fff", color: filterStatut === btn.v ? "#fff" : "#555", fontWeight: 600, cursor: "pointer", fontSize: 12 }}>
               {btn.l}
             </button>
           ))}
@@ -751,9 +751,9 @@ export default function Chantiers({ user, siteId, mouvements = [] }) {
 
       {/* Liste */}
       {loading ? <Spinner /> : filtered.length === 0 ? (
-        <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", padding: 60, textAlign: "center", color: "#9ca3af" }}>
+        <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e0e0d8", padding: 60, textAlign: "center", color: "#8a9ab8" }}>
           <div style={{ fontSize: 48, marginBottom: 14 }}>🏗️</div>
-          <div style={{ fontWeight: 800, color: "#374151", fontSize: 16, marginBottom: 8 }}>
+          <div style={{ fontWeight: 800, color: "#555", fontSize: 16, marginBottom: 8 }}>
             {chantiers.length === 0 ? "Aucun chantier créé" : "Aucun résultat"}
           </div>
           <div style={{ fontSize: 13, marginBottom: 20 }}>
@@ -763,7 +763,7 @@ export default function Chantiers({ user, siteId, mouvements = [] }) {
           </div>
           {canWrite && chantiers.length === 0 && (
             <button onClick={() => setShowForm(true)}
-              style={{ background: "#111827", color: "#fff", border: "none", borderRadius: 10, padding: "11px 22px", fontWeight: 700, cursor: "pointer", fontSize: 14 }}>
+              style={{ background: "#1e2330", color: "#fff", border: "none", borderRadius: 10, padding: "11px 22px", fontWeight: 700, cursor: "pointer", fontSize: 14 }}>
               🏗️ Créer le premier chantier
             </button>
           )}
@@ -779,13 +779,13 @@ export default function Chantiers({ user, siteId, mouvements = [] }) {
 
             return (
               <div key={c.id} onClick={() => setSelected(c)}
-                style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", padding: 20, cursor: "pointer", transition: "all 0.15s", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
+                style={{ background: "#fff", borderRadius: 16, border: "1px solid #e0e0d8", padding: 20, cursor: "pointer", transition: "all 0.15s", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}
                 onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.10)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
                 onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";  e.currentTarget.style.transform = "translateY(0)"; }}>
 
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: 15, color: "#111827", marginBottom: 4 }}>{c.nom}</div>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: "#1a1a1a", marginBottom: 4 }}>{c.nom}</div>
                     <span style={{ fontFamily: "monospace", fontSize: 11, fontWeight: 700, color: "#7c3aed", background: "#f3e8ff", padding: "2px 7px", borderRadius: 6 }}>#{c.code}</span>
                   </div>
                   <StatutBadge statut={c.statut} />
@@ -805,14 +805,14 @@ export default function Chantiers({ user, siteId, mouvements = [] }) {
                   <div style={{ background: "#f9fafb", borderRadius: 9, padding: "8px 12px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: pct !== null ? 6 : 0, fontSize: 12 }}>
                       <span style={{ color: "#6b7280" }}>Budget</span>
-                      <span style={{ fontWeight: 700, color: "#111827" }}>{parseFloat(c.budget).toLocaleString("fr-FR", { maximumFractionDigits: 0 })} €</span>
+                      <span style={{ fontWeight: 700, color: "#1a1a1a" }}>{parseFloat(c.budget).toLocaleString("fr-FR", { maximumFractionDigits: 0 })} €</span>
                     </div>
                     {pct !== null && (
                       <>
-                        <div style={{ height: 5, background: "#e5e7eb", borderRadius: 99, overflow: "hidden" }}>
+                        <div style={{ height: 5, background: "#e0e0d8", borderRadius: 99, overflow: "hidden" }}>
                           <div style={{ height: "100%", width: `${pct}%`, background: pct >= 90 ? "#dc2626" : pct >= 70 ? "#d97706" : "#059669", borderRadius: 99, transition: "width 0.4s" }} />
                         </div>
-                        <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 3, textAlign: "right" }}>{pct}% consommé</div>
+                        <div style={{ fontSize: 10, color: "#8a9ab8", marginTop: 3, textAlign: "right" }}>{pct}% consommé</div>
                       </>
                     )}
                   </div>
