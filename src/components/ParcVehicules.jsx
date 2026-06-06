@@ -15,7 +15,7 @@ const CATEGORIES = [
     match: v => {
       const p = pfx(v), n = nom(v);
       return ["VU","VP","VC"].includes(p) ||
-             (n.includes("REMORQUE") && !n.includes("POIDS LOURD") && !/\bPL\b/.test(n) && !n.includes(" PL "));
+             (n.includes("REMORQUE") && !n.includes("POIDS LOURD") && !/\bPL\b/.test(n));
     }
   },
   {
@@ -24,7 +24,7 @@ const CATEGORIES = [
     shortLabel: "Pelle",
     match: v => {
       const n = nom(v);
-      return n.includes("PELLE") || n.includes("PELLETEUSE") || n.includes("MINI-PELLE") || n.includes("MINIPELLE");
+      return n.includes("PELLE") || n.includes("PELLETEUSE") || n.includes("MINIPELLE");
     }
   },
   {
@@ -33,7 +33,11 @@ const CATEGORIES = [
     shortLabel: "PRR",
     match: v => {
       const n = nom(v);
-      return n.includes("PRR") || n.includes("PORTIQUE") || n.includes("RAIL") || n.includes("VOIE");
+      return n.includes("PRR")     || n.includes("PORTIQUE") || n.includes("RAIL")    ||
+             n.includes("VOIE")    || n.includes("LORRY")    || n.includes("ROBEL")   ||
+             n.includes("GEISMAR") || n.includes("PANDROL")  || n.includes("ROTAMP")  ||
+             n.includes("ROCLIP")  || n.includes("ROLIFT")   || n.includes("CEMBRE")  ||
+             n.includes("TRACTEL") || n.includes("HOSALC");
     }
   },
   {
@@ -51,10 +55,10 @@ const CATEGORIES = [
     label: "⚙️ Engins GC & MP",
     shortLabel: "GC/MP",
     match: v => {
-      const n = nom(v);
-      return n.includes("BOURREUSE") || n.includes("BOURREUR") || n.includes("COMPACTEUR") ||
-             n.includes("FINISSEUR") || n.includes("NIVELEUSE") || n.includes("CHARGEUSE") ||
-             n.includes("FINITION");
+      const p = pfx(v), n = nom(v);
+      return p === "CH" ||
+             n.includes("BOURREUSE") || n.includes("BOURREUR")  || n.includes("COMPACTEUR") ||
+             n.includes("FINISSEUR") || n.includes("NIVELEUSE") || n.includes("CHARGEUSE");
     }
   },
   {
@@ -63,7 +67,7 @@ const CATEGORIES = [
     shortLabel: "EM/BML",
     match: v => {
       const n = nom(v);
-      return n.includes("BML") || /\bEM\b/.test(n) || n.includes("MOTRICE") ||
+      return n.includes("BML") || n.includes("MOTRICE") ||
              n.includes("LOCOMOTIVE") || n.includes("LOCOTRACTEUR");
     }
   },
@@ -79,7 +83,8 @@ const CATEGORIES = [
     shortLabel: "Agri",
     match: v => {
       const n = nom(v);
-      return n.includes("TRACTEUR") || n.includes("TONDEUSE") || n.includes("AGRI");
+      return (n.includes("TRACTEUR") && !n.includes("LOCOTRACTEUR")) ||
+             n.includes("TONDEUSE") || n.includes("AGRI");
     }
   },
   {
@@ -88,10 +93,16 @@ const CATEGORIES = [
     shortLabel: "PM",
     match: v => {
       const p = pfx(v), n = nom(v);
-      return p === "PM" || n.includes("COMPRESSEUR") || n.includes("GROUPE") ||
-             n.includes("POMPE") || n.includes("GENERATRICE") || n.includes("GÉNÉRATRICE") ||
-             n.includes("MOTOPOMPE") || n.includes("VIBREUR") || n.includes("AIGUILLE") ||
-             n.includes("MARTEAU") || n.includes("PERFORATEUR");
+      return p === "PM"               ||
+             n.includes("COMPRESSEUR")|| n.includes("GROUPE")       || n.includes("POMPE")       ||
+             n.includes("GENERATRICE")|| n.includes("GÉNÉRATRICE")  || n.includes("GENERATEUR")  ||
+             n.includes("MOTOPOMPE")  || n.includes("VIBREUR")      || n.includes("AIGUILLE")    ||
+             n.includes("MARTEAU")    || n.includes("PERFORATEUR")  || n.includes("BOULONNEUSE") ||
+             n.includes("MEULEUSE")   || n.includes("PERCEUSE")     || n.includes("VISSEUSE")    ||
+             n.includes("TRONCONNEUSE")||n.includes("TRONÇONNEUSE") || n.includes("SOUFFLEUR")   ||
+             n.includes("SCIE ")      || n.includes("GERBEUR")      || n.includes("SDMO")        ||
+             n.includes("STIHL")      || n.includes("MAKITA")       || n.includes("HILTI")       ||
+             n.includes("BOSCH");
     }
   },
   {
