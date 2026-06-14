@@ -4935,7 +4935,7 @@ function LoginPage({ onLogin }) {
         )}
 
         <div style={{textAlign:"center",marginTop:16,color:"#4b5563",fontSize:11}}>
-          WMS Multi-sites v4.0
+          CLMTP Multi-sites v4.0
         </div>
       </div>
     </div>
@@ -5669,7 +5669,7 @@ export default function App() {
         <div className="desktop-sidebar" style={{width:sidebar?230:60,flexShrink:0,background:"#1e2330",display:"flex",flexDirection:"column",transition:"width 0.25s ease",overflow:"hidden"}}>
           <div style={{padding:sidebar?"22px 18px 18px":"22px 10px 18px",borderBottom:"1px solid rgba(255,255,255,.08)",display:"flex",alignItems:"center",gap:10}}>
             <div style={{width:34,height:34,background:`linear-gradient(135deg,${site.color},${site.color}99)`,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,flexShrink:0,color:"#fff",fontWeight:900,letterSpacing:-0.5}}>{site.logo}</div>
-            {sidebar&&<div><div style={{color:"#fff",fontWeight:900,fontSize:13}}>CLMTP WMS</div><div style={{color:"#8a9ab8",fontSize:10,marginTop:2}}>{user?.prenom} {user?.nom}</div></div>}
+            {sidebar&&<div><div style={{color:"#fff",fontWeight:900,fontSize:13}}>CLMTP</div><div style={{color:"#8a9ab8",fontSize:10,marginTop:2}}>{user?.prenom} {user?.nom}</div></div>}
           </div>
           <nav style={{flex:1,padding:"8px 8px",display:"flex",flexDirection:"column",gap:1,overflowY:"auto"}}>
             {NAV_FILTERED_SECTIONS.map(section=>{
@@ -5749,7 +5749,7 @@ export default function App() {
             <div style={{padding:"16px 18px",borderBottom:"1px solid rgba(255,255,255,.08)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <div style={{width:36,height:36,background:`linear-gradient(135deg,${site.color},${site.color}99)`,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#fff",fontWeight:900}}>{site.logo}</div>
-                <div><div style={{color:"#fff",fontWeight:900,fontSize:14}}>CLMTP WMS</div><div style={{color:"#8a9ab8",fontSize:11,marginTop:2}}>{user?.prenom} {user?.nom}</div></div>
+                <div><div style={{color:"#fff",fontWeight:900,fontSize:14}}>CLMTP</div><div style={{color:"#8a9ab8",fontSize:11,marginTop:2}}>{user?.prenom} {user?.nom}</div></div>
               </div>
               <button onClick={()=>setSidebar(false)} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#fff",cursor:"pointer",fontSize:18,padding:"4px 10px"}}>✕</button>
             </div>

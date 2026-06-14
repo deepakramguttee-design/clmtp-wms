@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon-*.png', 'icon-*.svg'],
       manifest: {
-        name: 'CLMTP WMS — Gestion d\'entrepôt',
-        short_name: 'CLMTP WMS',
+        name: 'CLMTP — Gestion d\'entrepôt',
+        short_name: 'CLMTP',
         description: 'Logiciel de gestion d\'entrepôt multi-sites CLMTP',
         theme_color: '#111827',
         background_color: '#111827',

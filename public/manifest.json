@@ -1,6 +1,6 @@
 {
   "name": "CLMTP SABLÉ — Gestion d'entrepôt",
-  "short_name": "CLMTP WMS",
+  "short_name": "CLMTP",
   "description": "Logiciel de gestion d'entrepôt multi-sites CLMTP",
   "start_url": "/",
   "display": "standalone",
