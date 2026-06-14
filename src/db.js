@@ -886,6 +886,115 @@ export async function deleteParcVehicule(id) {
   if (error) console.error(error);
 }
 
+// ── FOURNISSEURS ──────────────────────────────────────────────────────────────
+export async function getFournisseurs() {
+  const { data, error } = await supabase
+    .from('fournisseurs').select('*').eq('actif', true).order('nom')
+  if (error) { console.error(error); return []; }
+  return data || []
+}
+
+export async function getAllFournisseurs() {
+  const { data, error } = await supabase
+    .from('fournisseurs').select('*').order('nom')
+  if (error) { console.error(error); return []; }
+  return data || []
+}
+
+export async function createFournisseur(f) {
+  const { data, error } = await supabase
+    .from('fournisseurs')
+    .insert([{ nom: f.nom, email: f.email||'', telephone: f.telephone||'', adresse: f.adresse||'', notes: f.notes||'' }])
+    .select()
+  if (error) { console.error(error); return null; }
+  return data?.[0]
+}
+
+export async function updateFournisseur(id, updates) {
+  const { error } = await supabase.from('fournisseurs').update(updates).eq('id', id)
+  if (error) console.error(error)
+  return !error
+}
+
+export async function deleteFournisseur(id) {
+  const { error } = await supabase.from('fournisseurs').delete().eq('id', id)
+  if (error) console.error(error)
+  return !error
+}
+
+// ── BONS DE COMMANDE ──────────────────────────────────────────────────────────
+export async function getBonsCommande(siteId) {
+  const { data, error } = await supabase
+    .from('bons_commande').select('*').eq('site', siteId)
+    .order('created_at', { ascending: false })
+  if (error) { console.error(error); return []; }
+  return data || []
+}
+
+export async function getNextBCNumero(siteId) {
+  const year = new Date().getFullYear()
+  const { data } = await supabase
+    .from('bons_commande').select('numero').like('numero', `DDV-${year}-%`).eq('site', siteId)
+  const seq = (data?.length || 0) + 1
+  return `DDV-${year}-${String(seq).padStart(3, '0')}`
+}
+
+export async function createBonCommande(bc) {
+  const { data, error } = await supabase
+    .from('bons_commande')
+    .insert([{
+      numero: bc.numero,
+      fournisseur_id: bc.fournisseur_id || null,
+      fournisseur_nom: bc.fournisseur_nom || '',
+      site: bc.site,
+      statut: bc.statut || 'brouillon',
+      created_by: bc.created_by || '',
+      total_ht: bc.total_ht || 0,
+      total_ttc: bc.total_ttc || 0,
+      notes: bc.notes || '',
+    }])
+    .select()
+  if (error) { console.error(error); return null; }
+  return data?.[0]
+}
+
+export async function updateBonCommande(id, updates) {
+  const { error } = await supabase.from('bons_commande').update(updates).eq('id', id)
+  if (error) console.error(error)
+  return !error
+}
+
+export async function deleteBonCommande(id) {
+  const { error } = await supabase.from('bons_commande').delete().eq('id', id)
+  if (error) console.error(error)
+  return !error
+}
+
+export async function getBonCommandeLignes(bcId) {
+  const { data, error } = await supabase
+    .from('bons_commande_lignes').select('*').eq('bon_commande_id', bcId).order('ordre')
+  if (error) { console.error(error); return []; }
+  return data || []
+}
+
+export async function saveBonCommandeLignes(bcId, lignes) {
+  await supabase.from('bons_commande_lignes').delete().eq('bon_commande_id', bcId)
+  if (!lignes.length) return true
+  const rows = lignes.map((l, i) => ({
+    bon_commande_id: bcId,
+    reference: l.reference || '',
+    designation: l.designation || '',
+    quantite: parseFloat(l.quantite) || 1,
+    prix_unitaire: parseFloat(l.prix_unitaire) || 0,
+    montant_ligne: parseFloat(((parseFloat(l.quantite)||1) * (parseFloat(l.prix_unitaire)||0)).toFixed(2)),
+    source: l.source || 'libre',
+    ordre: i,
+  }))
+  const { error } = await supabase.from('bons_commande_lignes').insert(rows)
+  if (error) { console.error(error); return false; }
+  return true
+}
+
 // ── PARC CATÉGORIES ───────────────────────────────────────────────────────────
 export async function getParcCategories() {
   const { data, error } = await supabase.from('parc_categories').select('*').order('ordre')

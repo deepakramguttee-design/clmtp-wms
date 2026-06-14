@@ -6,6 +6,8 @@ import ReferenceFiltres from "./ReferenceFiltres.jsx";
 import Chantiers from "./components/Chantiers.jsx";
 import InventaireOutillage from "./components/InventaireOutillage.jsx";
 import ParcVehicules from "./components/ParcVehicules.jsx";
+import BonsCommande from "./components/BonsCommande.jsx";
+import GestionFournisseurs from "./components/GestionFournisseurs.jsx";
 // parc.js supprimé — données migrées vers Supabase (table parc_vehicules)
 import { supabase } from "./supabase.js";
 import {
@@ -26,7 +28,9 @@ import {
   getUserPermissions,
   getPermissions, savePermissions, deletePermissions,
   getFiltrationVehicules, getFiltrationEngins,
+  getFournisseurs,
 } from "./db.js";
+
 
 // ── STATUTS ───────────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -4744,8 +4748,10 @@ const NAV_ALL = [
   { id:"ref_filtres",  label:"Références filtres",    icon:"🔩", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"catalogue",    label:"Catalogue articles",   icon:"📋", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"parc",          label:"Parc engins",           icon:"🚜", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
-  { id:"utilisateurs", label:"Utilisateurs",         icon:"👥", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
-  { id:"admin",        label:"Administration",        icon:"🛡️", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
+  { id:"utilisateurs",  label:"Utilisateurs",          icon:"👥", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
+  { id:"admin",         label:"Administration",        icon:"🛡️", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
+  { id:"fournisseurs",  label:"Fournisseurs",          icon:"🏭", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+  { id:"bons_commande", label:"Demandes de devis",     icon:"📄", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
 ];
 
 // ── SECTIONS DE NAVIGATION ────────────────────────────────────────────────────
@@ -4792,6 +4798,13 @@ const NAV_SECTIONS = [
     id:"gestion", label:"Gestion", icon:"👥", defaultOpen:false,
     items:[
       { id:"utilisateurs", label:"Utilisateurs", icon:"👥", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
+    ]
+  },
+  {
+    id:"achats", label:"Achats", icon:"🛒", defaultOpen:false,
+    items:[
+      { id:"fournisseurs",  label:"Fournisseurs",      icon:"🏭", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"bons_commande", label:"Demandes de devis", icon:"📄", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
     ]
   },
 ];
@@ -4928,9 +4941,9 @@ const MODULES_PERMISSIONS = [
 const DEFAULT_PERMISSIONS = {
   admin:                  null,
   technicien:             ["dashboard","stock","scanner","ordres","equivalences","vue_eclatee","ref_filtres"],
-  magasinier:             ["dashboard","stock","scanner","mouvements","ordres","equivalences","vue_eclatee","ref_filtres"],
+  magasinier:             ["dashboard","stock","scanner","mouvements","ordres","equivalences","vue_eclatee","ref_filtres","fournisseurs","bons_commande"],
   preparateur:            ["dashboard","stock","scanner","ordres","location","pret","equivalences","vue_eclatee","ref_filtres"],
-  magasinier_preparateur: ["dashboard","stock","scanner","mouvements","ordres","location","pret","equivalences","vue_eclatee","ref_filtres"],
+  magasinier_preparateur: ["dashboard","stock","scanner","mouvements","ordres","location","pret","equivalences","vue_eclatee","ref_filtres","fournisseurs","bons_commande"],
   lecteur:                ["dashboard","stock","scanner","vue_eclatee","ref_filtres"],
 };
 
@@ -5415,6 +5428,7 @@ export default function App() {
   const [locations,setLocations]=useState([]);
   const [prets,setPrets]=useState([]);
   const [parcVehicules,setParcVehicules]=useState([]);
+  const [fournisseurs,setFournisseurs]=useState([]);
   const [showInstall, setShowInstall] = useState(false);
 
   // PWA Install prompt
@@ -5477,7 +5491,7 @@ export default function App() {
     if(!user) return;
     async function loadAll(){
       setLoading(true);
-      const [movs,stock,ords,eqs,prix,histPrix,parc]=await Promise.all([
+      const [movs,stock,ords,eqs,prix,histPrix,parc,fourns]=await Promise.all([
         getMouvementsSite(siteId),
         getStockOverridesSite(siteId),
         getOrdresSite(siteId),
@@ -5485,6 +5499,7 @@ export default function App() {
         getPrixFournisseurs(),
         getHistoriquePrix(),
         getParcVehicules(),
+        getFournisseurs(),
       ]);
       setMouvements(movs);
       setStockOverrides(stock);
@@ -5493,6 +5508,7 @@ export default function App() {
       setPrixFournisseurs(prix);
       setHistoriquePrix(histPrix);
       setParcVehicules(parc);
+      setFournisseurs(fourns);
       // Charger articles custom pour CLMTP SABLÉ
       if(siteId === "clmtp_sable") {
         const custom = await getCatalogue(siteId);
@@ -5550,7 +5566,9 @@ export default function App() {
     if(page==="location")  return <LocationMateriel locations={locations} setLocations={setLocations} siteId={siteId} products={ALL_SITE_PRODUCTS} parc={parcVehicules}/>;
     if(page==="pret")      return <PretMateriel prets={prets} setPrets={setPrets} siteId={siteId} products={ALL_SITE_PRODUCTS} parc={parcVehicules}/>;
     if(page==="catalogue") return <GestionCatalogue siteId={siteId} catalogue={catalogue} setCatalogue={setCatalogue}/>;
-    if(page==="admin")     return <AdminDashboard user={user} navigateTo={setPage}/>;
+    if(page==="admin")        return <AdminDashboard user={user} navigateTo={setPage}/>;
+    if(page==="fournisseurs")  return <GestionFournisseurs onRefresh={()=>getFournisseurs().then(setFournisseurs)}/>;
+    if(page==="bons_commande") return <BonsCommande siteId={siteId} user={user} products={ALL_SITE_PRODUCTS} fournisseurs={fournisseurs}/>;
   };
 
   return (
