@@ -8,6 +8,8 @@ import InventaireOutillage from "./components/InventaireOutillage.jsx";
 import ParcVehicules from "./components/ParcVehicules.jsx";
 import BonsCommande from "./components/BonsCommande.jsx";
 import GestionFournisseurs from "./components/GestionFournisseurs.jsx";
+import SeuilsStock from "./components/SeuilsStock.jsx";
+import StockCritique from "./components/StockCritique.jsx";
 // parc.js supprimé — données migrées vers Supabase (table parc_vehicules)
 import { supabase } from "./supabase.js";
 import {
@@ -29,6 +31,7 @@ import {
   getPermissions, savePermissions, deletePermissions,
   getFiltrationVehicules, getFiltrationEngins,
   getFournisseurs,
+  getSeuilsOverridesSite, setSeuilOverrideSite,
 } from "./db.js";
 
 
@@ -71,20 +74,29 @@ function Spinner() {
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
-function Dashboard({ stockOverrides, mouvements, ordres, products, user, navigateTo }) {
+function Dashboard({ stockOverrides, mouvements, ordres, products, user, navigateTo, seuilsOverrides, equivalences }) {
   const [time, setTime] = useState(new Date());
   useEffect(()=>{const t=setInterval(()=>setTime(new Date()),1000);return()=>clearInterval(t);},[]);
-  const siteProducts = products || ALL_PRODUCTS;
-  const getStock = p => stockOverrides[p.id]!==undefined ? stockOverrides[p.id] : p.stock;
+  const siteProducts   = products || ALL_PRODUCTS;
+  const getStock        = p => stockOverrides[p.id]!==undefined ? stockOverrides[p.id] : (p.stock??0);
+  const getSeuilMin     = p => seuilsOverrides?.[p.id]?.seuil_min ?? p.min ?? 0;
+  const getSeuilMinEquiv= p => seuilsOverrides?.[p.id]?.seuil_min_equivalence ?? 0;
+  const hasEquiv        = p => !!(equivalences?.[p.id]?.length);
+  const isFaible = p => {
+    const s=getStock(p),sm=getSeuilMin(p),sme=getSeuilMinEquiv(p);
+    if(s===0||sm===0) return false;
+    if(s<sm){ if(hasEquiv(p)&&sme>0&&s>=sme) return false; return true; }
+    return false;
+  };
 
   const stats = {
     total: siteProducts.length,
-    ok: siteProducts.filter(p=>getStock(p)>0&&getStock(p)>=(p.min||0)).length,
+    ok: siteProducts.filter(p=>getStock(p)>0&&getStock(p)>=getSeuilMin(p)).length,
     rupture: siteProducts.filter(p=>getStock(p)===0).length,
-    faible: siteProducts.filter(p=>getStock(p)>0&&(p.min||0)>0&&getStock(p)<(p.min||0)).length,
+    faible: siteProducts.filter(isFaible).length,
     valeur: Math.round(siteProducts.reduce((a,p)=>a+getStock(p)*(p.prix||0),0)),
   };
-  const alertes = siteProducts.filter(p=>getStock(p)>0&&(p.min||0)>0&&getStock(p)<(p.min||0)).slice(0,6);
+  const alertes = siteProducts.filter(isFaible).slice(0,6);
   const orOuverts = ordres.filter(o=>o.statut!=="termine"&&o.statut!=="annule");
   const mouvJour = mouvements.filter(m=>new Date(m.created_at||m.date).toDateString()===new Date().toDateString());
 
@@ -109,16 +121,18 @@ function Dashboard({ stockOverrides, mouvements, ordres, products, user, navigat
         {[
           {label:"Références",value:stats.total.toLocaleString("fr-FR"),icon:"🗂",color:"#1a1a1a"},
           {label:"En stock",value:stats.ok.toLocaleString("fr-FR"),icon:"✅",color:"#059669"},
-          {label:"Rupture",value:stats.rupture.toLocaleString("fr-FR"),icon:"🔴",color:"#dc2626"},
-          {label:"Faible",value:stats.faible,icon:"⚠️",color:"#d97706"},
+          {label:"Rupture",value:stats.rupture.toLocaleString("fr-FR"),icon:"🔴",color:"#dc2626",onClick:()=>navigateTo("stock_critique")},
+          {label:"Faible",value:stats.faible,icon:"⚠️",color:"#d97706",onClick:()=>navigateTo("stock_critique")},
           {label:"Valeur stock",value:stats.valeur.toLocaleString("fr-FR")+" €",icon:"💶",color:"#3b82f6"},
           {label:"OR en cours",value:orOuverts.length,icon:"🔧",color:"#7c3aed"},
           {label:"Mouvements/jour",value:mouvJour.length,icon:"📥",color:"#0891b2"},
         ].map((k,i)=>(
-          <div key={i} style={{background:"#fff",borderRadius:14,padding:"16px 18px",border:"1px solid #e0e0d8",boxShadow:"0 1px 3px rgba(0,0,0,0.05)"}}>
+          <div key={i} onClick={k.onClick} style={{background:"#fff",borderRadius:14,padding:"16px 18px",border:k.onClick?"1.5px solid #fca5a5":"1px solid #e0e0d8",boxShadow:"0 1px 3px rgba(0,0,0,0.05)",cursor:k.onClick?"pointer":"default",transition:"transform 0.1s",userSelect:"none"}}
+            onMouseEnter={e=>{if(k.onClick)e.currentTarget.style.transform="scale(1.03)"}}
+            onMouseLeave={e=>{if(k.onClick)e.currentTarget.style.transform=""}}>
             <div style={{fontSize:22,marginBottom:6}}>{k.icon}</div>
             <div style={{fontSize:22,fontWeight:900,color:k.color,letterSpacing:-0.5}}>{k.value}</div>
-            <div style={{fontSize:12,color:"#6b7280",marginTop:4}}>{k.label}</div>
+            <div style={{fontSize:12,color:"#6b7280",marginTop:4}}>{k.label}{k.onClick&&<span style={{marginLeft:5,fontSize:10,color:"#9ca3af"}}>→ voir</span>}</div>
           </div>
         ))}
       </div>
@@ -137,7 +151,7 @@ function Dashboard({ stockOverrides, mouvements, ordres, products, user, navigat
                 </div>
                 <div style={{textAlign:"right"}}>
                   <div style={{fontWeight:800,color:"#fbbf24",fontSize:16}}>{getStock(p)}</div>
-                  <div style={{fontSize:10,color:"#6b7280"}}>min: {p.min}</div>
+                  <div style={{fontSize:10,color:"#6b7280"}}>seuil: {getSeuilMin(p)}{hasEquiv(p)&&getSeuilMinEquiv(p)>0?` / équiv: ${getSeuilMinEquiv(p)}`:""}</div>
                 </div>
               </div>
             ))
@@ -4749,6 +4763,9 @@ const NAV_ALL = [
   { id:"catalogue",    label:"Catalogue articles",   icon:"📋", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"parc",          label:"Parc engins",           icon:"🚜", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"utilisateurs",  label:"Utilisateurs",          icon:"👥", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
+  { id:"seuils",        label:"Seuils critiques",      icon:"⚠️", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+  { id:"stock_critique",label:"Stock critique",        icon:"🚨", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+  { id:"a_commander",  label:"À commander",            icon:"🚨", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"admin",         label:"Administration",        icon:"🛡️", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"fournisseurs",  label:"Fournisseurs",          icon:"🏭", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"bons_commande", label:"Demandes de devis",     icon:"📄", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
@@ -4766,7 +4783,8 @@ const NAV_SECTIONS = [
   {
     id:"atelier", label:"Atelier", icon:"🏭", defaultOpen:true,
     items:[
-      { id:"stock",        label:"Stocks",               icon:"📦", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"stock",         label:"Stocks",               icon:"📦", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"stock_critique",label:"Stock critique",       icon:"🚨", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
       { id:"scanner",      label:"Scanner articles",     icon:"📷", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
       { id:"barcodes",     label:"Codes-barres",         icon:"🔲", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
       { id:"mouvements",   label:"Entrées / Sorties",    icon:"📥", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
@@ -4797,13 +4815,15 @@ const NAV_SECTIONS = [
   {
     id:"gestion", label:"Gestion", icon:"👥", defaultOpen:false,
     items:[
-      { id:"utilisateurs", label:"Utilisateurs", icon:"👥", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"utilisateurs", label:"Utilisateurs",     icon:"👥", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"seuils",       label:"Seuils critiques", icon:"⚠️", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
     ]
   },
   {
     id:"achats", label:"Achats", icon:"🛒", defaultOpen:false,
     items:[
       { id:"fournisseurs",  label:"Fournisseurs",      icon:"🏭", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"a_commander",   label:"À commander",       icon:"🚨", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
       { id:"bons_commande", label:"Demandes de devis", icon:"📄", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
     ]
   },
@@ -4941,9 +4961,9 @@ const MODULES_PERMISSIONS = [
 const DEFAULT_PERMISSIONS = {
   admin:                  null,
   technicien:             ["dashboard","stock","scanner","ordres","equivalences","vue_eclatee","ref_filtres"],
-  magasinier:             ["dashboard","stock","scanner","mouvements","ordres","equivalences","vue_eclatee","ref_filtres","fournisseurs","bons_commande"],
+  magasinier:             ["dashboard","stock","stock_critique","a_commander","scanner","mouvements","ordres","equivalences","vue_eclatee","ref_filtres","fournisseurs","bons_commande","seuils"],
   preparateur:            ["dashboard","stock","scanner","ordres","location","pret","equivalences","vue_eclatee","ref_filtres"],
-  magasinier_preparateur: ["dashboard","stock","scanner","mouvements","ordres","location","pret","equivalences","vue_eclatee","ref_filtres","fournisseurs","bons_commande"],
+  magasinier_preparateur: ["dashboard","stock","stock_critique","a_commander","scanner","mouvements","ordres","location","pret","equivalences","vue_eclatee","ref_filtres","fournisseurs","bons_commande","seuils"],
   lecteur:                ["dashboard","stock","scanner","vue_eclatee","ref_filtres"],
 };
 
@@ -5429,6 +5449,7 @@ export default function App() {
   const [prets,setPrets]=useState([]);
   const [parcVehicules,setParcVehicules]=useState([]);
   const [fournisseurs,setFournisseurs]=useState([]);
+  const [seuilsOverrides,setSeuilsOverrides]=useState({});
   const [showInstall, setShowInstall] = useState(false);
 
   // PWA Install prompt
@@ -5456,6 +5477,16 @@ export default function App() {
   const ALL_SITE_PRODUCTS = siteId === "clmtp_sable"
     ? [...ALL_PRODUCTS, ...(customArticles||[])]
     : catalogue;
+
+  const stockCritiqueCount = (() => {
+    const getS = p => stockOverrides[p.id] !== undefined ? stockOverrides[p.id] : (p.stock ?? 0)
+    return ALL_SITE_PRODUCTS.filter(p => {
+      const s=getS(p), sm=seuilsOverrides[p.id]?.seuil_min ?? p.min ?? 0
+      if (sm === 0 || s >= sm) return false
+      const sme = seuilsOverrides[p.id]?.seuil_min_equivalence ?? 0
+      return !(equivalences[p.id]?.length && sme > 0 && s >= sme)
+    }).length
+  })();
 
   const handleLogin = (u, sid) => { setUser(u); setSiteId(sid); };
   const handleLogout = () => {
@@ -5491,7 +5522,7 @@ export default function App() {
     if(!user) return;
     async function loadAll(){
       setLoading(true);
-      const [movs,stock,ords,eqs,prix,histPrix,parc,fourns]=await Promise.all([
+      const [movs,stock,ords,eqs,prix,histPrix,parc,fourns,seuils]=await Promise.all([
         getMouvementsSite(siteId),
         getStockOverridesSite(siteId),
         getOrdresSite(siteId),
@@ -5500,6 +5531,7 @@ export default function App() {
         getHistoriquePrix(),
         getParcVehicules(),
         getFournisseurs(),
+        getSeuilsOverridesSite(siteId),
       ]);
       setMouvements(movs);
       setStockOverrides(stock);
@@ -5509,6 +5541,7 @@ export default function App() {
       setHistoriquePrix(histPrix);
       setParcVehicules(parc);
       setFournisseurs(fourns);
+      setSeuilsOverrides(seuils);
       // Charger articles custom pour CLMTP SABLÉ
       if(siteId === "clmtp_sable") {
         const custom = await getCatalogue(siteId);
@@ -5548,7 +5581,7 @@ export default function App() {
 
   const renderPage=()=>{
     if(loading) return <Spinner/>;
-    if(page==="dashboard") return <Dashboard stockOverrides={stockOverrides} mouvements={mouvements} ordres={ordres} products={ALL_SITE_PRODUCTS} user={user} navigateTo={setPage}/>;
+    if(page==="dashboard") return <Dashboard stockOverrides={stockOverrides} mouvements={mouvements} ordres={ordres} products={ALL_SITE_PRODUCTS} user={user} navigateTo={setPage} seuilsOverrides={seuilsOverrides} equivalences={equivalences}/>;
     if(page==="stock")     return <Stock stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} products={PRODUCTS} siteId={siteId} user={user} customArticles={customArticles} setCustomArticles={setCustomArticles} autoOpenNewArticle={autoOpenNewArticle} setAutoOpenNewArticle={setAutoOpenNewArticle}/>;
     if(page==="mouvements") return <EntreesSorties mouvements={mouvements.filter(m=>!m.site_id||m.site_id===siteId)} setMouvements={setMouvements} stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} siteId={siteId} products={ALL_SITE_PRODUCTS} user={user} navigateTo={setPage} setAutoOpenNewArticle={setAutoOpenNewArticle}/>;
     if(page==="chantiers") return <Chantiers user={user} siteId={siteId} mouvements={mouvements}/>;
@@ -5569,6 +5602,9 @@ export default function App() {
     if(page==="admin")        return <AdminDashboard user={user} navigateTo={setPage}/>;
     if(page==="fournisseurs")  return <GestionFournisseurs onRefresh={()=>getFournisseurs().then(setFournisseurs)}/>;
     if(page==="bons_commande") return <BonsCommande siteId={siteId} user={user} products={ALL_SITE_PRODUCTS} fournisseurs={fournisseurs}/>;
+    if(page==="seuils")        return <SeuilsStock products={ALL_SITE_PRODUCTS} stockOverrides={stockOverrides} equivalences={equivalences} seuilsOverrides={seuilsOverrides} setSeuilsOverrides={setSeuilsOverrides} siteId={siteId}/>;
+    if(page==="stock_critique") return <StockCritique products={ALL_SITE_PRODUCTS} stockOverrides={stockOverrides} equivalences={equivalences} seuilsOverrides={seuilsOverrides} fournisseurs={fournisseurs} siteId={siteId} user={user} navigateTo={setPage}/>;
+    if(page==="a_commander")    return <StockCritique products={ALL_SITE_PRODUCTS} stockOverrides={stockOverrides} equivalences={equivalences} seuilsOverrides={seuilsOverrides} fournisseurs={fournisseurs} siteId={siteId} user={user} navigateTo={setPage} pageTitle="Articles à commander" pageSubtitle={`Stock critique · ${{"clmtp_sable":"CLMTP Sablé","claisse_rail":"Claisse Rail","stmf":"STMF"}[siteId]||siteId}`}/>;
   };
 
   return (
@@ -5580,6 +5616,7 @@ export default function App() {
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes scanline{0%,100%{top:10%}50%{top:90%}}
         @keyframes slideIn{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
         ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:99px;}
 
         /* MOBILE RESPONSIVE */
@@ -5662,13 +5699,14 @@ export default function App() {
                   <div style={{overflow:"hidden",maxHeight:isOpen?"1000px":"0",transition:"max-height 0.28s ease"}}>
                     {section.items.map(item=>{
                       const active=page===item.id;
-                      const badge=item.id==="ordres"&&orEnCours>0?orEnCours:item.id==="mouvements"&&mouvJour>0?mouvJour:0;
+                      const badge=item.id==="ordres"&&orEnCours>0?orEnCours:item.id==="mouvements"&&mouvJour>0?mouvJour:(item.id==="stock"||item.id==="a_commander"||item.id==="stock_critique")&&stockCritiqueCount>0?stockCritiqueCount:0;
+                      const badgeBg=item.id==="ordres"?"#7c3aed":(item.id==="stock"||item.id==="a_commander"||item.id==="stock_critique")?"#dc2626":"#f59e0b";
                       return(
                         <button key={item.id} onClick={()=>setPage(item.id)} title={!sidebar?item.label:""}
                           style={{display:"flex",alignItems:"center",gap:10,padding:sidebar?"8px 12px 8px 22px":"8px 10px",borderRadius:9,border:"none",cursor:"pointer",background:active?"#2d3d5c":"transparent",color:active?"#90b4f0":"#8a9ab8",fontWeight:active?700:500,fontSize:12,textAlign:"left",width:"100%",borderLeft:active?"3px solid #90b4f0":"3px solid transparent"}}>
                           <span style={{fontSize:15,flexShrink:0}}>{item.icon}</span>
                           {sidebar&&<span style={{flex:1}}>{item.label}</span>}
-                          {sidebar&&badge>0&&<span style={{background:item.id==="ordres"?"#7c3aed":"#f59e0b",color:"#fff",borderRadius:99,padding:"1px 7px",fontSize:10,fontWeight:700}}>{badge}</span>}
+                          {sidebar&&badge>0&&<span style={{background:badgeBg,color:"#fff",borderRadius:99,padding:"1px 7px",fontSize:10,fontWeight:700,animation:(item.id==="stock"||item.id==="a_commander")?"pulse 1.5s infinite":undefined}}>{badge}</span>}
                         </button>
                       );
                     })}

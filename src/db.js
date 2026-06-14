@@ -550,6 +550,30 @@ export async function setStockOverrideSite(articleId, stock, siteId) {
   if (error) console.error('setStockOverrideSite:', error)
 }
 
+export async function getSeuilsOverridesSite(siteId) {
+  const { data, error } = await supabase
+    .from('stock_overrides')
+    .select('article_id, seuil_min, seuil_min_equivalence')
+    .eq('site_id', siteId)
+  if (error) { console.error(error); return {}; }
+  const map = {}
+  ;(data || []).forEach(r => {
+    if (r.seuil_min != null || r.seuil_min_equivalence != null)
+      map[r.article_id] = { seuil_min: r.seuil_min, seuil_min_equivalence: r.seuil_min_equivalence }
+  })
+  return map
+}
+
+export async function setSeuilOverrideSite(articleId, siteId, seuilMin, seuilMinEquiv) {
+  const { error } = await supabase
+    .from('stock_overrides')
+    .upsert(
+      { article_id: articleId, site_id: siteId, seuil_min: seuilMin ?? 0, seuil_min_equivalence: seuilMinEquiv ?? 0 },
+      { onConflict: 'article_id,site_id' }
+    )
+  if (error) console.error('setSeuilOverrideSite:', error)
+}
+
 export async function getMouvementsSite(siteId) {
   const { data, error } = await supabase
     .from('mouvements')
