@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS bons_commande_lignes (
   prix_unitaire  NUMERIC(12,2) NOT NULL DEFAULT 0,
   montant_ligne  NUMERIC(12,2) NOT NULL DEFAULT 0,
   source         TEXT DEFAULT 'libre'
-                   CHECK (source IN ('catalogue_milwaukee','filtration','libre')),
+                   CHECK (source IN ('catalogue_milwaukee','filtration','libre','ref_unified','designation')),
   ordre          INTEGER DEFAULT 0,
   created_at     TIMESTAMPTZ DEFAULT now()
 );

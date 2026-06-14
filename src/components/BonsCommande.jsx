@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   getBonsCommande, createBonCommande, updateBonCommande, deleteBonCommande,
   getBonCommandeLignes, saveBonCommandeLignes, getNextBCNumero,
   getFiltrationVehicules, getFiltrationEngins,
   getDDVFournisseurs, syncDDVFournisseurs, updateDDVFournisseur, deleteDDVFournisseur,
+  getCatalogue,
 } from "../db.js"
 
 const SITES_LABEL = { clmtp_sable:"CLMTP SABLÉ", claisse_rail:"CLAISSE RAIL", stmf:"STMF" }
@@ -205,68 +206,117 @@ function DDVSuivi({ ddvFourns, setDdvFourns }) {
 }
 
 // ── LIGNE ROW ─────────────────────────────────────────────────────────────────
-function LigneRow({ ligne, index, products, filtrationData, onChange, onRemove }) {
+const SRC_BADGE = {
+  milwaukee: { bg:"#dbeafe", text:"#1e40af", label:"M" },
+  filtration: { bg:"#d1fae5", text:"#065f46", label:"F" },
+  catalogue:  { bg:"#ede9fe", text:"#6d28d9", label:"C" },
+}
+
+function LigneRow({ ligne, index, products, filtrationData, catalogueData, onChange, onRemove }) {
   const [query, setQuery] = useState(ligne.reference || "")
   const [suggs, setSuggs] = useState([])
   const [open, setOpen] = useState(false)
+  const [dropRect, setDropRect] = useState(null)
+  const inputRef = useRef(null)
+
+  const openDrop = () => {
+    if (inputRef.current) {
+      const r = inputRef.current.getBoundingClientRect()
+      setDropRect({ top: r.bottom + 2, left: r.left, width: r.width })
+    }
+    setOpen(true)
+  }
 
   const search = (q) => {
     setQuery(q); onChange(index, "reference", q)
-    if (!q.trim()) { setSuggs([]); return }
+    if (!q.trim()) { setSuggs([]); setOpen(false); return }
     const ql = q.toLowerCase()
-    if (ligne.source === "catalogue_milwaukee") {
+    if (ligne.source === "ref_unified") {
+      const results = []
+      ;(products||[]).filter(p =>
+        (p.name||"").toLowerCase().includes(ql)||(p.id||"").toLowerCase().includes(ql)||(p.sku||"").toLowerCase().includes(ql)
+      ).slice(0,5).forEach(p => results.push({ ref:p.id||p.sku||"", label:p.name||p.nom||"", prix:p.prix||0, _source:"milwaukee" }))
+      filtrationData.filter(f =>
+        f.ref.toLowerCase().includes(ql)||f.label.toLowerCase().includes(ql)
+      ).slice(0,5).forEach(f => results.push({ ...f, _source:"filtration" }))
+      ;(catalogueData||[]).filter(c =>
+        (c.name||"").toLowerCase().includes(ql)||(c.id||"").toLowerCase().includes(ql)||(c.sku||"").toLowerCase().includes(ql)
+      ).slice(0,5).forEach(c => results.push({ ref:c.id||c.sku||"", label:c.name||"", prix:c.prix||0, _source:"catalogue" }))
+      setSuggs(results.slice(0,12))
+    } else if (ligne.source === "catalogue_milwaukee") {
       setSuggs((products||[]).filter(p=>
         (p.name||"").toLowerCase().includes(ql)||(p.id||"").toLowerCase().includes(ql)||(p.sku||"").toLowerCase().includes(ql)
-      ).slice(0,8).map(p=>({ref:p.id||p.sku||"",label:p.name||p.nom||"",prix:p.prix||0})))
+      ).slice(0,8).map(p=>({ ref:p.id||p.sku||"", label:p.name||p.nom||"", prix:p.prix||0, _source:"milwaukee" })))
     } else if (ligne.source === "filtration") {
       setSuggs(filtrationData.filter(f=>
         f.ref.toLowerCase().includes(ql)||f.label.toLowerCase().includes(ql)
-      ).slice(0,8))
+      ).slice(0,8).map(f=>({ ...f, _source:"filtration" })))
     }
-    setOpen(true)
+    openDrop()
   }
 
   const pick = (s) => {
     setQuery(s.ref); setSuggs([]); setOpen(false)
     onChange(index, "reference", s.ref)
     onChange(index, "designation", s.label)
+    onChange(index, "_badge", s._source)
     if (s.prix > 0) onChange(index, "prix_unitaire", s.prix)
   }
 
-  const badge = ligne.source === "catalogue_milwaukee"
+  const effectiveBadge = ligne._badge
+  const badge = effectiveBadge === "milwaukee"
+    ? {bg:"#dbeafe",text:"#1e40af",label:"Milwaukee"}
+    : effectiveBadge === "filtration"
+    ? {bg:"#d1fae5",text:"#065f46",label:"Filtration"}
+    : effectiveBadge === "catalogue"
+    ? {bg:"#ede9fe",text:"#6d28d9",label:"Catalogue"}
+    : ligne.source === "ref_unified"
+    ? {bg:"#f3f4f6",text:"#555",label:"Réf."}
+    : ligne.source === "designation"
+    ? {bg:"#fef3c7",text:"#d97706",label:"Désignation"}
+    : ligne.source === "catalogue_milwaukee"
     ? {bg:"#dbeafe",text:"#1e40af",label:"Milwaukee"}
     : ligne.source === "filtration"
     ? {bg:"#d1fae5",text:"#065f46",label:"Filtration"}
     : {bg:"#f3f4f6",text:"#555",label:"Libre"}
 
+  const hasAutocomplete = ligne.source === "ref_unified" || ligne.source === "catalogue_milwaukee" || ligne.source === "filtration"
   const montant = (parseFloat(ligne.quantite)||0) * (parseFloat(ligne.prix_unitaire)||0)
 
   return (
     <tr style={{borderBottom:"1px solid #f3f4f6"}}>
       <td style={{padding:"8px 10px",verticalAlign:"top",minWidth:160}}>
         <span style={{background:badge.bg,color:badge.text,padding:"2px 7px",borderRadius:99,fontSize:10,fontWeight:700,display:"inline-block",marginBottom:4}}>{badge.label}</span>
-        {ligne.source !== "libre" ? (
+        {hasAutocomplete ? (
           <div style={{position:"relative"}}>
-            <input value={query} onChange={e=>search(e.target.value)} onFocus={()=>query&&setOpen(true)}
+            <input ref={inputRef} value={query}
+              onChange={e=>search(e.target.value)}
+              onFocus={()=>{ if(query) openDrop() }}
               onBlur={()=>setTimeout(()=>setOpen(false),180)}
-              placeholder={ligne.source==="catalogue_milwaukee"?"Réf. / nom article…":"Réf. filtration…"}
+              placeholder={ligne.source==="ref_unified"?"Réf. / désignation…":ligne.source==="catalogue_milwaukee"?"Réf. / nom article…":"Réf. filtration…"}
               style={{width:"100%",padding:"6px 9px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:12,outline:"none",boxSizing:"border-box"}}/>
-            {open&&suggs.length>0&&(
-              <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e0e0d8",borderRadius:10,zIndex:200,boxShadow:"0 4px 20px rgba(0,0,0,0.12)",maxHeight:220,overflowY:"auto"}}>
-                {suggs.map((s,i)=>(
-                  <div key={i} onMouseDown={()=>pick(s)} style={{padding:"8px 12px",cursor:"pointer",borderBottom:"1px solid #f3f4f6"}}
-                    onMouseEnter={e=>e.currentTarget.style.background="#f9fafb"}
-                    onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
-                    <div style={{fontWeight:700,fontFamily:"monospace",fontSize:11,color:"#1e2330"}}>{s.ref||"—"}</div>
-                    <div style={{color:"#6b7280",fontSize:11,marginTop:1}}>{s.label}</div>
-                    {s.prix>0&&<div style={{color:"#059669",fontSize:11,fontWeight:700}}>{s.prix.toFixed(2)} €</div>}
-                  </div>
-                ))}
+            {open&&suggs.length>0&&dropRect&&(
+              <div style={{position:"fixed",top:dropRect.top,left:dropRect.left,width:dropRect.width,background:"#fff",border:"1px solid #e0e0d8",borderRadius:10,zIndex:9999,boxShadow:"0 8px 24px rgba(0,0,0,0.14)",maxHeight:260,overflowY:"auto"}}>
+                {suggs.map((s,i)=>{
+                  const sb = SRC_BADGE[s._source]
+                  return (
+                    <div key={i} onMouseDown={()=>pick(s)} style={{padding:"8px 12px",cursor:"pointer",borderBottom:"1px solid #f3f4f6",display:"flex",gap:8,alignItems:"flex-start"}}
+                      onMouseEnter={e=>e.currentTarget.style.background="#f9fafb"}
+                      onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
+                      {sb&&<span style={{background:sb.bg,color:sb.text,fontSize:9,fontWeight:800,padding:"2px 5px",borderRadius:99,flexShrink:0,marginTop:2}}>{sb.label}</span>}
+                      <div>
+                        <div style={{fontWeight:700,fontFamily:"monospace",fontSize:11,color:"#1e2330"}}>{s.ref||"—"}</div>
+                        <div style={{color:"#6b7280",fontSize:11,marginTop:1}}>{s.label}</div>
+                        {s.prix>0&&<div style={{color:"#059669",fontSize:11,fontWeight:700}}>{s.prix.toFixed(2)} €</div>}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>
         ) : (
-          <input value={ligne.reference} onChange={e=>onChange(index,"reference",e.target.value)}
+          <input value={ligne.reference||""} onChange={e=>onChange(index,"reference",e.target.value)}
             placeholder="Référence…"
             style={{width:"100%",padding:"6px 9px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:12,outline:"none",boxSizing:"border-box"}}/>
         )}
@@ -312,12 +362,13 @@ function FormBC({ bc, siteId, user, products, fournisseurs, onSaved, onCancel })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [filtrationData, setFiltrationData] = useState([])
+  const [catalogueData, setCatalogueData] = useState([])
   const [selectedFourn, setSelectedFourn] = useState([])
   const [ddvFourns, setDdvFourns] = useState([])
   const [sendModal, setSendModal] = useState(false)
 
   useEffect(() => {
-    Promise.all([getFiltrationVehicules(), getFiltrationEngins()]).then(([vehicules, engins]) => {
+    Promise.all([getFiltrationVehicules(), getFiltrationEngins(), getCatalogue(siteId)]).then(([vehicules, engins, cat]) => {
       const items = []
       const vFields = ["filtre_air","filtre_habitacle","filtre_gasoil","filtre_huile","plaquette_avant","plaquette_arriere","disque_avant","disque_arriere","pneu"]
       const vLabels = ["Filtre air","Filtre habitacle","Filtre gasoil","Filtre huile","Plaquette avant","Plaquette arrière","Disque avant","Disque arrière","Pneu"]
@@ -326,6 +377,7 @@ function FormBC({ bc, siteId, user, products, fournisseurs, onSaved, onCancel })
       const eLabels = ["Filtre hydraulique","Filtre moteur","Filtre air sécurité","Filtre air principal","Filtre GO","Filtre AdBlue","Dessiccateur","Filtre aération","Filtre transmission","Courroie"]
       engins.forEach(e => eFields.forEach((f,fi) => { if(e[f]) items.push({ref:e[f],label:`${eLabels[fi]} — ${e.engin||e.code||""}`,prix:0}) }))
       setFiltrationData(items)
+      setCatalogueData(cat)
     })
     if (!isNew) {
       Promise.all([getBonCommandeLignes(bc.id), getDDVFournisseurs(bc.id)]).then(([ls, ddvs]) => {
@@ -455,40 +507,39 @@ function FormBC({ bc, siteId, user, products, fournisseurs, onSaved, onCancel })
 
     doc.setDrawColor(229,231,235); doc.line(15,68,195,68)
 
+    doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(17,24,39)
+    doc.text("Bonjour,", 15, 76)
+    const introText = "Pourriez-vous nous faire un devis (délais / disponibilité) sous l'entité CLMTP SABLE SUR SARTHE pour les références ci-dessous :"
+    const introLines = doc.splitTextToSize(introText, 180)
+    doc.text(introLines, 15, 84)
+    const introEndY = 84 + introLines.length * 6
+
     autoTable(doc, {
-      head:[["Réf.","Désignation","Source","Qté","P.U. HT (€)","Montant HT (€)"]],
+      head:[["Réf.","Désignation","Qté"]],
       body: lignes.map(l=>[
-        l.reference||"—", l.designation,
-        l.source==="catalogue_milwaukee"?"Milwaukee":l.source==="filtration"?"Filtration":"Libre",
+        l.reference||"—",
+        l.designation,
         String(parseFloat(l.quantite)||0),
-        parseFloat(l.prix_unitaire||0).toFixed(2),
-        ((parseFloat(l.quantite)||0)*(parseFloat(l.prix_unitaire)||0)).toFixed(2),
       ]),
-      startY:72, styles:{fontSize:9,cellPadding:3},
+      startY: introEndY + 6,
+      styles:{fontSize:9,cellPadding:3},
       headStyles:{fillColor:[17,24,39],textColor:255,fontStyle:"bold",fontSize:9},
       alternateRowStyles:{fillColor:[249,250,251]},
-      columnStyles:{0:{cellWidth:30,fontStyle:"bold",font:"courier"},1:{cellWidth:70},2:{cellWidth:22,fontSize:8,textColor:[107,114,128]},3:{cellWidth:14,halign:"center"},4:{cellWidth:26,halign:"right"},5:{cellWidth:26,halign:"right",fontStyle:"bold"}},
+      columnStyles:{
+        0:{cellWidth:42,fontStyle:"bold",font:"courier"},
+        1:{cellWidth:122},
+        2:{cellWidth:16,halign:"center"},
+      },
       margin:{left:15,right:15},
     })
 
     const finalY = (doc.lastAutoTable?.finalY||170) + 8
-    doc.setFillColor(249,250,251); doc.roundedRect(130,finalY,65,40,3,3,"F")
-    doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(107,114,128)
-    doc.text("Total HT :", 135, finalY+10)
-    doc.text("TVA (20%) :", 135, finalY+19)
-    doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(17,24,39)
-    doc.text("TOTAL TTC :", 135, finalY+30)
-    doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(107,114,128)
-    doc.text(`${totalHT.toFixed(2)} €`, 193, finalY+10, {align:"right"})
-    doc.text(`${tva.toFixed(2)} €`, 193, finalY+19, {align:"right"})
-    doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(5,150,105)
-    doc.text(`${totalTTC.toFixed(2)} €`, 193, finalY+30, {align:"right"})
 
     if (form.notes) {
       doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor(107,114,128)
       doc.text("NOTES :", 15, finalY+10)
       doc.setFont("helvetica","normal"); doc.setTextColor(17,24,39); doc.setFontSize(9)
-      doc.text(form.notes, 15, finalY+17, {maxWidth:108})
+      doc.text(form.notes, 15, finalY+17, {maxWidth:180})
     }
 
     const pages = doc.getNumberOfPages()
@@ -584,9 +635,9 @@ function FormBC({ bc, siteId, user, products, fournisseurs, onSaved, onCancel })
         <div style={{padding:"14px 20px",borderBottom:"1px solid #f3f4f6",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
           <div style={{fontWeight:700,fontSize:15,color:"#1a1a1a"}}>📦 Lignes ({lignes.length})</div>
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            <button onClick={()=>addLigne("catalogue_milwaukee")} style={{padding:"7px 13px",background:"#dbeafe",color:"#1e40af",border:"1px solid #93c5fd",borderRadius:9,cursor:"pointer",fontSize:12,fontWeight:700}}>+ Milwaukee</button>
-            <button onClick={()=>addLigne("filtration")} style={{padding:"7px 13px",background:"#d1fae5",color:"#065f46",border:"1px solid #6ee7b7",borderRadius:9,cursor:"pointer",fontSize:12,fontWeight:700}}>+ Filtration</button>
-            <button onClick={()=>addLigne("libre")} style={{padding:"7px 13px",background:"#f3f4f6",color:"#1a1a1a",border:"1px solid #e0e0d8",borderRadius:9,cursor:"pointer",fontSize:12,fontWeight:700}}>+ Ligne libre</button>
+            <button onClick={()=>addLigne("ref_unified")} style={{padding:"7px 13px",background:"#f3f4f6",color:"#1a1a1a",border:"1px solid #e0e0d8",borderRadius:9,cursor:"pointer",fontSize:12,fontWeight:700}}>+ Référence</button>
+            <button onClick={()=>addLigne("designation")} style={{padding:"7px 13px",background:"#fef3c7",color:"#d97706",border:"1px solid #fcd34d",borderRadius:9,cursor:"pointer",fontSize:12,fontWeight:700}}>+ Désignation</button>
+            <button onClick={()=>addLigne("libre")} style={{padding:"7px 13px",background:"#f9fafb",color:"#6b7280",border:"1px solid #e0e0d8",borderRadius:9,cursor:"pointer",fontSize:12,fontWeight:700}}>+ Ligne libre</button>
           </div>
         </div>
         {lignes.length === 0 ? (
@@ -606,7 +657,7 @@ function FormBC({ bc, siteId, user, products, fournisseurs, onSaved, onCancel })
               </thead>
               <tbody>
                 {lignes.map((l,i)=>(
-                  <LigneRow key={l._key||i} ligne={l} index={i} products={products} filtrationData={filtrationData} onChange={updateLigne} onRemove={removeLigne}/>
+                  <LigneRow key={l._key||i} ligne={l} index={i} products={products} filtrationData={filtrationData} catalogueData={catalogueData} onChange={updateLigne} onRemove={removeLigne}/>
                 ))}
               </tbody>
             </table>
