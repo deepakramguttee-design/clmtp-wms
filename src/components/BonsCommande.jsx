@@ -3,6 +3,7 @@ import {
   getBonsCommande, createBonCommande, updateBonCommande, deleteBonCommande,
   getBonCommandeLignes, saveBonCommandeLignes, getNextBCNumero,
   getFiltrationVehicules, getFiltrationEngins,
+  getDDVFournisseurs, syncDDVFournisseurs, updateDDVFournisseur, deleteDDVFournisseur,
 } from "../db.js"
 
 const SITES_LABEL = { clmtp_sable:"CLMTP SABLÉ", claisse_rail:"CLAISSE RAIL", stmf:"STMF" }
@@ -12,6 +13,195 @@ const BC_STATUTS = {
   envoye:     { bg:"#dbeafe", text:"#1e40af", label:"Envoyé"     },
   devis_recu: { bg:"#fef3c7", text:"#d97706", label:"Devis reçu" },
   commande:   { bg:"#d1fae5", text:"#065f46", label:"Commandé"   },
+}
+
+const DDV_S = {
+  en_attente: { bg:"#f3f4f6", text:"#6b7280", label:"En attente" },
+  envoye:     { bg:"#dbeafe", text:"#1e40af", label:"Envoyé"     },
+  devis_recu: { bg:"#fef3c7", text:"#d97706", label:"Devis reçu" },
+  commande:   { bg:"#d1fae5", text:"#065f46", label:"Commandé"   },
+}
+
+function buildMailto(fourn, bcNumero, lignes) {
+  const sujet = encodeURIComponent(`Demande de devis ${bcNumero} - CLMTP`)
+  const corps = lignes.length
+    ? lignes.map((l,i) => `${i+1}. Réf: ${l.reference||"—"} | ${l.designation} | Qté: ${l.quantite}`).join("\n")
+    : "(aucune ligne)"
+  const body = encodeURIComponent(
+    `Bonjour,\n\nNous vous adressons la présente demande de devis ${bcNumero}.\n\nArticles demandés :\n${corps}\n\nCordialement,\nCLMTP SABLÉ`
+  )
+  return `mailto:${fourn.email||""}?subject=${sujet}&body=${body}`
+}
+
+// ── MODAL ENVOI ───────────────────────────────────────────────────────────────
+function SendModal({ ddvFourns, bcNumero, lignes, onClose, onSent }) {
+  const [sentIds, setSentIds] = useState(new Set(ddvFourns.filter(f=>f.statut==="envoye").map(f=>f.id)))
+
+  const send = async (f) => {
+    window.open(buildMailto(f, bcNumero, lignes))
+    await updateDDVFournisseur(f.id, { statut:"envoye", date_envoi: new Date().toISOString() })
+    setSentIds(p => new Set([...p, f.id]))
+    onSent(f.id)
+  }
+
+  const sendAll = async () => {
+    const toSend = ddvFourns.filter(f => f.email && !sentIds.has(f.id))
+    for (let i=0; i<toSend.length; i++) {
+      const f = toSend[i]
+      setTimeout(() => window.open(buildMailto(f, bcNumero, lignes)), 400*i)
+      await updateDDVFournisseur(f.id, { statut:"envoye", date_envoi: new Date().toISOString() })
+      onSent(f.id)
+    }
+    setSentIds(new Set(ddvFourns.map(f=>f.id)))
+  }
+
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+      <div style={{background:"#fff",borderRadius:16,padding:28,width:"100%",maxWidth:540,boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+          <h2 style={{margin:0,fontSize:17,fontWeight:800}}>📧 Envoyer aux fournisseurs</h2>
+          <button onClick={onClose} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"5px 11px",cursor:"pointer",fontSize:14}}>✕</button>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:18,maxHeight:320,overflowY:"auto"}}>
+          {ddvFourns.map(f => {
+            const sent = sentIds.has(f.id)
+            return (
+              <div key={f.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",background:"#f9fafb",borderRadius:10,border:"1px solid #e0e0d8"}}>
+                <div>
+                  <div style={{fontWeight:700,fontSize:13}}>{f.fournisseur_nom}</div>
+                  <div style={{color:"#6b7280",fontSize:11}}>{f.email || <em>Pas d'email renseigné</em>}</div>
+                </div>
+                {sent
+                  ? <span style={{color:"#059669",fontWeight:700,fontSize:12,whiteSpace:"nowrap"}}>✓ Envoyé</span>
+                  : <button onClick={()=>send(f)} disabled={!f.email}
+                      style={{padding:"6px 14px",background:f.email?"#dbeafe":"#f3f4f6",color:f.email?"#1e40af":"#9ca3af",border:"none",borderRadius:8,cursor:f.email?"pointer":"not-allowed",fontSize:12,fontWeight:700,whiteSpace:"nowrap"}}>
+                      📧 Envoyer
+                    </button>
+                }
+              </div>
+            )
+          })}
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",borderTop:"1px solid #f3f4f6",paddingTop:14,gap:10}}>
+          <button onClick={onClose} style={{padding:"9px 18px",background:"#f3f4f6",border:"none",borderRadius:9,cursor:"pointer",fontSize:13,fontWeight:600}}>Fermer</button>
+          <button onClick={sendAll} style={{padding:"9px 20px",background:"#1e2330",color:"#fff",border:"none",borderRadius:9,cursor:"pointer",fontSize:13,fontWeight:700}}>
+            📬 Tout envoyer
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── SUIVI FOURNISSEURS ────────────────────────────────────────────────────────
+function DDVSuivi({ ddvFourns, setDdvFourns }) {
+  const [devisModal, setDevisModal] = useState(null)
+  const [devisForm, setDevisForm] = useState({ prix:"", notes:"" })
+
+  const prices = ddvFourns.filter(f=>f.prix_total_recu>0).map(f=>parseFloat(f.prix_total_recu))
+  const minPrix = prices.length ? Math.min(...prices) : null
+
+  const openDevis = (f) => { setDevisForm({ prix:f.prix_total_recu||"", notes:f.notes_reponse||"" }); setDevisModal(f) }
+
+  const saveDevis = async () => {
+    const updates = { statut:"devis_recu", prix_total_recu:parseFloat(devisForm.prix)||0, notes_reponse:devisForm.notes, date_reponse:new Date().toISOString() }
+    await updateDDVFournisseur(devisModal.id, updates)
+    setDdvFourns(p => p.map(f => f.id===devisModal.id ? {...f,...updates} : f))
+    setDevisModal(null)
+  }
+
+  const markCommande = async (f) => {
+    await updateDDVFournisseur(f.id, { statut:"commande" })
+    setDdvFourns(p => p.map(x => x.id===f.id ? {...x,statut:"commande"} : x))
+  }
+
+  const remove = async (f) => {
+    if (!confirm(`Retirer ${f.fournisseur_nom} du suivi ?`)) return
+    await deleteDDVFournisseur(f.id)
+    setDdvFourns(p => p.filter(x => x.id!==f.id))
+  }
+
+  if (!ddvFourns.length) return null
+
+  return (
+    <div style={{background:"#fff",borderRadius:14,border:"1px solid #e0e0d8",overflow:"hidden"}}>
+      <div style={{padding:"12px 18px",borderBottom:"1px solid #f3f4f6",fontWeight:700,fontSize:14,color:"#1a1a1a"}}>
+        📊 Suivi des fournisseurs ({ddvFourns.length})
+      </div>
+      <div style={{overflowX:"auto"}}>
+        <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+          <thead>
+            <tr style={{background:"#f9fafb",borderBottom:"1px solid #e0e0d8"}}>
+              {["Fournisseur","Email","Statut","Prix reçu","Notes réponse","Date envoi","Actions"].map(h=>(
+                <th key={h} style={{padding:"9px 12px",textAlign:"left",fontWeight:700,color:"#374151",fontSize:10,whiteSpace:"nowrap"}}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {ddvFourns.map((f,i) => {
+              const s = DDV_S[f.statut]||DDV_S.en_attente
+              const isBest = minPrix!==null && parseFloat(f.prix_total_recu)===minPrix && f.prix_total_recu>0
+              return (
+                <tr key={f.id} style={{borderBottom:"1px solid #f3f4f6",background:isBest?"#f0fdf4":i%2===0?"#fff":"#fafafa"}}>
+                  <td style={{padding:"9px 12px",fontWeight:700,fontSize:12}}>
+                    {isBest && <span title="Meilleur prix" style={{marginRight:4}}>🏆</span>}
+                    {f.fournisseur_nom}
+                  </td>
+                  <td style={{padding:"9px 12px",color:"#6b7280",fontSize:11}}>{f.email||"—"}</td>
+                  <td style={{padding:"9px 12px"}}>
+                    <span style={{background:s.bg,color:s.text,padding:"2px 8px",borderRadius:20,fontSize:10,fontWeight:700,whiteSpace:"nowrap"}}>{s.label}</span>
+                  </td>
+                  <td style={{padding:"9px 12px",fontWeight:700,color:isBest?"#059669":"#1a1a1a",whiteSpace:"nowrap"}}>
+                    {f.prix_total_recu>0 ? `${parseFloat(f.prix_total_recu).toFixed(2)} €` : "—"}
+                  </td>
+                  <td style={{padding:"9px 12px",color:"#6b7280",maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}} title={f.notes_reponse||""}>{f.notes_reponse||"—"}</td>
+                  <td style={{padding:"9px 12px",color:"#6b7280",whiteSpace:"nowrap",fontSize:11}}>
+                    {f.date_envoi ? new Date(f.date_envoi).toLocaleDateString("fr-FR") : "—"}
+                  </td>
+                  <td style={{padding:"9px 12px"}}>
+                    <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+                      {f.statut!=="commande" && (
+                        <button onClick={()=>openDevis(f)} style={{padding:"4px 9px",background:"#fef3c7",color:"#d97706",border:"none",borderRadius:6,cursor:"pointer",fontSize:11,fontWeight:700,whiteSpace:"nowrap"}}>📩 Devis reçu</button>
+                      )}
+                      {f.statut==="devis_recu" && (
+                        <button onClick={()=>markCommande(f)} style={{padding:"4px 9px",background:"#d1fae5",color:"#065f46",border:"none",borderRadius:6,cursor:"pointer",fontSize:11,fontWeight:700,whiteSpace:"nowrap"}}>✅ Commander</button>
+                      )}
+                      <button onClick={()=>remove(f)} style={{padding:"4px 8px",background:"#fee2e2",border:"none",borderRadius:6,cursor:"pointer",fontSize:11,color:"#dc2626",fontWeight:700}}>✕</button>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {devisModal && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+          <div style={{background:"#fff",borderRadius:16,padding:24,width:"100%",maxWidth:400,boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
+            <h3 style={{margin:"0 0 16px",fontSize:15,fontWeight:800}}>📩 Devis reçu — {devisModal.fournisseur_nom}</h3>
+            <div style={{display:"flex",flexDirection:"column",gap:12}}>
+              <div>
+                <label style={{fontSize:12,fontWeight:700,color:"#555",display:"block",marginBottom:4}}>Prix total reçu (€)</label>
+                <input type="number" step="0.01" min="0" value={devisForm.prix} onChange={e=>setDevisForm(p=>({...p,prix:e.target.value}))}
+                  placeholder="0.00" style={{width:"100%",padding:"9px 12px",border:"1px solid #e0e0d8",borderRadius:9,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+              </div>
+              <div>
+                <label style={{fontSize:12,fontWeight:700,color:"#555",display:"block",marginBottom:4}}>Notes / conditions</label>
+                <textarea value={devisForm.notes} onChange={e=>setDevisForm(p=>({...p,notes:e.target.value}))} rows={3}
+                  placeholder="Délai, conditions, remarques…"
+                  style={{width:"100%",padding:"9px 12px",border:"1px solid #e0e0d8",borderRadius:9,fontSize:13,outline:"none",resize:"vertical",boxSizing:"border-box",fontFamily:"inherit"}}/>
+              </div>
+            </div>
+            <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:16}}>
+              <button onClick={()=>setDevisModal(null)} style={{padding:"8px 16px",background:"#f3f4f6",border:"none",borderRadius:9,cursor:"pointer",fontSize:13,fontWeight:600}}>Annuler</button>
+              <button onClick={saveDevis} style={{padding:"8px 18px",background:"#d97706",color:"#fff",border:"none",borderRadius:9,cursor:"pointer",fontSize:13,fontWeight:700}}>💾 Enregistrer</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ── LIGNE ROW ─────────────────────────────────────────────────────────────────
@@ -119,9 +309,12 @@ function FormBC({ bc, siteId, user, products, fournisseurs, onSaved, onCancel })
     notes: bc?.notes || "",
   })
   const [lignes, setLignes] = useState([])
-  const [loading, setLoading] = useState(!isNew)
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [filtrationData, setFiltrationData] = useState([])
+  const [selectedFourn, setSelectedFourn] = useState([])
+  const [ddvFourns, setDdvFourns] = useState([])
+  const [sendModal, setSendModal] = useState(false)
 
   useEffect(() => {
     Promise.all([getFiltrationVehicules(), getFiltrationEngins()]).then(([vehicules, engins]) => {
@@ -135,8 +328,12 @@ function FormBC({ bc, siteId, user, products, fournisseurs, onSaved, onCancel })
       setFiltrationData(items)
     })
     if (!isNew) {
-      getBonCommandeLignes(bc.id).then(ls => {
+      Promise.all([getBonCommandeLignes(bc.id), getDDVFournisseurs(bc.id)]).then(([ls, ddvs]) => {
         setLignes(ls.map(l => ({...l, _key: Math.random()})))
+        setDdvFourns(ddvs)
+        const ids = ddvs.map(d => String(d.fournisseur_id))
+        setSelectedFourn(ids)
+        if (ddvs[0]) setForm(p => ({...p, fournisseur_id:String(ddvs[0].fournisseur_id), fournisseur_nom:ddvs[0].fournisseur_nom}))
         setLoading(false)
       })
     } else setLoading(false)
@@ -146,68 +343,81 @@ function FormBC({ bc, siteId, user, products, fournisseurs, onSaved, onCancel })
   const tva = totalHT * 0.20
   const totalTTC = totalHT + tva
 
-  const addLigne = (source) => setLignes(p => [...p, {_key:Date.now(),reference:"",designation:"",quantite:1,prix_unitaire:0,montant_ligne:0,source}])
-
-  const updateLigne = (i, field, val) => setLignes(p => p.map((l,idx) => idx!==i ? l : {...l,[field]:val,montant_ligne:(field==="quantite"?(parseFloat(val)||0)*(parseFloat(l.prix_unitaire)||0):(parseFloat(l.quantite)||0)*(parseFloat(field==="prix_unitaire"?val:l.prix_unitaire)||0))}))
-
-  const removeLigne = (i) => setLignes(p => p.filter((_,idx)=>idx!==i))
-
-  const handleFournisseur = (e) => {
-    const id = e.target.value
-    const f = fournisseurs.find(f => String(f.id)===String(id))
-    setForm(p => ({...p, fournisseur_id:id, fournisseur_nom:f?.nom||""}))
+  const toggleFourn = (id) => {
+    const sid = String(id)
+    setSelectedFourn(prev => {
+      const next = prev.includes(sid) ? prev.filter(x=>x!==sid) : [...prev, sid]
+      const first = fournisseurs.find(f=>String(f.id)===next[0])
+      setForm(fp => ({...fp, fournisseur_id:next[0]||"", fournisseur_nom:first?.nom||""}))
+      return next
+    })
   }
 
-  const buildPayload = (numero) => ({
-    numero: numero || bc?.numero,
-    fournisseur_id: form.fournisseur_id || null,
-    fournisseur_nom: form.fournisseur_nom,
-    site: form.site,
-    statut: isNew ? "brouillon" : form.statut,
-    created_by: `${user?.prenom||""} ${user?.nom||""}`.trim(),
-    total_ht: parseFloat(totalHT.toFixed(2)),
-    total_ttc: parseFloat(totalTTC.toFixed(2)),
-    notes: form.notes,
-  })
+  const addLigne = (source) => setLignes(p => [...p, {_key:Date.now(),reference:"",designation:"",quantite:1,prix_unitaire:0,montant_ligne:0,source}])
+  const updateLigne = (i, field, val) => setLignes(p => p.map((l,idx) => idx!==i ? l : {...l,[field]:val,montant_ligne:(field==="quantite"?(parseFloat(val)||0)*(parseFloat(l.prix_unitaire)||0):(parseFloat(l.quantite)||0)*(parseFloat(field==="prix_unitaire"?val:l.prix_unitaire)||0))}))
+  const removeLigne = (i) => setLignes(p => p.filter((_,idx)=>idx!==i))
+
+  const buildPayload = (numero) => {
+    const first = fournisseurs.find(f=>String(f.id)===selectedFourn[0])
+    return {
+      numero: numero || bc?.numero,
+      fournisseur_id: first?.id || null,
+      fournisseur_nom: first?.nom || form.fournisseur_nom,
+      site: form.site,
+      statut: isNew ? "brouillon" : form.statut,
+      created_by: `${user?.prenom||""} ${user?.nom||""}`.trim(),
+      total_ht: parseFloat(totalHT.toFixed(2)),
+      total_ttc: parseFloat(totalTTC.toFixed(2)),
+      notes: form.notes,
+    }
+  }
 
   const validate = () => {
-    if (!form.fournisseur_nom) { alert("Sélectionnez un fournisseur."); return false }
+    if (!selectedFourn.length) { alert("Sélectionnez au moins un fournisseur."); return false }
     if (!lignes.length) { alert("Ajoutez au moins une ligne."); return false }
     if (lignes.some(l => !l.designation.trim())) { alert("Toutes les lignes doivent avoir une désignation."); return false }
     return true
   }
 
+  const doSave = async () => {
+    const payload = buildPayload(isNew ? await getNextBCNumero(form.site) : undefined)
+    let savedBc
+    if (isNew) {
+      savedBc = await createBonCommande(payload)
+    } else {
+      await updateBonCommande(bc.id, payload)
+      savedBc = {...bc, ...payload, id:bc.id}
+    }
+    if (!savedBc) return null
+    await saveBonCommandeLignes(savedBc.id, lignes)
+    const fournsToSync = fournisseurs
+      .filter(f => selectedFourn.includes(String(f.id)))
+      .map(f => ({ fournisseur_id:f.id, fournisseur_nom:f.nom, email:f.email||"" }))
+    const updatedDdvs = await syncDDVFournisseurs(savedBc.id, fournsToSync)
+    setDdvFourns(updatedDdvs)
+    return savedBc
+  }
+
   const saveDraft = async () => {
     if (!validate()) return
     setSaving(true)
-    let saved
-    if (isNew) {
-      const numero = await getNextBCNumero(form.site)
-      saved = await createBonCommande(buildPayload(numero))
-    } else {
-      await updateBonCommande(bc.id, buildPayload())
-      saved = {...bc, ...buildPayload(), id:bc.id}
-    }
-    if (saved) {
-      await saveBonCommandeLignes(saved.id, lignes)
-      onSaved(saved, isNew)
-    }
+    const saved = await doSave()
     setSaving(false)
+    if (saved) onSaved(saved, isNew)
+  }
+
+  const openSendModal = async () => {
+    if (!validate()) return
+    setSaving(true)
+    await doSave()
+    setSaving(false)
+    setSendModal(true)
   }
 
   const generatePDF = async () => {
     if (!validate()) return
     setSaving(true)
-    let currentBc = bc
-    if (isNew) {
-      const numero = await getNextBCNumero(form.site)
-      currentBc = await createBonCommande(buildPayload(numero))
-      if (currentBc) await saveBonCommandeLignes(currentBc.id, lignes)
-    } else {
-      await updateBonCommande(bc.id, buildPayload())
-      await saveBonCommandeLignes(bc.id, lignes)
-      currentBc = {...bc, ...buildPayload()}
-    }
+    const currentBc = await doSave()
     setSaving(false)
     if (!currentBc) return
 
@@ -236,36 +446,28 @@ function FormBC({ bc, siteId, user, products, fournisseurs, onSaved, onCancel })
     doc.text(`Site : ${SITES_LABEL[form.site]||form.site}`, 135, 50)
     doc.text(`Créé par : ${buildPayload().created_by||"—"}`, 135, 56)
 
+    const fournsLabel = fournisseurs.filter(f=>selectedFourn.includes(String(f.id))).map(f=>f.nom).join(", ") || form.fournisseur_nom
     doc.setFillColor(249,250,251); doc.roundedRect(15,40,112,24,3,3,"F")
     doc.setFont("helvetica","bold"); doc.setFontSize(8); doc.setTextColor(107,114,128)
-    doc.text("FOURNISSEUR", 20, 47)
-    doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.setTextColor(17,24,39)
-    doc.text(form.fournisseur_nom, 20, 57)
+    doc.text("FOURNISSEUR(S)", 20, 47)
+    doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(17,24,39)
+    doc.text(fournsLabel, 20, 57, {maxWidth:105})
 
     doc.setDrawColor(229,231,235); doc.line(15,68,195,68)
 
     autoTable(doc, {
       head:[["Réf.","Désignation","Source","Qté","P.U. HT (€)","Montant HT (€)"]],
       body: lignes.map(l=>[
-        l.reference||"—",
-        l.designation,
+        l.reference||"—", l.designation,
         l.source==="catalogue_milwaukee"?"Milwaukee":l.source==="filtration"?"Filtration":"Libre",
         String(parseFloat(l.quantite)||0),
         parseFloat(l.prix_unitaire||0).toFixed(2),
         ((parseFloat(l.quantite)||0)*(parseFloat(l.prix_unitaire)||0)).toFixed(2),
       ]),
-      startY: 72,
-      styles:{fontSize:9,cellPadding:3},
+      startY:72, styles:{fontSize:9,cellPadding:3},
       headStyles:{fillColor:[17,24,39],textColor:255,fontStyle:"bold",fontSize:9},
       alternateRowStyles:{fillColor:[249,250,251]},
-      columnStyles:{
-        0:{cellWidth:30,fontStyle:"bold",font:"courier"},
-        1:{cellWidth:70},
-        2:{cellWidth:22,fontSize:8,textColor:[107,114,128]},
-        3:{cellWidth:14,halign:"center"},
-        4:{cellWidth:26,halign:"right"},
-        5:{cellWidth:26,halign:"right",fontStyle:"bold"},
-      },
+      columnStyles:{0:{cellWidth:30,fontStyle:"bold",font:"courier"},1:{cellWidth:70},2:{cellWidth:22,fontSize:8,textColor:[107,114,128]},3:{cellWidth:14,halign:"center"},4:{cellWidth:26,halign:"right"},5:{cellWidth:26,halign:"right",fontStyle:"bold"}},
       margin:{left:15,right:15},
     })
 
@@ -307,12 +509,18 @@ function FormBC({ bc, siteId, user, products, fournisseurs, onSaved, onCancel })
         <div>
           <button onClick={onCancel} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"7px 14px",cursor:"pointer",fontSize:13,fontWeight:600,marginBottom:8,display:"block"}}>← Retour à la liste</button>
           <h1 style={{fontSize:22,fontWeight:900,color:"#1a1a1a",margin:0}}>{isNew?"Nouvelle demande de devis":`Éditer ${bc.numero}`}</h1>
-          <p style={{color:"#6b7280",fontSize:13,margin:"4px 0 0"}}>Renseignez le fournisseur, le site et les articles à commander</p>
+          <p style={{color:"#6b7280",fontSize:13,margin:"4px 0 0"}}>Sélectionnez les fournisseurs, le site et les articles à commander</p>
         </div>
         <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
           <button onClick={saveDraft} disabled={saving} style={{background:"#fff",color:"#1e2330",border:"2px solid #1e2330",borderRadius:10,padding:"10px 18px",fontWeight:700,cursor:saving?"not-allowed":"pointer",fontSize:13,opacity:saving?.7:1}}>
             {saving?"⏳ Sauvegarde…":"💾 Enregistrer brouillon"}
           </button>
+          {!isNew && (
+            <button onClick={openSendModal} disabled={saving||!selectedFourn.length}
+              style={{background:"#dbeafe",color:"#1e40af",border:"none",borderRadius:10,padding:"11px 18px",fontWeight:700,cursor:saving||!selectedFourn.length?"not-allowed":"pointer",fontSize:13,opacity:saving?.7:1}}>
+              📧 Envoyer aux fournisseurs
+            </button>
+          )}
           <button onClick={generatePDF} disabled={saving} style={{background:"#1e2330",color:"#fff",border:"none",borderRadius:10,padding:"11px 20px",fontWeight:700,cursor:saving?"not-allowed":"pointer",fontSize:13,opacity:saving?.7:1}}>
             📄 Générer PDF
           </button>
@@ -320,12 +528,29 @@ function FormBC({ bc, siteId, user, products, fournisseurs, onSaved, onCancel })
       </div>
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:14}}>
-        <div style={{background:"#fff",borderRadius:14,padding:"16px 20px",border:"1px solid #e0e0d8"}}>
-          <label style={{fontSize:12,fontWeight:700,color:"#555",display:"block",marginBottom:8}}>Fournisseur *</label>
-          <select value={form.fournisseur_id} onChange={handleFournisseur} style={{width:"100%",padding:"10px 12px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",background:"#fff"}}>
-            <option value="">— Sélectionner un fournisseur —</option>
-            {fournisseurs.map(f=><option key={f.id} value={f.id}>{f.nom}</option>)}
-          </select>
+        {/* Fournisseurs multi-select */}
+        <div style={{background:"#fff",borderRadius:14,padding:"16px 20px",border:"1px solid #e0e0d8",gridColumn:"1/-1"}}>
+          <label style={{fontSize:12,fontWeight:700,color:"#555",display:"block",marginBottom:8}}>
+            Fournisseurs *
+            {selectedFourn.length>0 && <span style={{marginLeft:8,background:"#1e2330",color:"#fff",padding:"2px 8px",borderRadius:20,fontSize:10,fontWeight:700}}>{selectedFourn.length} sélectionné{selectedFourn.length!==1?"s":""}</span>}
+          </label>
+          {fournisseurs.length===0
+            ? <p style={{color:"#9ca3af",fontSize:13,margin:0}}>Aucun fournisseur disponible — ajoutez-en dans la page Fournisseurs.</p>
+            : <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:8,maxHeight:200,overflowY:"auto"}}>
+                {fournisseurs.map(f => {
+                  const sel = selectedFourn.includes(String(f.id))
+                  return (
+                    <label key={f.id} style={{display:"flex",alignItems:"flex-start",gap:8,padding:"9px 12px",background:sel?"#eff6ff":"#f9fafb",border:sel?"1.5px solid #93c5fd":"1.5px solid #e0e0d8",borderRadius:9,cursor:"pointer",fontSize:13}}>
+                      <input type="checkbox" checked={sel} onChange={()=>toggleFourn(f.id)} style={{accentColor:"#1e2330",marginTop:2,flexShrink:0}}/>
+                      <div>
+                        <div style={{fontWeight:700,fontSize:12,color:"#1a1a1a"}}>{f.nom}</div>
+                        {f.email && <div style={{color:"#6b7280",fontSize:10,marginTop:1}}>{f.email}</div>}
+                      </div>
+                    </label>
+                  )
+                })}
+              </div>
+          }
         </div>
 
         <div style={{background:"#fff",borderRadius:14,padding:"16px 20px",border:"1px solid #e0e0d8"}}>
@@ -364,7 +589,6 @@ function FormBC({ bc, siteId, user, products, fournisseurs, onSaved, onCancel })
             <button onClick={()=>addLigne("libre")} style={{padding:"7px 13px",background:"#f3f4f6",color:"#1a1a1a",border:"1px solid #e0e0d8",borderRadius:9,cursor:"pointer",fontSize:12,fontWeight:700}}>+ Ligne libre</button>
           </div>
         </div>
-
         {lignes.length === 0 ? (
           <div style={{padding:32,textAlign:"center",color:"#6b7280",fontSize:13}}>
             <div style={{fontSize:32,marginBottom:8}}>📋</div>
@@ -382,15 +606,12 @@ function FormBC({ bc, siteId, user, products, fournisseurs, onSaved, onCancel })
               </thead>
               <tbody>
                 {lignes.map((l,i)=>(
-                  <LigneRow key={l._key||i} ligne={l} index={i}
-                    products={products} filtrationData={filtrationData}
-                    onChange={updateLigne} onRemove={removeLigne}/>
+                  <LigneRow key={l._key||i} ligne={l} index={i} products={products} filtrationData={filtrationData} onChange={updateLigne} onRemove={removeLigne}/>
                 ))}
               </tbody>
             </table>
           </div>
         )}
-
         <div style={{padding:"14px 20px",borderTop:"1px solid #f3f4f6",display:"flex",justifyContent:"flex-end"}}>
           <div style={{background:"#f9fafb",borderRadius:12,padding:"16px 20px",minWidth:240,border:"1px solid #e0e0d8"}}>
             <div style={{display:"flex",justifyContent:"space-between",gap:24,marginBottom:7}}>
@@ -408,6 +629,18 @@ function FormBC({ bc, siteId, user, products, fournisseurs, onSaved, onCancel })
           </div>
         </div>
       </div>
+
+      {!isNew && <DDVSuivi ddvFourns={ddvFourns} setDdvFourns={setDdvFourns} />}
+
+      {sendModal && (
+        <SendModal
+          ddvFourns={ddvFourns}
+          bcNumero={bc?.numero}
+          lignes={lignes}
+          onClose={()=>setSendModal(false)}
+          onSent={(id)=>setDdvFourns(p=>p.map(f=>f.id===id?{...f,statut:"envoye",date_envoi:new Date().toISOString()}:f))}
+        />
+      )}
     </div>
   )
 }
@@ -421,7 +654,6 @@ export default function BonsCommande({ siteId, user, products, fournisseurs }) {
   const [filterStatut, setFilterStatut] = useState("tous")
   const [filterFourn, setFilterFourn] = useState("")
   const [filterSearch, setFilterSearch] = useState("")
-  const [emailLoading, setEmailLoading] = useState(null)
 
   useEffect(() => {
     setLoading(true)
@@ -437,30 +669,6 @@ export default function BonsCommande({ siteId, user, products, fournisseurs }) {
     if (!confirm("Supprimer définitivement cette demande de devis ?")) return
     await deleteBonCommande(id)
     setBcs(prev => prev.filter(b=>b.id!==id))
-  }
-
-  const handleEmail = async (bc) => {
-    setEmailLoading(bc.id)
-    const fourn = fournisseurs.find(f => String(f.id)===String(bc.fournisseur_id))
-    const email = fourn?.email || ""
-    const lignes = await getBonCommandeLignes(bc.id)
-    setEmailLoading(null)
-
-    const sujet = encodeURIComponent(`Demande de devis ${bc.numero} - CLMTP`)
-    const lignesText = lignes.length
-      ? lignes.map((l,i) => `${i+1}. Réf: ${l.reference||"—"} | ${l.designation} | Qté: ${l.quantite}`).join("\n")
-      : "(aucune ligne)"
-    const body = encodeURIComponent(
-      `Bonjour,\n\nNous vous adressons la présente demande de devis ${bc.numero}.\n\nArticles demandés :\n${lignesText}\n\nCordialement,\nCLMTP SABLÉ`
-    )
-    window.open(`mailto:${email}?subject=${sujet}&body=${body}`)
-
-    if (bc.statut === "brouillon") {
-      if (confirm("Passer le statut à « Envoyé » ?")) {
-        await updateBonCommande(bc.id, { statut:"envoye" })
-        setBcs(prev => prev.map(b => b.id===bc.id ? {...b, statut:"envoye"} : b))
-      }
-    }
   }
 
   if (view==="form") {
@@ -498,12 +706,12 @@ export default function BonsCommande({ siteId, user, products, fournisseurs }) {
 
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))",gap:12}}>
         {[
-          {label:"Total",value:stats.total,icon:"📋",color:"#1a1a1a"},
-          {label:"Brouillons",value:stats.brouillon,icon:"📝",color:"#555"},
-          {label:"Envoyés",value:stats.envoye,icon:"📤",color:"#1e40af"},
-          {label:"Devis reçus",value:stats.devis_recu,icon:"📩",color:"#d97706"},
-          {label:"Commandés",value:stats.commande,icon:"✅",color:"#059669"},
-          {label:"Total TTC",value:stats.montant.toFixed(2)+" €",icon:"💶",color:"#7c3aed"},
+          {label:"Total",      value:stats.total,                   icon:"📋",color:"#1a1a1a"},
+          {label:"Brouillons", value:stats.brouillon,               icon:"📝",color:"#555"},
+          {label:"Envoyés",    value:stats.envoye,                  icon:"📤",color:"#1e40af"},
+          {label:"Devis reçus",value:stats.devis_recu,              icon:"📩",color:"#d97706"},
+          {label:"Commandés",  value:stats.commande,                icon:"✅",color:"#059669"},
+          {label:"Total TTC",  value:stats.montant.toFixed(2)+" €", icon:"💶",color:"#7c3aed"},
         ].map((k,i)=>(
           <div key={i} style={{background:"#fff",borderRadius:14,padding:"14px 16px",border:"1px solid #e0e0d8"}}>
             <div style={{fontSize:20,marginBottom:6}}>{k.icon}</div>
@@ -539,7 +747,7 @@ export default function BonsCommande({ siteId, user, products, fournisseurs }) {
             <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
               <thead>
                 <tr style={{background:"#f9fafb",borderBottom:"1px solid #e0e0d8"}}>
-                  {["Numéro","Fournisseur","Site","Date","Statut","Total HT","Total TTC","Actions"].map(h=>(
+                  {["Numéro","Fournisseurs","Site","Date","Statut","Total HT","Total TTC","Actions"].map(h=>(
                     <th key={h} style={{padding:"11px 14px",textAlign:["Total HT","Total TTC"].includes(h)?"right":"left",fontWeight:700,color:"#374151",fontSize:11,whiteSpace:"nowrap"}}>{h}</th>
                   ))}
                 </tr>
@@ -550,7 +758,7 @@ export default function BonsCommande({ siteId, user, products, fournisseurs }) {
                   return (
                     <tr key={bc.id} style={{borderBottom:"1px solid #f3f4f6",background:i%2===0?"#fff":"#fafafa"}}>
                       <td style={{padding:"11px 14px",fontWeight:700,color:"#1e2330",fontFamily:"monospace",fontSize:12}}>{bc.numero}</td>
-                      <td style={{padding:"11px 14px",fontWeight:600}}>{bc.fournisseur_nom||"—"}</td>
+                      <td style={{padding:"11px 14px",fontWeight:600,fontSize:12}}>{bc.fournisseur_nom||"—"}</td>
                       <td style={{padding:"11px 14px",color:"#6b7280",fontSize:12}}>{SITES_LABEL[bc.site]||bc.site}</td>
                       <td style={{padding:"11px 14px",color:"#6b7280",fontSize:12,whiteSpace:"nowrap"}}>{new Date(bc.date_creation||bc.created_at).toLocaleDateString("fr-FR")}</td>
                       <td style={{padding:"11px 14px"}}>
@@ -559,13 +767,7 @@ export default function BonsCommande({ siteId, user, products, fournisseurs }) {
                       <td style={{padding:"11px 14px",fontWeight:700,textAlign:"right",whiteSpace:"nowrap"}}>{parseFloat(bc.total_ht||0).toFixed(2)} €</td>
                       <td style={{padding:"11px 14px",fontWeight:700,textAlign:"right",color:"#059669",whiteSpace:"nowrap"}}>{parseFloat(bc.total_ttc||0).toFixed(2)} €</td>
                       <td style={{padding:"11px 14px"}}>
-                        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                          {(bc.statut==="brouillon"||bc.statut==="envoye") && (
-                            <button onClick={()=>handleEmail(bc)} disabled={emailLoading===bc.id}
-                              style={{padding:"5px 11px",background:"#dbeafe",color:"#1e40af",border:"none",borderRadius:7,cursor:emailLoading===bc.id?"not-allowed":"pointer",fontSize:12,fontWeight:600,opacity:emailLoading===bc.id?.6:1}}>
-                              {emailLoading===bc.id?"⏳":"📧"} Email
-                            </button>
-                          )}
+                        <div style={{display:"flex",gap:6}}>
                           <button onClick={()=>{setEditBc(bc);setView("form")}} style={{padding:"5px 11px",background:"#f3f4f6",border:"none",borderRadius:7,cursor:"pointer",fontSize:12,fontWeight:600}}>✏️ Éditer</button>
                           <button onClick={()=>handleDelete(bc.id)} style={{padding:"5px 11px",background:"#fee2e2",border:"none",borderRadius:7,cursor:"pointer",fontSize:12,color:"#dc2626",fontWeight:600}}>🗑</button>
                         </div>

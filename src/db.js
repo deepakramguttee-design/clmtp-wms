@@ -922,6 +922,40 @@ export async function deleteFournisseur(id) {
   return !error
 }
 
+// ── DDV FOURNISSEURS ──────────────────────────────────────────────────────────
+export async function getDDVFournisseurs(bcId) {
+  const { data, error } = await supabase.from('ddv_fournisseurs').select('*').eq('bon_commande_id', bcId).order('created_at')
+  if (error) { console.error(error); return [] }
+  return data || []
+}
+
+export async function syncDDVFournisseurs(bcId, fourns) {
+  // fourns: [{ fournisseur_id, fournisseur_nom, email }]
+  const { data: existing } = await supabase.from('ddv_fournisseurs').select('*').eq('bon_commande_id', bcId)
+  const existingMap = new Map((existing||[]).map(r => [String(r.fournisseur_id), r]))
+  const newIds = new Set(fourns.map(f => String(f.fournisseur_id)))
+  const toDelete = (existing||[]).filter(r => !newIds.has(String(r.fournisseur_id))).map(r => r.id)
+  if (toDelete.length) await supabase.from('ddv_fournisseurs').delete().in('id', toDelete)
+  const toInsert = fourns.filter(f => !existingMap.has(String(f.fournisseur_id))).map(f => ({
+    bon_commande_id: bcId, fournisseur_id: f.fournisseur_id, fournisseur_nom: f.fournisseur_nom, email: f.email,
+  }))
+  if (toInsert.length) await supabase.from('ddv_fournisseurs').insert(toInsert)
+  const { data } = await supabase.from('ddv_fournisseurs').select('*').eq('bon_commande_id', bcId).order('created_at')
+  return data || []
+}
+
+export async function updateDDVFournisseur(id, updates) {
+  const { error } = await supabase.from('ddv_fournisseurs').update(updates).eq('id', id)
+  if (error) console.error(error)
+  return !error
+}
+
+export async function deleteDDVFournisseur(id) {
+  const { error } = await supabase.from('ddv_fournisseurs').delete().eq('id', id)
+  if (error) console.error(error)
+  return !error
+}
+
 // ── BONS DE COMMANDE ──────────────────────────────────────────────────────────
 export async function getBonsCommande(siteId) {
   const { data, error } = await supabase
