@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import bcrypt from "bcryptjs";
 import { ALL_PRODUCTS } from "./products.js";
 import AdminDashboard from "./AdminDashboard.jsx";
 import VueEclatee from "./VueEclatee.jsx";
@@ -13,9 +12,10 @@ import SeuilsStock from "./components/SeuilsStock.jsx";
 import StockCritique from "./components/StockCritique.jsx";
 // parc.js supprimé — données migrées vers Supabase (table parc_vehicules)
 import { supabase } from "./supabase.js";
+import { useAuth } from "./AuthContext.jsx";
+import Login from "./Login.jsx";
 import {
-  loginUser, loginUserMultiSite,
-  getUtilisateurs, getUtilisateursSite, createUtilisateur, createUtilisateurSite, updateUtilisateur, updateUtilisateurPermissions, deleteUtilisateur,
+  getUtilisateurs, getUtilisateursSite, createUtilisateur, createUtilisateurSite, updateUtilisateur, deleteUtilisateur,
   getParcVehicules, createParcVehicule, updateParcVehicule, deleteParcVehicule,
   getCatalogue, importCatalogue,
   addCatalogueArticle, updateCatalogueArticle, deleteCatalogueArticle,
@@ -567,6 +567,12 @@ function EntreesSorties({ mouvements, setMouvements, stockOverrides, setStockOve
   const [fifoLots,setFifoLots]=useState([]);
   const [fifoResult,setFifoResult]=useState(null);
   const [confirmDeleteMouv,setConfirmDeleteMouv]=useState(null);
+  const [modeMulti,setModeMulti]=useState(false);
+  const [lignes,setLignes]=useState([{id:1,article:null,search:"",suggestions:[],quantite:"",prixUnitaire:""}]);
+  const [motifMulti,setMotifMulti]=useState("");
+  const [referenceMulti,setReferenceMulti]=useState("");
+  const [bdcMulti,setBdcMulti]=useState("");
+  const [savingMulti,setSavingMulti]=useState(false);
   const PAGE=20;
 
   const canDelete = user && (user.role==="admin" || user.role==="magasinier");
@@ -624,6 +630,44 @@ function EntreesSorties({ mouvements, setMouvements, stockOverrides, setStockOve
   };
 
   const fifoEstimate = type === "sortie" && quantite && parseInt(quantite) > 0 ? calcFifoEstimate(quantite) : null;
+
+  const updateLigne=(id,changes)=>setLignes(prev=>prev.map(l=>l.id===id?{...l,...changes}:l));
+  const handleSearchLigne=(id,v)=>{
+    const s=v.toLowerCase();
+    const suggs=s.length<2?[]:(products||ALL_PRODUCTS).filter(p=>(p.name||"").toLowerCase().includes(s)||(p.id||"").toLowerCase().includes(s)||(p.fournisseur||"").toLowerCase().includes(s)).slice(0,6);
+    updateLigne(id,{search:v,article:null,suggestions:suggs});
+  };
+  const handleConfirmMulti=async()=>{
+    const valid=lignes.filter(l=>l.article&&l.quantite&&parseInt(l.quantite)>0);
+    if(!valid.length)return;
+    setSavingMulti(true);
+    const newMovs=[];
+    const overrides={...stockOverrides};
+    for(const l of valid){
+      const qty=parseInt(l.quantite);
+      const stockActuel=overrides[l.article.id]!==undefined?overrides[l.article.id]:(l.article.stock??0);
+      const newStock=type==="entree"?stockActuel+qty:stockActuel-qty;
+      let coutFifo=null;
+      if(type==="sortie"){
+        const lots=await getLotsArticle(l.article.id);
+        const activeLots=lots.filter(x=>!x.clos&&x.qty_restante>0);
+        if(activeLots.length>0){const r=await consommerFIFO(l.article.id,qty);coutFifo=r.totalCout;}
+      }
+      if(type==="entree"&&l.prixUnitaire&&parseFloat(l.prixUnitaire)>0){
+        await addLotAchat({articleId:l.article.id,articleName:l.article.name,fournisseur:l.article.fournisseur||"",dateAchat:new Date().toISOString().split("T")[0],qty,prixUnitaire:parseFloat(l.prixUnitaire),referenceBon:referenceMulti||"",notes:motifMulti||""});
+      }
+      const mouv={type,articleId:l.article.id,articleName:l.article.name,fournisseur:l.article.fournisseur,quantite:qty,stockAvant:stockActuel,stockApres:newStock,motif:motifMulti||(type==="entree"?"Réception fournisseur":"Consommation"),reference:referenceMulti||"",num_bdc:bdcMulti||"",cout_fifo:coutFifo,prix_unitaire:l.prixUnitaire?parseFloat(l.prixUnitaire):null};
+      const saved=await addMouvementSite(mouv,siteId);
+      await setStockOverrideSite(l.article.id,newStock,siteId);
+      overrides[l.article.id]=newStock;
+      newMovs.push(saved||{...mouv,id:Date.now()+Math.random(),created_at:new Date().toISOString()});
+    }
+    setMouvements(prev=>[...newMovs.reverse(),...prev]);
+    setStockOverrides(prev=>({...prev,...overrides}));
+    setLignes([{id:Date.now(),article:null,search:"",suggestions:[],quantite:"",prixUnitaire:""}]);
+    setMotifMulti("");setReferenceMulti("");setBdcMulti("");
+    setSavingMulti(false);
+  };
 
   const filtered = mouvements.filter(m=>{
     const okT=filterType==="tous"||m.type===filterType;
@@ -704,12 +748,92 @@ function EntreesSorties({ mouvements, setMouvements, stockOverrides, setStockOve
       <div style={{display:"grid",gridTemplateColumns:"360px 1fr",gap:20,alignItems:"start"}}>
         {/* Formulaire */}
         <div style={{background:"#fff",borderRadius:16,border:"1px solid #e0e0d8",padding:22,position:"sticky",top:0}}>
-          <h3 style={{fontSize:15,fontWeight:800,color:"#1a1a1a",marginBottom:16}}>➕ Nouveau mouvement</h3>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+            <h3 style={{fontSize:15,fontWeight:800,color:"#1a1a1a",margin:0}}>➕ Nouveau mouvement</h3>
+            <button onClick={()=>{setModeMulti(m=>!m);setLignes([{id:Date.now(),article:null,search:"",suggestions:[],quantite:"",prixUnitaire:""}]);}} style={{padding:"5px 11px",borderRadius:8,border:"1px solid #e0e0d8",background:modeMulti?"#1e2330":"#fff",color:modeMulti?"#fff":"#555",fontWeight:600,cursor:"pointer",fontSize:11,whiteSpace:"nowrap"}}>
+              {modeMulti?"✕ Mode simple":"📋 Mode lot"}
+            </button>
+          </div>
           <div style={{display:"flex",gap:8,marginBottom:16}}>
             {[{v:"entree",l:"📥 Entrée",bg:"#d1fae5",c:"#065f46",bc:"#059669"},{v:"sortie",l:"📤 Sortie",bg:"#fee2e2",c:"#991b1b",bc:"#dc2626"}].map(t=>(
               <button key={t.v} onClick={()=>setType(t.v)} style={{flex:1,padding:"11px",borderRadius:10,border:`2px solid ${type===t.v?t.bc:"#e0e0d8"}`,background:type===t.v?t.bg:"#fff",color:type===t.v?t.c:"#6b7280",fontWeight:700,cursor:"pointer",fontSize:14}}>{t.l}</button>
             ))}
           </div>
+          {modeMulti&&(
+            <div>
+              <div style={{display:"flex",flexDirection:"column",gap:8,maxHeight:340,overflowY:"auto",marginBottom:10}}>
+                {lignes.map((l,idx)=>(
+                  <div key={l.id} style={{background:"#f9fafb",borderRadius:10,border:"1px solid #e0e0d8",padding:"10px 12px",position:"relative"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                      <span style={{fontSize:11,fontWeight:700,color:"#8a9ab8"}}>Article {idx+1}</span>
+                      {lignes.length>1&&<button onClick={()=>setLignes(prev=>prev.filter(x=>x.id!==l.id))} style={{background:"none",border:"none",cursor:"pointer",color:"#dc2626",fontSize:14,padding:0,lineHeight:1}}>✕</button>}
+                    </div>
+                    <div style={{position:"relative",marginBottom:6}}>
+                      <input value={l.search} onChange={e=>handleSearchLigne(l.id,e.target.value)} placeholder="Rechercher un article…"
+                        style={{width:"100%",padding:"8px 12px",border:`1px solid ${l.article?"#10b981":"#e0e0d8"}`,borderRadius:8,fontSize:12,outline:"none",boxSizing:"border-box"}}/>
+                      {l.suggestions.length>0&&(
+                        <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#fff",border:"1px solid #e0e0d8",borderRadius:8,boxShadow:"0 8px 24px rgba(0,0,0,0.12)",zIndex:200+idx,overflow:"hidden",marginTop:2}}>
+                          {l.suggestions.map(p=>(
+                            <div key={p.id} onClick={()=>updateLigne(l.id,{article:p,search:p.name,suggestions:[],prixUnitaire:p.prix>0?String(p.prix):""})}
+                              style={{padding:"7px 12px",cursor:"pointer",borderBottom:"1px solid #f3f4f6",fontSize:12}}
+                              onMouseEnter={e=>e.currentTarget.style.background="#f9fafb"}
+                              onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
+                              <div style={{fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.name}</div>
+                              <div style={{fontSize:10,color:"#6b7280"}}>{p.id} · Stock : <strong style={{color:getStock(p)===0?"#dc2626":"#059669"}}>{getStock(p)}</strong></div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{display:"flex",gap:6}}>
+                      <input type="number" min="1" value={l.quantite} onChange={e=>updateLigne(l.id,{quantite:e.target.value})} placeholder="Qté *"
+                        style={{flex:1,padding:"7px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:13,fontWeight:700,outline:"none",boxSizing:"border-box"}}/>
+                      <input type="number" step="0.0001" min="0" value={l.prixUnitaire} onChange={e=>updateLigne(l.id,{prixUnitaire:e.target.value})} placeholder="Prix HT €"
+                        style={{flex:1,padding:"7px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:12,outline:"none",boxSizing:"border-box",color:"#3b82f6"}}/>
+                    </div>
+                    {l.article&&l.quantite&&parseInt(l.quantite)>0&&(
+                      <div style={{fontSize:11,color:"#6b7280",marginTop:5}}>
+                        Stock après : <strong style={{color:type==="entree"?"#059669":"#dc2626"}}>{type==="entree"?getStock(l.article)+parseInt(l.quantite):getStock(l.article)-parseInt(l.quantite)}</strong>
+                        {l.prixUnitaire&&<span style={{marginLeft:8,color:"#3b82f6"}}>· {(parseFloat(l.prixUnitaire||0)*parseInt(l.quantite||0)).toFixed(2)} €</span>}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button onClick={()=>setLignes(prev=>[...prev,{id:Date.now(),article:null,search:"",suggestions:[],quantite:"",prixUnitaire:""}])}
+                style={{width:"100%",padding:"8px",borderRadius:9,border:"2px dashed #e0e0d8",background:"#f9fafb",color:"#6b7280",cursor:"pointer",fontWeight:600,fontSize:12,marginBottom:12}}>
+                ➕ Ajouter un article
+              </button>
+              <div style={{display:"flex",gap:8,marginBottom:10}}>
+                <div style={{flex:1}}>
+                  <label style={{fontSize:11,fontWeight:600,color:"#555",display:"block",marginBottom:4}}>Motif</label>
+                  <select value={motifMulti} onChange={e=>setMotifMulti(e.target.value)} style={{width:"100%",padding:"8px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:12,outline:"none",boxSizing:"border-box"}}>
+                    {type==="entree"?<><option value="">Réception fournisseur</option><option>Retour client</option><option>Correction inventaire</option><option>Transfert interne</option><option>Autre</option></>
+                    :<><option value="">Consommation chantier</option><option>Ordre de réparation</option><option>Perte / Casse</option><option>Correction inventaire</option><option>Autre</option></>}
+                  </select>
+                </div>
+              </div>
+              <div style={{display:"flex",gap:8,marginBottom:14}}>
+                <input value={referenceMulti} onChange={e=>setReferenceMulti(e.target.value)} placeholder={type==="sortie"?"N° OR / bon…":"BL / BDC…"} style={{flex:1,padding:"8px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:12,outline:"none"}}/>
+                <input value={bdcMulti} onChange={e=>setBdcMulti(e.target.value)} placeholder={type==="sortie"?"N° chantier":"N° BDC"} style={{flex:1,padding:"8px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:12,outline:"none",fontFamily:"monospace"}}/>
+              </div>
+              {lignes.filter(l=>l.article&&l.quantite&&parseInt(l.quantite)>0).length>0&&(
+                <div style={{background:type==="entree"?"#f0fdf4":"#fff1f2",borderRadius:9,padding:"9px 13px",marginBottom:10,fontSize:12,color:type==="entree"?"#065f46":"#991b1b"}}>
+                  <strong>{lignes.filter(l=>l.article&&l.quantite&&parseInt(l.quantite)>0).length} article(s)</strong> · {type==="entree"?"+":"-"}<strong>{lignes.filter(l=>l.article&&l.quantite&&parseInt(l.quantite)>0).reduce((a,l)=>a+parseInt(l.quantite),0)} unités</strong>
+                  {lignes.filter(l=>l.article&&l.prixUnitaire&&l.quantite&&parseInt(l.quantite)>0).length>0&&<span style={{marginLeft:8,color:"#3b82f6",fontWeight:700}}>· {lignes.filter(l=>l.article&&l.prixUnitaire&&l.quantite&&parseInt(l.quantite)>0).reduce((a,l)=>a+parseFloat(l.prixUnitaire||0)*parseInt(l.quantite||0),0).toFixed(2)} € total</span>}
+                </div>
+              )}
+              <button onClick={handleConfirmMulti}
+                disabled={savingMulti||lignes.filter(l=>l.article&&l.quantite&&parseInt(l.quantite)>0).length===0}
+                style={{width:"100%",padding:"13px",borderRadius:11,border:"none",fontWeight:800,fontSize:15,
+                  cursor:savingMulti||lignes.filter(l=>l.article&&l.quantite&&parseInt(l.quantite)>0).length===0?"not-allowed":"pointer",
+                  background:savingMulti||lignes.filter(l=>l.article&&l.quantite&&parseInt(l.quantite)>0).length===0?"#e0e0d8":type==="entree"?"#059669":"#dc2626",
+                  color:savingMulti||lignes.filter(l=>l.article&&l.quantite&&parseInt(l.quantite)>0).length===0?"#8a9ab8":"#fff"}}>
+                {savingMulti?"⏳ Enregistrement…":type==="entree"?`📥 Valider ${lignes.filter(l=>l.article&&l.quantite&&parseInt(l.quantite)>0).length} entrée(s)`:`📤 Valider ${lignes.filter(l=>l.article&&l.quantite&&parseInt(l.quantite)>0).length} sortie(s)`}
+              </button>
+            </div>
+          )}
+          {!modeMulti&&<>
           <div style={{marginBottom:12,position:"relative"}}>
             <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Article *</label>
             <input value={search} onChange={e=>handleSearch(e.target.value)} placeholder="Rechercher un article…" style={{width:"100%",padding:"10px 14px",border:`1px solid ${selectedArticle?"#10b981":"#e0e0d8"}`,borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
@@ -817,6 +941,7 @@ function EntreesSorties({ mouvements, setMouvements, stockOverrides, setStockOve
           <button onClick={()=>setShowConfirm(true)} disabled={!selectedArticle||!quantite||parseInt(quantite)<=0} style={{width:"100%",padding:"13px",borderRadius:11,border:"none",cursor:selectedArticle&&quantite&&parseInt(quantite)>0?"pointer":"not-allowed",background:!selectedArticle||!quantite||parseInt(quantite)<=0?"#e0e0d8":type==="entree"?"#059669":"#dc2626",color:!selectedArticle||!quantite||parseInt(quantite)<=0?"#8a9ab8":"#fff",fontWeight:800,fontSize:15}}>
             {type==="entree"?"📥 Valider l'entrée":"📤 Valider la sortie"}
           </button>
+          </>}
         </div>
 
         {/* Historique */}
@@ -4828,118 +4953,6 @@ const NAV_SECTIONS = [
   },
 ];
 
-// ── LOGIN PAGE ────────────────────────────────────────────────────────────────
-function LoginPage({ onLogin }) {
-  const [siteId,setSiteId]=useState("clmtp_sable");
-  const [email,setEmail]=useState("");
-  const [password,setPassword]=useState("");
-  const [loading,setLoading]=useState(false);
-  const [error,setError]=useState("");
-  const [showPwd,setShowPwd]=useState(false);
-  const [step,setStep]=useState("site"); // "site" | "login"
-
-  const site = SITES[siteId];
-
-  const handleLogin = async () => {
-    if(!email||!password){setError("Remplissez tous les champs.");return;}
-    setLoading(true); setError("");
-    const user = await loginUserMultiSite(email, password, siteId);
-    if(user) {
-      localStorage.setItem("wms_user", JSON.stringify(user));
-      localStorage.setItem("wms_site", siteId);
-      onLogin(user, siteId);
-    } else {
-      setError("Email ou mot de passe incorrect pour ce site.");
-    }
-    setLoading(false);
-  };
-
-  const handleKey = e => { if(e.key==="Enter") { if(step==="site") setStep("login"); else handleLogin(); } };
-
-  return (
-    <div style={{minHeight:"100vh",background:"#1e2330",display:"flex",alignItems:"center",justifyContent:"center",padding:20,fontFamily:"'DM Sans',sans-serif"}}>
-      <div style={{width:"min(100%,440px)"}}>
-
-        {/* Logo */}
-        <div style={{textAlign:"center",marginBottom:32}}>
-          <div style={{width:64,height:64,background:`linear-gradient(135deg,${site.color},${site.color}99)`,borderRadius:18,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,margin:"0 auto 16px",color:"#fff",fontWeight:900,letterSpacing:-0.5,transition:"all 0.3s"}}>
-            {site.logo}
-          </div>
-          <div style={{color:"#fff",fontWeight:900,fontSize:24,letterSpacing:-0.5,transition:"all 0.3s"}}>{site.label}</div>
-          <div style={{color:"#6b7280",fontSize:13,marginTop:4}}>Gestion d'entrepôt</div>
-        </div>
-
-        {/* Sélection site */}
-        {step === "site" && (
-          <div style={{background:"#fff",borderRadius:20,padding:28,boxShadow:"0 24px 64px rgba(0,0,0,0.4)"}}>
-            <h2 style={{fontSize:16,fontWeight:800,color:"#1a1a1a",margin:"0 0 20px",textAlign:"center"}}>Choisissez votre site</h2>
-            <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:20}}>
-              {Object.entries(SITES).map(([id,s])=>(
-                <button key={id} onClick={()=>setSiteId(id)} style={{
-                  padding:"16px 18px", borderRadius:14, border:`2px solid ${siteId===id?s.color:"#e0e0d8"}`,
-                  background:siteId===id?s.bg:"#fff", cursor:"pointer", display:"flex", alignItems:"center", gap:14,
-                  textAlign:"left", transition:"all 0.15s", fontFamily:"'DM Sans',sans-serif",
-                }}>
-                  <div style={{width:42,height:42,background:siteId===id?s.color:"#f3f4f6",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0,transition:"all 0.15s"}}>
-                    {s.icon}
-                  </div>
-                  <div>
-                    <div style={{fontWeight:800,fontSize:15,color:siteId===id?s.color:"#1a1a1a"}}>{s.label}</div>
-                    <div style={{fontSize:11,color:"#8a9ab8",marginTop:2}}>Accès sécurisé · Données séparées</div>
-                  </div>
-                  {siteId===id&&<div style={{marginLeft:"auto",color:s.color,fontSize:18}}>✓</div>}
-                </button>
-              ))}
-            </div>
-            <button onClick={()=>setStep("login")} style={{width:"100%",padding:"14px",background:site.color,color:"#fff",border:"none",borderRadius:12,fontWeight:800,fontSize:15,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
-              Accéder à {site.label} →
-            </button>
-          </div>
-        )}
-
-        {/* Connexion */}
-        {step === "login" && (
-          <div style={{background:"#fff",borderRadius:20,padding:28,boxShadow:"0 24px 64px rgba(0,0,0,0.4)"}}>
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
-              <button type="button" onClick={()=>setStep("site")} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"6px 10px",cursor:"pointer",fontSize:14,color:"#6b7280"}}>←</button>
-              <div>
-                <div style={{fontWeight:800,fontSize:16,color:"#1a1a1a"}}>🔐 Connexion</div>
-                <div style={{fontSize:12,color:site.color,fontWeight:600}}>{site.icon} {site.label}</div>
-              </div>
-            </div>
-
-            {error&&<div style={{background:"#fee2e2",border:"1px solid #fca5a5",borderRadius:10,padding:"10px 14px",fontSize:13,color:"#991b1b",fontWeight:600,marginBottom:16}}>⚠️ {error}</div>}
-
-            <form onSubmit={e=>{e.preventDefault();handleLogin();}} noValidate>
-              <div style={{marginBottom:14}}>
-                <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:6}}>Adresse email</label>
-                <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
-                  autoComplete="email"
-                  placeholder="votre@email.fr"
-                  style={{width:"100%",padding:"12px 14px",border:"1.5px solid #e0e0d8",borderRadius:10,fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:"'DM Sans',sans-serif"}}/>
-              </div>
-              <div style={{marginBottom:20}}>
-                <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:6}}>Mot de passe</label>
-                <div style={{position:"relative"}}>
-                  <input type={showPwd?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)}
-                    autoComplete="current-password"
-                    placeholder="••••••••"
-                    style={{width:"100%",padding:"12px 44px 12px 14px",border:"1.5px solid #e0e0d8",borderRadius:10,fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:"'DM Sans',sans-serif"}}/>
-                  <button type="button" onClick={()=>setShowPwd(s=>!s)} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",fontSize:16,color:"#8a9ab8"}}>
-                    {showPwd?"🙈":"👁"}
-                  </button>
-                </div>
-              </div>
-              <button type="submit" disabled={loading} style={{width:"100%",padding:"14px",background:loading?"#8a9ab8":site.color,color:"#fff",border:"none",borderRadius:12,fontWeight:800,fontSize:15,cursor:loading?"not-allowed":"pointer",fontFamily:"'DM Sans',sans-serif"}}>
-                {loading?"⏳ Connexion…":"Se connecter →"}
-              </button>
-            </form>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 // ── GESTION UTILISATEURS ──────────────────────────────────────────────────────
 // Modules disponibles pour les permissions
@@ -4969,16 +4982,17 @@ const DEFAULT_PERMISSIONS = {
 // ── BOUTON VOIR MOT DE PASSE (super admin uniquement) ────────────────────────
 
 function GestionUtilisateurs({ currentUser, siteId }) {
+  const { refreshModules } = useAuth();
   const [users,setUsers]=useState([]);
-  const [tarifs,setTarifs]=useState({}); // { "Prénom NOM": taux_horaire }
+  const [tarifs,setTarifs]=useState({});
   const [loading,setLoading]=useState(true);
   const [showForm,setShowForm]=useState(false);
-  const [showPerms,setShowPerms]=useState(null); // utilisateur dont on édite les perms
+  const [showPerms,setShowPerms]=useState(null);
   const [editUser,setEditUser]=useState(null);
   const [saving,setSaving]=useState(false);
-  const [showPwd,setShowPwd]=useState(false);
-  const [form,setForm]=useState({nom:"",prenom:"",email:"",motDePasse:"",role:"technicien",site:siteId,tauxHoraire:""});
+  const [form,setForm]=useState({nom:"",prenom:"",email:"",role:"technicien",site:siteId,tauxHoraire:""});
   const [customPerms,setCustomPerms]=useState([]);
+  const [showCreatePwd,setShowCreatePwd]=useState(false);
 
   const site = SITES[siteId] || SITES.clmtp_sable;
 
@@ -5001,14 +5015,15 @@ function GestionUtilisateurs({ currentUser, siteId }) {
 
   const openAdd = () => {
     setEditUser(null);
-    setForm({nom:"",prenom:"",email:"",motDePasse:"",role:"technicien",site:siteId,tauxHoraire:""});
+    setForm({nom:"",prenom:"",email:"",password:"",role:"technicien",site:siteId,tauxHoraire:""});
+    setShowCreatePwd(false);
     setShowForm(true);
   };
 
   const openEdit = u => {
     setEditUser(u);
     const fullName=`${u.prenom} ${u.nom}`;
-    setForm({nom:u.nom,prenom:u.prenom,email:u.email,motDePasse:"",role:u.role,site:u.site_id||siteId,
+    setForm({nom:u.nom,prenom:u.prenom,email:u.email,role:u.role,site:u.site_id||siteId,
       tauxHoraire:tarifs[fullName]!==undefined?String(tarifs[fullName]):""});
     setShowForm(true);
   };
@@ -5030,12 +5045,7 @@ function GestionUtilisateurs({ currentUser, siteId }) {
       setUsers(prev => prev.map(u =>
         u.id === showPerms.id ? {...u, permissions: newPerms} : u
       ));
-      try {
-        const cu = JSON.parse(localStorage.getItem("wms_user"));
-        if(cu && String(cu.id) === String(showPerms.id)) {
-          localStorage.setItem("wms_user", JSON.stringify({...cu, permissions: newPerms}));
-        }
-      } catch(e) {}
+      if(String(currentUser.id) === String(showPerms.id)) refreshModules?.();
     } else {
       alert('Erreur sauvegarde permissions');
     }
@@ -5046,12 +5056,7 @@ function GestionUtilisateurs({ currentUser, siteId }) {
     const ok = await savePermissions(showPerms.id, customPerms);
     if (ok) {
       setUsers(prev => prev.map(u => u.id === showPerms.id ? {...u, permissions: customPerms} : u));
-      try {
-        const cu = JSON.parse(localStorage.getItem("wms_user"));
-        if(cu && String(cu.id) === String(showPerms.id)) {
-          localStorage.setItem("wms_user", JSON.stringify({...cu, permissions: customPerms}));
-        }
-      } catch(e) {}
+      if(String(currentUser.id) === String(showPerms.id)) refreshModules?.();
       setShowPerms(null);
     } else {
       alert('Erreur lors de la sauvegarde');
@@ -5075,16 +5080,21 @@ function GestionUtilisateurs({ currentUser, siteId }) {
 
   const handleSave = async () => {
     if(!form.nom||!form.prenom||!form.email) return;
+    if(!editUser && !form.password) return;
     setSaving(true);
     if(editUser) {
       const upd = {nom:form.nom,prenom:form.prenom,email:form.email,role:form.role,site_id:form.site};
-      if(form.motDePasse) upd.mot_de_passe=await bcrypt.hash(form.motDePasse,10);
       await updateUtilisateur(editUser.id, upd);
       setUsers(prev=>prev.map(u=>u.id===editUser.id?{...u,...upd}:u));
     } else {
-      if(!form.motDePasse){setSaving(false);return;}
-      const saved = await createUtilisateurSite(form, form.site);
-      if(saved) setUsers(prev=>[saved,...prev]);
+      const { data, error } = await supabase.functions.invoke('create-auth-user', {
+        body: { email: form.email, password: form.password, nom: form.nom, prenom: form.prenom, role: form.role, site_id: form.site },
+      });
+      if(error || data?.error) {
+        alert(`Erreur : ${data?.error || error?.message}`);
+        setSaving(false); return;
+      }
+      if(data?.user) setUsers(prev=>[data.user,...prev]);
     }
     const fullName=`${form.prenom} ${form.nom}`;
     if(form.tauxHoraire!==""&&!isNaN(parseFloat(form.tauxHoraire))){
@@ -5284,14 +5294,20 @@ function GestionUtilisateurs({ currentUser, siteId }) {
                 <input type="email" value={form.email} onChange={e=>setForm(p=>({...p,email:e.target.value}))} placeholder="jean.dupont@email.fr"
                   style={{width:"100%",padding:"10px 13px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
               </div>
-              <div>
-                <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>{editUser?"Nouveau mot de passe":"Mot de passe *"}</label>
-                <div style={{position:"relative"}}>
-                  <input type={showPwd?"text":"password"} value={form.motDePasse} onChange={e=>setForm(p=>({...p,motDePasse:e.target.value}))} placeholder="••••••••"
-                    style={{width:"100%",padding:"10px 40px 10px 13px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
-                  <button onClick={()=>setShowPwd(s=>!s)} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",fontSize:15,color:"#8a9ab8"}}>{showPwd?"🙈":"👁"}</button>
+              {!editUser&&(
+                <div>
+                  <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Mot de passe initial *</label>
+                  <div style={{position:"relative"}}>
+                    <input type={showCreatePwd?"text":"password"} value={form.password||""} onChange={e=>setForm(p=>({...p,password:e.target.value}))}
+                      placeholder="Min. 6 caractères" autoComplete="new-password"
+                      style={{width:"100%",padding:"10px 40px 10px 13px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                    <button type="button" onClick={()=>setShowCreatePwd(s=>!s)} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",fontSize:15,color:"#6b7280"}}>
+                      {showCreatePwd?"🙈":"👁"}
+                    </button>
+                  </div>
+                  <div style={{fontSize:11,color:"#8a9ab8",marginTop:3}}>L'utilisateur pourra le changer via son profil.</div>
                 </div>
-              </div>
+              )}
               <div>
                 <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:8}}>Site *</label>
                 <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -5336,7 +5352,7 @@ function GestionUtilisateurs({ currentUser, siteId }) {
               </div>
               <div style={{display:"flex",gap:10,marginTop:4}}>
                 <button onClick={()=>setShowForm(false)} style={{flex:1,padding:"12px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer"}}>Annuler</button>
-                <button onClick={handleSave} disabled={saving||!form.nom||!form.prenom||!form.email} style={{flex:2,padding:"12px",background:form.nom&&form.prenom&&form.email?"#1e2330":"#e0e0d8",color:form.nom&&form.prenom&&form.email?"#fff":"#8a9ab8",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>
+                <button onClick={handleSave} disabled={saving||!form.nom||!form.prenom||!form.email||(!editUser&&!form.password)} style={{flex:2,padding:"12px",background:(form.nom&&form.prenom&&form.email&&(editUser||form.password))?"#1e2330":"#e0e0d8",color:(form.nom&&form.prenom&&form.email&&(editUser||form.password))?"#fff":"#8a9ab8",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>
                   {saving?"⏳…":editUser?"💾 Modifier":"➕ Créer"}
                 </button>
               </div>
@@ -5354,7 +5370,8 @@ function GestionParc({ parc, setParc, user }) {
 }
 
 // ── CHANGER MOT DE PASSE ──────────────────────────────────────────────────────
-function ChangerMotDePasse({ user, onClose, onSuccess }) {
+function ChangerMotDePasse({ onClose, onSuccess }) {
+  const { authUser } = useAuth();
   const [actuel, setActuel] = useState("");
   const [nouveau, setNouveau] = useState("");
   const [confirmer, setConfirmer] = useState("");
@@ -5365,22 +5382,15 @@ function ChangerMotDePasse({ user, onClose, onSuccess }) {
 
   const handleSave = async () => {
     setError("");
-    const stored = user.mot_de_passe || "";
-    const actuelOk = stored.startsWith("$2")
-      ? await bcrypt.compare(actuel, stored)
-      : actuel === stored;
-    if (!actuelOk) { setError("Mot de passe actuel incorrect."); return; }
     if (nouveau.length < 6) { setError("Le nouveau mot de passe doit faire au moins 6 caractères."); return; }
     if (nouveau !== confirmer) { setError("Les mots de passe ne correspondent pas."); return; }
     setSaving(true);
-    const hash = await bcrypt.hash(nouveau, 10);
-    const { error: err } = await supabase
-      .from('utilisateurs')
-      .update({ mot_de_passe: hash })
-      .eq('id', user.id);
+    const { error: authErr } = await supabase.auth.signInWithPassword({ email: authUser.email, password: actuel });
+    if (authErr) { setSaving(false); setError("Mot de passe actuel incorrect."); return; }
+    const { error: updErr } = await supabase.auth.updateUser({ password: nouveau });
     setSaving(false);
-    if (err) { setError("Erreur lors de la sauvegarde."); return; }
-    onSuccess(hash);
+    if (updErr) { setError("Erreur lors de la mise à jour."); return; }
+    onSuccess();
   };
 
   return (
@@ -5420,9 +5430,7 @@ function ChangerMotDePasse({ user, onClose, onSuccess }) {
 }
 
 export default function App() {
-  const [user, setUser] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("wms_user")); } catch { return null; }
-  });
+  const { profil: user, modules, signOut, refreshModules, authUser, loading: authLoading } = useAuth();
   const [siteId, setSiteId] = useState(() => localStorage.getItem("wms_site") || "clmtp_sable");
   const [page,setPage]=useState("dashboard");
   const [sidebar,setSidebar]=useState(true);
@@ -5481,13 +5489,12 @@ export default function App() {
     }).length
   })();
 
-  const handleLogin = (u, sid) => { setUser(u); setSiteId(sid); };
   const handleLogout = () => {
-    localStorage.removeItem("wms_user");
     localStorage.removeItem("wms_site");
-    setUser(null); setSiteId("clmtp_sable");
+    setSiteId("clmtp_sable");
     setMouvements([]); setOrdres([]); setStockOverrides({});
     setLocations([]); setPrets([]); setCustomArticles([]);
+    signOut();
   };
 
   // Ouvrir automatiquement la section contenant la page active
@@ -5499,17 +5506,6 @@ export default function App() {
     });
   },[page]);
 
-  // Rafraîchir les permissions de l'utilisateur connecté au démarrage
-  useEffect(() => {
-    if (!user) return;
-    getPermissions(user.id).then(modules => {
-      if (modules !== null && JSON.stringify(modules) !== JSON.stringify(user.permissions)) {
-        const updated = { ...user, permissions: modules };
-        setUser(updated);
-        localStorage.setItem("wms_user", JSON.stringify(updated));
-      }
-    }).catch(() => {});
-  }, []);
 
   useEffect(()=>{
     if(!user) return;
@@ -5556,14 +5552,15 @@ export default function App() {
     loadAll();
   },[user, siteId]);
 
-  if(!user) return <LoginPage onLogin={handleLogin}/>;
+  if (authLoading) return <Spinner />;
+  if (!user) return <Login siteId={siteId} setSiteId={setSiteId} />;
 
   const filterNavItem = n => {
     if (!n.sites.includes(siteId)) return false;
-    if(user.permissions && Array.isArray(user.permissions) && user.permissions.length > 0) {
+    if(modules && Array.isArray(modules) && modules.length > 0) {
       if(user.role === "admin") return n.roles.includes("admin");
       const defaults = DEFAULT_PERMISSIONS[user.role] || [];
-      return user.permissions.includes(n.id) || defaults.includes(n.id);
+      return modules.includes(n.id) || defaults.includes(n.id);
     }
     return n.roles.includes(user.role);
   };
@@ -5837,10 +5834,7 @@ export default function App() {
       </div>
 
       {/* Modal Changer mot de passe */}
-      {showChangePwd&&<ChangerMotDePasse user={user} onClose={()=>setShowChangePwd(false)} onSuccess={pwd=>{
-        const updated={...user,mot_de_passe:pwd};
-        setUser(updated);
-        localStorage.setItem("wms_user",JSON.stringify(updated));
+      {showChangePwd&&<ChangerMotDePasse onClose={()=>setShowChangePwd(false)} onSuccess={()=>{
         setShowChangePwd(false);
         alert("✅ Mot de passe modifié avec succès !");
       }}/>}

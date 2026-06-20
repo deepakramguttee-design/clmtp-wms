@@ -2,23 +2,6 @@
 // Toutes les fonctions pour lire/écrire les données partagées
 
 import { supabase } from './supabase.js'
-import bcrypt from 'bcryptjs'
-
-export async function hashPassword(password) {
-  return bcrypt.hash(password, 10)
-}
-
-// Transparent migration: supports bcrypt hashes AND legacy plaintext.
-// On plaintext match, silently upgrades the stored value to bcrypt.
-async function verifyAndMigratePassword(plain, stored, userId) {
-  if (stored && stored.startsWith('$2')) {
-    return bcrypt.compare(plain, stored)
-  }
-  if (stored !== plain) return false
-  const hash = await bcrypt.hash(plain, 10)
-  supabase.from('utilisateurs').update({ mot_de_passe: hash }).eq('id', userId).then(() => {})
-  return true
-}
 
 // ── MOUVEMENTS ────────────────────────────────────────────────────────────────
 export async function getMouvements() {
@@ -275,34 +258,6 @@ export async function getUtilisateurs() {
   return data || []
 }
 
-export async function loginUser(email, password) {
-  try {
-    // Récupérer d'abord par email uniquement
-    const { data, error } = await supabase
-      .from('utilisateurs')
-      .select('*')
-      .eq('email', email.toLowerCase().trim())
-      .eq('actif', true)
-
-    if (error) { console.error('Login error:', error); return null; }
-    if (!data || data.length === 0) { console.error('User not found'); return null; }
-
-    const user = data[0];
-    const ok = await verifyAndMigratePassword(password, user.mot_de_passe, user.id)
-    if (!ok) { console.error('Wrong password'); return null; }
-
-    // Mettre à jour dernière connexion
-    await supabase
-      .from('utilisateurs')
-      .update({ derniere_connexion: new Date().toISOString() })
-      .eq('id', user.id)
-
-    return user;
-  } catch(e) {
-    console.error('Login exception:', e);
-    return null;
-  }
-}
 
 export async function createUtilisateur(user) {
   const { data, error } = await supabase
@@ -311,7 +266,6 @@ export async function createUtilisateur(user) {
       nom: user.nom,
       prenom: user.prenom,
       email: user.email.toLowerCase().trim(),
-      mot_de_passe: await bcrypt.hash(user.motDePasse, 10),
       role: user.role,
       actif: true,
     }])
@@ -426,31 +380,6 @@ export async function deleteLotAchat(id) {
 }
 
 // ── MULTI-SITES ───────────────────────────────────────────────────────────────
-export async function loginUserMultiSite(email, password, siteId) {
-  try {
-    const { data, error } = await supabase
-      .from('utilisateurs')
-      .select('*')
-      .eq('email', email.toLowerCase().trim())
-      .eq('actif', true)
-      .eq('site_id', siteId)
-    if (error || !data || data.length === 0) return null
-    const user = data[0]
-    const ok = await verifyAndMigratePassword(password, user.mot_de_passe, user.id)
-    if (!ok) return null
-    await supabase.from('utilisateurs').update({ derniere_connexion: new Date().toISOString() }).eq('id', user.id)
-    // Charger les permissions custom depuis user_permissions
-    const { data: permsData } = await supabase
-      .from('user_permissions')
-      .select('modules')
-      .eq('user_id', user.id)
-      .limit(1)
-    if (permsData?.[0]?.modules) {
-      user.permissions = permsData[0].modules
-    }
-    return user
-  } catch(e) { console.error(e); return null; }
-}
 
 // Catalogue dynamique (CLAISSE RAIL, STMF)
 export async function addCatalogueArticle(siteId, article) {
@@ -677,7 +606,6 @@ export async function createUtilisateurSite(user, siteId) {
     .insert([{
       nom: user.nom, prenom: user.prenom,
       email: user.email.toLowerCase().trim(),
-      mot_de_passe: await bcrypt.hash(user.motDePasse, 10),
       role: user.role, actif: true, site_id: siteId,
     }])
     .select()
@@ -685,19 +613,6 @@ export async function createUtilisateurSite(user, siteId) {
   return data?.[0]
 }
 
-export async function updateUtilisateurPermissions(id, permissions) {
-  const { data, error } = await supabase
-    .from('utilisateurs')
-    .update({ permissions: permissions })
-    .eq('id', id)
-    .select()
-  if (error) {
-    console.error('updateUtilisateurPermissions error:', error)
-    return false
-  }
-  console.log('permissions updated:', data)
-  return true
-}
 
 // ── SUPPRESSIONS ──────────────────────────────────────────────────────────────
 export async function deleteMouvement(id) {
