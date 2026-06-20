@@ -2,6 +2,23 @@
 // Toutes les fonctions pour lire/écrire les données partagées
 
 import { supabase } from './supabase.js'
+import bcrypt from 'bcryptjs'
+
+export async function hashPassword(password) {
+  return bcrypt.hash(password, 10)
+}
+
+// Transparent migration: supports bcrypt hashes AND legacy plaintext.
+// On plaintext match, silently upgrades the stored value to bcrypt.
+async function verifyAndMigratePassword(plain, stored, userId) {
+  if (stored && stored.startsWith('$2')) {
+    return bcrypt.compare(plain, stored)
+  }
+  if (stored !== plain) return false
+  const hash = await bcrypt.hash(plain, 10)
+  supabase.from('utilisateurs').update({ mot_de_passe: hash }).eq('id', userId).then(() => {})
+  return true
+}
 
 // ── MOUVEMENTS ────────────────────────────────────────────────────────────────
 export async function getMouvements() {
@@ -252,7 +269,7 @@ export async function addHistoriquePrix(h) {
 export async function getUtilisateurs() {
   const { data, error } = await supabase
     .from('utilisateurs')
-    .select('id,nom,prenom,email,mot_de_passe,role,actif,created_at,derniere_connexion,site_id,permissions')
+    .select('id,nom,prenom,email,role,actif,created_at,derniere_connexion,site_id,permissions')
     .order('created_at', { ascending: false })
   if (error) { console.error(error); return []; }
   return data || []
@@ -271,8 +288,8 @@ export async function loginUser(email, password) {
     if (!data || data.length === 0) { console.error('User not found'); return null; }
 
     const user = data[0];
-    // Comparer le mot de passe
-    if (user.mot_de_passe !== password) { console.error('Wrong password'); return null; }
+    const ok = await verifyAndMigratePassword(password, user.mot_de_passe, user.id)
+    if (!ok) { console.error('Wrong password'); return null; }
 
     // Mettre à jour dernière connexion
     await supabase
@@ -294,7 +311,7 @@ export async function createUtilisateur(user) {
       nom: user.nom,
       prenom: user.prenom,
       email: user.email.toLowerCase().trim(),
-      mot_de_passe: user.motDePasse,
+      mot_de_passe: await bcrypt.hash(user.motDePasse, 10),
       role: user.role,
       actif: true,
     }])
@@ -419,7 +436,8 @@ export async function loginUserMultiSite(email, password, siteId) {
       .eq('site_id', siteId)
     if (error || !data || data.length === 0) return null
     const user = data[0]
-    if (user.mot_de_passe !== password) return null
+    const ok = await verifyAndMigratePassword(password, user.mot_de_passe, user.id)
+    if (!ok) return null
     await supabase.from('utilisateurs').update({ derniere_connexion: new Date().toISOString() }).eq('id', user.id)
     // Charger les permissions custom depuis user_permissions
     const { data: permsData } = await supabase
@@ -646,7 +664,7 @@ export async function createOrdreSite(ordre, siteId) {
 export async function getUtilisateursSite(siteId) {
   const { data, error } = await supabase
     .from('utilisateurs')
-    .select('id,nom,prenom,email,mot_de_passe,role,actif,created_at,derniere_connexion,site_id,permissions')
+    .select('id,nom,prenom,email,role,actif,created_at,derniere_connexion,site_id,permissions')
     .eq('site_id', siteId)
     .order('created_at', { ascending: false })
   if (error) { console.error(error); return []; }
@@ -659,7 +677,7 @@ export async function createUtilisateurSite(user, siteId) {
     .insert([{
       nom: user.nom, prenom: user.prenom,
       email: user.email.toLowerCase().trim(),
-      mot_de_passe: user.motDePasse,
+      mot_de_passe: await bcrypt.hash(user.motDePasse, 10),
       role: user.role, actif: true, site_id: siteId,
     }])
     .select()

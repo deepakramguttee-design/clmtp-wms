@@ -2,7 +2,7 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     
     <!-- iOS PWA -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -43,8 +43,16 @@
       <div class="s-bar"><div class="s-fill"></div></div>
     </div>
 
+    <noscript>
+      <div style="position:fixed;inset:0;background:#1e2330;display:flex;align-items:center;justify-content:center;font-family:Arial;color:#fff;text-align:center;padding:20px;">
+        <div>
+          <div style="font-size:40px;margin-bottom:16px;">⚠️</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:8px;">JavaScript requis</div>
+          <div style="font-size:14px;color:#9ca3af;">CLMTP nécessite JavaScript pour fonctionner. Activez-le dans votre navigateur.</div>
+        </div>
+      </div>
+    </noscript>
     <div id="root"></div>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script type="module" src="/src/main.jsx"></script>
 
     <script>

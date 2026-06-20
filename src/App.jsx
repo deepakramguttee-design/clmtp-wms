@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import bcrypt from "bcryptjs";
 import { ALL_PRODUCTS } from "./products.js";
 import AdminDashboard from "./AdminDashboard.jsx";
 import VueEclatee from "./VueEclatee.jsx";
@@ -1387,9 +1388,8 @@ function GestionPrix({ prixFournisseurs, setPrixFournisseurs, historiquePrix, se
     setPrixFournisseurs(prev=>prev.filter(p=>p.id!==id));
   };
 
-  const handleExportExcel = () => {
-    const XLSX = window.XLSX;
-    if(!XLSX){alert("Bibliothèque Excel non chargée. Rechargez la page.");return;}
+  const handleExportExcel = async () => {
+    const XLSX = await import("xlsx");
     const rows = prixFournisseurs.map(p=>({
       "SKU": p.article_id,
       "Article": p.article_name,
@@ -1414,8 +1414,7 @@ function GestionPrix({ prixFournisseurs, setPrixFournisseurs, historiquePrix, se
     const reader=new FileReader();
     reader.onload=async(ev)=>{
       try {
-        const XLSX=window.XLSX;
-        if(!XLSX){alert("Bibliothèque Excel non chargée. Rechargez la page.");return;}
+        const XLSX=await import("xlsx");
         const wb=XLSX.read(ev.target.result,{type:"array"});
         const ws=wb.Sheets[wb.SheetNames[0]];
         const data=XLSX.utils.sheet_to_json(ws);
@@ -4902,7 +4901,7 @@ function LoginPage({ onLogin }) {
         {step === "login" && (
           <div style={{background:"#fff",borderRadius:20,padding:28,boxShadow:"0 24px 64px rgba(0,0,0,0.4)"}}>
             <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
-              <button onClick={()=>setStep("site")} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"6px 10px",cursor:"pointer",fontSize:14,color:"#6b7280"}}>←</button>
+              <button type="button" onClick={()=>setStep("site")} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"6px 10px",cursor:"pointer",fontSize:14,color:"#6b7280"}}>←</button>
               <div>
                 <div style={{fontWeight:800,fontSize:16,color:"#1a1a1a"}}>🔐 Connexion</div>
                 <div style={{fontSize:12,color:site.color,fontWeight:600}}>{site.icon} {site.label}</div>
@@ -4911,32 +4910,32 @@ function LoginPage({ onLogin }) {
 
             {error&&<div style={{background:"#fee2e2",border:"1px solid #fca5a5",borderRadius:10,padding:"10px 14px",fontSize:13,color:"#991b1b",fontWeight:600,marginBottom:16}}>⚠️ {error}</div>}
 
-            <div style={{marginBottom:14}}>
-              <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:6}}>Adresse email</label>
-              <input type="email" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={handleKey}
-                placeholder="votre@email.fr"
-                style={{width:"100%",padding:"12px 14px",border:"1.5px solid #e0e0d8",borderRadius:10,fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:"'DM Sans',sans-serif"}}/>
-            </div>
-            <div style={{marginBottom:20}}>
-              <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:6}}>Mot de passe</label>
-              <div style={{position:"relative"}}>
-                <input type={showPwd?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={handleKey}
-                  placeholder="••••••••"
-                  style={{width:"100%",padding:"12px 44px 12px 14px",border:"1.5px solid #e0e0d8",borderRadius:10,fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:"'DM Sans',sans-serif"}}/>
-                <button onClick={()=>setShowPwd(s=>!s)} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",fontSize:16,color:"#8a9ab8"}}>
-                  {showPwd?"🙈":"👁"}
-                </button>
+            <form onSubmit={e=>{e.preventDefault();handleLogin();}} noValidate>
+              <div style={{marginBottom:14}}>
+                <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:6}}>Adresse email</label>
+                <input type="email" value={email} onChange={e=>setEmail(e.target.value)}
+                  autoComplete="email"
+                  placeholder="votre@email.fr"
+                  style={{width:"100%",padding:"12px 14px",border:"1.5px solid #e0e0d8",borderRadius:10,fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:"'DM Sans',sans-serif"}}/>
               </div>
-            </div>
-            <button onClick={handleLogin} disabled={loading} style={{width:"100%",padding:"14px",background:loading?"#8a9ab8":site.color,color:"#fff",border:"none",borderRadius:12,fontWeight:800,fontSize:15,cursor:loading?"not-allowed":"pointer",fontFamily:"'DM Sans',sans-serif"}}>
-              {loading?"⏳ Connexion…":"Se connecter →"}
-            </button>
+              <div style={{marginBottom:20}}>
+                <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:6}}>Mot de passe</label>
+                <div style={{position:"relative"}}>
+                  <input type={showPwd?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    style={{width:"100%",padding:"12px 44px 12px 14px",border:"1.5px solid #e0e0d8",borderRadius:10,fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:"'DM Sans',sans-serif"}}/>
+                  <button type="button" onClick={()=>setShowPwd(s=>!s)} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",fontSize:16,color:"#8a9ab8"}}>
+                    {showPwd?"🙈":"👁"}
+                  </button>
+                </div>
+              </div>
+              <button type="submit" disabled={loading} style={{width:"100%",padding:"14px",background:loading?"#8a9ab8":site.color,color:"#fff",border:"none",borderRadius:12,fontWeight:800,fontSize:15,cursor:loading?"not-allowed":"pointer",fontFamily:"'DM Sans',sans-serif"}}>
+                {loading?"⏳ Connexion…":"Se connecter →"}
+              </button>
+            </form>
           </div>
         )}
-
-        <div style={{textAlign:"center",marginTop:16,color:"#4b5563",fontSize:11}}>
-          CLMTP Multi-sites v4.0
-        </div>
       </div>
     </div>
   );
@@ -4968,17 +4967,6 @@ const DEFAULT_PERMISSIONS = {
 };
 
 // ── BOUTON VOIR MOT DE PASSE (super admin uniquement) ────────────────────────
-function ShowPasswordBtn({ pwd }) {
-  const [show, setShow] = useState(false);
-  if (!pwd) return <span style={{fontSize:11,color:"#8a9ab8",fontStyle:"italic"}}>—</span>;
-  return (
-    <button
-      onClick={()=>setShow(s=>!s)}
-      style={{padding:"4px 10px",background:show?"#dbeafe":"#f3f4f6",border:`1px solid ${show?"#93c5fd":"#e0e0d8"}`,borderRadius:7,cursor:"pointer",fontSize:11,color:show?"#1e40af":"#6b7280",fontWeight:600,maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-      {show ? pwd : "👁 Voir"}
-    </button>
-  );
-}
 
 function GestionUtilisateurs({ currentUser, siteId }) {
   const [users,setUsers]=useState([]);
@@ -5090,7 +5078,7 @@ function GestionUtilisateurs({ currentUser, siteId }) {
     setSaving(true);
     if(editUser) {
       const upd = {nom:form.nom,prenom:form.prenom,email:form.email,role:form.role,site_id:form.site};
-      if(form.motDePasse) upd.mot_de_passe=form.motDePasse;
+      if(form.motDePasse) upd.mot_de_passe=await bcrypt.hash(form.motDePasse,10);
       await updateUtilisateur(editUser.id, upd);
       setUsers(prev=>prev.map(u=>u.id===editUser.id?{...u,...upd}:u));
     } else {
@@ -5211,7 +5199,7 @@ function GestionUtilisateurs({ currentUser, siteId }) {
                     <td style={{padding:"12px 14px"}}>
                       <div style={{display:"flex",gap:6,alignItems:"center"}}>
                         <button onClick={()=>openEdit(u)} style={{padding:"5px 11px",background:"#f3f4f6",border:"none",borderRadius:7,cursor:"pointer",fontSize:12,fontWeight:600}}>✏️</button>
-                        {currentUser?.email==="deepak.ramguttee@gmail.com"&&<ShowPasswordBtn pwd={u.mot_de_passe}/>}
+
                         <button onClick={()=>handleToggle(u)} disabled={isMe} style={{padding:"5px 11px",background:u.actif?"#fef3c7":"#d1fae5",border:"none",borderRadius:7,cursor:isMe?"not-allowed":"pointer",fontSize:12,fontWeight:600,color:u.actif?"#92400e":"#065f46"}}>
                           {u.actif?"🔒":"🔓"}
                         </button>
@@ -5377,17 +5365,22 @@ function ChangerMotDePasse({ user, onClose, onSuccess }) {
 
   const handleSave = async () => {
     setError("");
-    if (actuel !== user.mot_de_passe) { setError("Mot de passe actuel incorrect."); return; }
+    const stored = user.mot_de_passe || "";
+    const actuelOk = stored.startsWith("$2")
+      ? await bcrypt.compare(actuel, stored)
+      : actuel === stored;
+    if (!actuelOk) { setError("Mot de passe actuel incorrect."); return; }
     if (nouveau.length < 6) { setError("Le nouveau mot de passe doit faire au moins 6 caractères."); return; }
     if (nouveau !== confirmer) { setError("Les mots de passe ne correspondent pas."); return; }
     setSaving(true);
+    const hash = await bcrypt.hash(nouveau, 10);
     const { error: err } = await supabase
       .from('utilisateurs')
-      .update({ mot_de_passe: nouveau })
+      .update({ mot_de_passe: hash })
       .eq('id', user.id);
     setSaving(false);
     if (err) { setError("Erreur lors de la sauvegarde."); return; }
-    onSuccess(nouveau);
+    onSuccess(hash);
   };
 
   return (
