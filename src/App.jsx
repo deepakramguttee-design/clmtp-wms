@@ -5571,6 +5571,20 @@ export default function App() {
 
   const renderPage=()=>{
     if(loading) return <Spinner/>;
+
+    // Role guard — blocks direct ?page= URL access for pages not allowed by this role
+    const navItem = NAV_ALL.find(n => n.id === page);
+    if (navItem && !navItem.roles.includes(user.role)) {
+      return (
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:80,gap:16,textAlign:"center"}}>
+          <div style={{fontSize:52}}>🚫</div>
+          <div style={{fontWeight:800,fontSize:18,color:"#1a1a1a"}}>Accès non autorisé</div>
+          <div style={{color:"#6b7280",fontSize:14,maxWidth:320}}>Votre rôle <strong>{user.role}</strong> ne permet pas d'accéder à cette page.</div>
+          <button onClick={()=>setPage("dashboard")} style={{marginTop:8,padding:"10px 22px",background:"#1e2330",color:"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:"pointer",fontSize:14}}>← Tableau de bord</button>
+        </div>
+      );
+    }
+
     if(page==="dashboard") return <Dashboard stockOverrides={stockOverrides} mouvements={mouvements} ordres={ordres} products={ALL_SITE_PRODUCTS} user={user} navigateTo={setPage} seuilsOverrides={seuilsOverrides} equivalences={equivalences}/>;
     if(page==="stock")     return <Stock stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} products={PRODUCTS} siteId={siteId} user={user} customArticles={customArticles} setCustomArticles={setCustomArticles} autoOpenNewArticle={autoOpenNewArticle} setAutoOpenNewArticle={setAutoOpenNewArticle}/>;
     if(page==="mouvements") return <EntreesSorties mouvements={mouvements.filter(m=>!m.site_id||m.site_id===siteId)} setMouvements={setMouvements} stockOverrides={stockOverrides} setStockOverrides={setStockOverrides} siteId={siteId} products={ALL_SITE_PRODUCTS} user={user} navigateTo={setPage} setAutoOpenNewArticle={setAutoOpenNewArticle}/>;
