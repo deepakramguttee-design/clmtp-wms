@@ -4866,6 +4866,12 @@ const SITE_LOGOS = {
   stmf:         '/logos/stmf.jpg',
 };
 
+const SITE_LABELS = {
+  clmtp_sable:  'CLMTP SABLÉ',
+  claisse_rail: 'CLAISSE RAIL',
+  stmf:         'STMF',
+};
+
 const ROLES = {
   admin:                  { label: "Administrateur",          color: "#7c3aed", bg: "#f3e8ff", icon: "👑" },
   technicien:             { label: "Technicien",              color: "#1e40af", bg: "#dbeafe", icon: "🔧" },
@@ -5744,11 +5750,12 @@ export default function App() {
       <div style={{display:"flex",height:"100vh",overflow:"hidden"}}>
         {/* SIDEBAR DESKTOP + MOBILE DRAWER */}
         <div className="desktop-sidebar" style={{width:sidebar?230:60,flexShrink:0,background:"#1e2330",display:"flex",flexDirection:"column",transition:"width 0.25s ease",overflow:"hidden"}}>
-          <div style={{padding:sidebar?"16px 18px":"12px 10px",borderBottom:"1px solid rgba(255,255,255,.08)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <div style={{padding:sidebar?"14px 18px":"10px",borderBottom:"1px solid rgba(255,255,255,.08)",display:"flex",alignItems:"center",justifyContent:sidebar?"flex-start":"center",gap:10}}>
             {SITE_LOGOS[siteId]
-              ? <img src={SITE_LOGOS[siteId]} alt={site.label} style={{height:sidebar?48:32,maxWidth:sidebar?160:40,objectFit:"contain",transition:"height 0.25s ease, max-width 0.25s ease"}}/>
-              : <div style={{color:"#fff",fontWeight:900,fontSize:sidebar?13:11}}>CLMTP</div>
+              ? <img src={SITE_LOGOS[siteId]} alt={SITE_LABELS[siteId]||"CLMTP"} style={{height:40,maxWidth:sidebar?120:40,objectFit:"contain",flexShrink:0,transition:"max-width 0.25s ease"}}/>
+              : <div style={{color:"#fff",fontWeight:900,fontSize:13,flexShrink:0}}>{SITE_LABELS[siteId]||"CLMTP"}</div>
             }
+            {sidebar&&SITE_LOGOS[siteId]&&<div style={{color:"#fff",fontWeight:700,fontSize:13,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{SITE_LABELS[siteId]||"CLMTP"}</div>}
           </div>
           <nav style={{flex:1,padding:"8px 8px",display:"flex",flexDirection:"column",gap:1,overflowY:"auto"}}>
             {NAV_FILTERED_SECTIONS.map(section=>{
@@ -5843,8 +5850,9 @@ export default function App() {
             <div style={{padding:"16px 18px",borderBottom:"1px solid rgba(255,255,255,.08)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 {SITE_LOGOS[siteId]
-                  ? <img src={SITE_LOGOS[siteId]} alt={site.label} style={{height:40,maxWidth:120,objectFit:"contain"}}/>
-                  : <div style={{color:"#fff",fontWeight:900,fontSize:14}}>CLMTP</div>
+                  ? <><img src={SITE_LOGOS[siteId]} alt={SITE_LABELS[siteId]||"CLMTP"} style={{height:40,maxWidth:120,objectFit:"contain"}}/>
+                      <div style={{color:"#fff",fontWeight:700,fontSize:13}}>{SITE_LABELS[siteId]||"CLMTP"}</div></>
+                  : <div style={{color:"#fff",fontWeight:900,fontSize:14}}>{SITE_LABELS[siteId]||"CLMTP"}</div>
                 }
               </div>
               <button onClick={()=>setSidebar(false)} style={{background:"rgba(255,255,255,.1)",border:"none",borderRadius:8,color:"#fff",cursor:"pointer",fontSize:18,padding:"4px 10px"}}>✕</button>

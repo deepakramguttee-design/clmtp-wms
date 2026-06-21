@@ -7,6 +7,12 @@ const SITE_LOGOS = {
   stmf:         '/logos/stmf.jpg',
 }
 
+const SITE_LABELS = {
+  clmtp_sable:  'CLMTP SABLÉ',
+  claisse_rail: 'CLAISSE RAIL',
+  stmf:         'STMF',
+}
+
 const SITES = {
   clmtp_sable:  { label: "CLMTP SABLÉ",   color: "#1e40af", bg: "#dbeafe", icon: "🏗️", logo: "CS" },
   claisse_rail: { label: "CLAISSE RAIL",   color: "#065f46", bg: "#d1fae5", icon: "🚂", logo: "CR" },
@@ -46,14 +52,15 @@ export default function Login({ siteId, setSiteId }) {
 
         <div style={{textAlign:"center",marginBottom:32}}>
           {SITE_LOGOS[siteId]
-            ? <img src={SITE_LOGOS[siteId]} alt={site.label}
-                style={{height:80,maxWidth:200,objectFit:"contain",margin:"0 auto 16px",display:"block",transition:"opacity 0.3s"}}/>
+            ? <div style={{width:88,height:88,background:"#fff",borderRadius:20,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px",overflow:"hidden",boxShadow:"0 4px 16px rgba(0,0,0,0.2)"}}>
+                <img src={SITE_LOGOS[siteId]} alt={SITE_LABELS[siteId]||site.label}
+                  style={{width:72,height:72,objectFit:"contain",transition:"opacity 0.3s"}}/>
+              </div>
             : <div style={{width:64,height:64,background:`linear-gradient(135deg,${site.color},${site.color}99)`,borderRadius:18,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,margin:"0 auto 16px",color:"#fff",fontWeight:900,letterSpacing:-0.5,transition:"all 0.3s"}}>
                 {site.logo}
               </div>
           }
-          <div style={{color:"#fff",fontWeight:900,fontSize:24,letterSpacing:-0.5,transition:"all 0.3s"}}>{site.label}</div>
-          <div style={{color:"#6b7280",fontSize:13,marginTop:4}}>Gestion d'entrepôt</div>
+          <div style={{color:"#fff",fontWeight:900,fontSize:24,letterSpacing:-0.5,transition:"all 0.3s"}}>{SITE_LABELS[siteId]||site.label}</div>
         </div>
 
         {step === 'site' && (
