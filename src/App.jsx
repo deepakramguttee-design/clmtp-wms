@@ -4993,6 +4993,9 @@ function GestionUtilisateurs({ currentUser, siteId }) {
   const [form,setForm]=useState({nom:"",prenom:"",email:"",role:"technicien",site:siteId,tauxHoraire:""});
   const [customPerms,setCustomPerms]=useState([]);
   const [showCreatePwd,setShowCreatePwd]=useState(false);
+  const [resetPwdUser,setResetPwdUser]=useState(null);
+  const [resetPwdInput,setResetPwdInput]=useState('');
+  const [resetPwdSaving,setResetPwdSaving]=useState(false);
 
   const site = SITES[siteId] || SITES.clmtp_sable;
 
@@ -5119,6 +5122,22 @@ function GestionUtilisateurs({ currentUser, siteId }) {
     setUsers(prev=>prev.filter(x=>x.id!==u.id));
   };
 
+  const handleAdminResetPassword = async (u, password) => {
+    if (password.length < 6) return;
+    setResetPwdSaving(true);
+    const { data, error } = await supabase.functions.invoke('reset-user-password', {
+      body: { auth_id: u.auth_id, password },
+    });
+    setResetPwdSaving(false);
+    if (error || data?.error) {
+      alert(`Erreur : ${data?.error || error?.message}`);
+      return;
+    }
+    setResetPwdUser(null);
+    setResetPwdInput('');
+    alert(`✅ Mot de passe de ${u.prenom} ${u.nom} réinitialisé.`);
+  };
+
   return (
     <div style={{display:"flex",flexDirection:"column",gap:20}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
@@ -5214,6 +5233,9 @@ function GestionUtilisateurs({ currentUser, siteId }) {
                           {u.actif?"🔒":"🔓"}
                         </button>
                         <button onClick={()=>handleDelete(u)} disabled={isMe} style={{padding:"5px 10px",background:isMe?"#f3f4f6":"#fee2e2",border:"none",borderRadius:7,cursor:isMe?"not-allowed":"pointer",fontSize:12,color:isMe?"#8a9ab8":"#dc2626"}}>🗑</button>
+                        {currentUser.role==='admin'&&u.auth_id&&!isMe&&(
+                          <button onClick={()=>{setResetPwdUser(u);setResetPwdInput('');}} title="Réinitialiser le mot de passe" style={{padding:"5px 10px",background:"#fff7ed",border:"none",borderRadius:7,cursor:"pointer",fontSize:12,color:"#d97706"}}>🔑</button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -5360,6 +5382,43 @@ function GestionUtilisateurs({ currentUser, siteId }) {
           </div>
         </div>
       )}
+
+      {/* Modal Réinitialiser mot de passe (admin) */}
+      {resetPwdUser&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,backdropFilter:"blur(2px)"}}>
+          <div style={{background:"#fff",borderRadius:20,padding:30,width:"min(96vw,420px)",boxShadow:"0 20px 60px rgba(0,0,0,0.2)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+              <h2 style={{fontSize:16,fontWeight:800,color:"#1a1a1a",margin:0}}>🔑 Réinitialiser le mot de passe</h2>
+              <button onClick={()=>{setResetPwdUser(null);setResetPwdInput('');}} style={{background:"#f3f4f6",border:"none",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:15}}>✕</button>
+            </div>
+            <div style={{background:"#fff7ed",borderRadius:10,padding:"10px 14px",marginBottom:16,fontSize:13,color:"#92400e",fontWeight:600}}>
+              {resetPwdUser.prenom} {resetPwdUser.nom} · <span style={{fontWeight:400}}>{resetPwdUser.email}</span>
+            </div>
+            <div style={{marginBottom:16}}>
+              <label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Nouveau mot de passe *</label>
+              <input
+                type="password"
+                value={resetPwdInput}
+                onChange={e=>setResetPwdInput(e.target.value)}
+                placeholder="Min. 6 caractères"
+                autoComplete="new-password"
+                style={{width:"100%",padding:"10px 13px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}
+              />
+              <div style={{fontSize:11,color:"#8a9ab8",marginTop:4}}>Ne sera pas stocké ici. Communiquer à l'utilisateur en main propre.</div>
+            </div>
+            <div style={{display:"flex",gap:10}}>
+              <button onClick={()=>{setResetPwdUser(null);setResetPwdInput('');}} style={{flex:1,padding:"12px",background:"#f3f4f6",border:"none",borderRadius:10,fontWeight:600,cursor:"pointer"}}>Annuler</button>
+              <button
+                onClick={()=>handleAdminResetPassword(resetPwdUser,resetPwdInput)}
+                disabled={resetPwdSaving||resetPwdInput.length<6}
+                style={{flex:2,padding:"12px",background:resetPwdSaving||resetPwdInput.length<6?"#e0e0d8":"#d97706",color:resetPwdSaving||resetPwdInput.length<6?"#8a9ab8":"#fff",border:"none",borderRadius:10,fontWeight:700,cursor:resetPwdSaving||resetPwdInput.length<6?"not-allowed":"pointer",fontSize:14}}
+              >
+                {resetPwdSaving?"⏳ En cours…":"🔑 Réinitialiser"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -5452,6 +5511,14 @@ export default function App() {
   const [fournisseurs,setFournisseurs]=useState([]);
   const [seuilsOverrides,setSeuilsOverrides]=useState({});
   const [showInstall, setShowInstall] = useState(false);
+
+  // Non-admin users are locked to their own site regardless of what was picked at login
+  useEffect(() => {
+    if (user && user.role !== 'admin' && user.site_id) {
+      setSiteId(user.site_id);
+      localStorage.setItem('wms_site', user.site_id);
+    }
+  }, [user]);
 
   // PWA Install prompt
   useEffect(() => {
@@ -5553,7 +5620,7 @@ export default function App() {
   },[user, siteId]);
 
   if (authLoading) return <Spinner />;
-  if (!user) return <Login siteId={siteId} setSiteId={setSiteId} />;
+  if (!user) return <Login />;
 
   const filterNavItem = n => {
     if (!n.sites.includes(siteId)) return false;
@@ -5736,6 +5803,21 @@ export default function App() {
                     </div>
                   </div>
                 </div>
+                {user.role === 'admin' && (
+                  <div style={{marginBottom:8}}>
+                    <div style={{fontSize:10,color:"#6a7a9a",fontWeight:700,letterSpacing:0.8,textTransform:"uppercase",marginBottom:4}}>Site actif</div>
+                    <div style={{display:"flex",flexDirection:"column",gap:2}}>
+                      {Object.entries(SITES).map(([id,s])=>(
+                        <button key={id} onClick={()=>{setSiteId(id);localStorage.setItem('wms_site',id);}}
+                          style={{padding:"5px 8px",borderRadius:7,border:`1px solid ${siteId===id?s.color:"transparent"}`,background:siteId===id?`${s.color}22`:"transparent",color:siteId===id?s.color:"#8a9ab8",cursor:"pointer",fontSize:11,fontWeight:siteId===id?700:500,textAlign:"left",display:"flex",alignItems:"center",gap:6,fontFamily:"'DM Sans',sans-serif"}}>
+                          <span style={{fontSize:13}}>{s.icon}</span>
+                          <span style={{flex:1}}>{s.label}</span>
+                          {siteId===id&&<span style={{fontSize:9}}>✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <button onClick={()=>setShowChangePwd(true)} style={{width:"100%",padding:"7px",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,color:"#8a9ab8",cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",marginBottom:6}}>
                   🔒 Changer mot de passe
                 </button>

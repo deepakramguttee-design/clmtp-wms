@@ -84,15 +84,17 @@ DO $$ DECLARE r RECORD; BEGIN
 
 CREATE POLICY "mouvements_select" ON mouvements FOR SELECT
   USING (auth.uid() IS NOT NULL
-    AND (site_id IS NULL OR site_id = get_my_site() OR is_admin()));
+    AND (site_id = get_my_site() OR is_admin()));
 
 CREATE POLICY "mouvements_write" ON mouvements FOR ALL
   USING (auth.uid() IS NOT NULL AND get_my_role() <> 'lecteur'
-    AND (site_id IS NULL OR site_id = get_my_site() OR is_admin()))
+    AND (site_id = get_my_site() OR is_admin()))
   WITH CHECK (auth.uid() IS NOT NULL AND get_my_role() <> 'lecteur'
-    AND (site_id IS NULL OR site_id = get_my_site() OR is_admin()));
+    AND (site_id = get_my_site() OR is_admin()));
 
--- ── §B3 : stock_overrides (pas de site_id — clmtp_sable global)
+-- ── §B3 : stock_overrides (site_id présent — cloisonné par site)
+-- Diagnostic 2026-06-21 : 36 lignes, 0 NULL, toutes site_id='clmtp_sable'.
+-- La colonne site_id a été ajoutée post-setup. Cloisonnement direct activé.
 
 ALTER TABLE stock_overrides ENABLE ROW LEVEL SECURITY;
 DO $$ DECLARE r RECORD; BEGIN
@@ -101,11 +103,13 @@ DO $$ DECLARE r RECORD; BEGIN
   END LOOP; END $$;
 
 CREATE POLICY "stock_overrides_select" ON stock_overrides FOR SELECT
-  USING (auth.uid() IS NOT NULL);
+  USING (auth.uid() IS NOT NULL AND (site_id = get_my_site() OR is_admin()));
 
 CREATE POLICY "stock_overrides_write" ON stock_overrides FOR ALL
-  USING (auth.uid() IS NOT NULL AND get_my_role() <> 'lecteur')
-  WITH CHECK (auth.uid() IS NOT NULL AND get_my_role() <> 'lecteur');
+  USING (auth.uid() IS NOT NULL AND get_my_role() <> 'lecteur'
+    AND (site_id = get_my_site() OR is_admin()))
+  WITH CHECK (auth.uid() IS NOT NULL AND get_my_role() <> 'lecteur'
+    AND (site_id = get_my_site() OR is_admin()));
 
 -- ── §B3 : Tables scopées par site_id ─────────────────────────
 -- ordres_reparation, catalogues, locations, prets, chantiers
@@ -210,7 +214,9 @@ DO $$ DECLARE tbl TEXT; r RECORD; BEGIN
       ||'  AND (c.site_id=get_my_site() OR is_admin())))';
   END LOOP; END $$;
 
--- ── §B3 : equipements (colonne site nullable) ─────────────────
+-- ── §B3 : equipements (global — visible par tous les sites) ──
+-- Décision 2026-06-21 : pas de cloisonnement par site.
+-- 102 lignes, colonne site présente mais ignorée pour le RLS.
 
 ALTER TABLE equipements ENABLE ROW LEVEL SECURITY;
 DO $$ DECLARE r RECORD; BEGIN
@@ -219,13 +225,11 @@ DO $$ DECLARE r RECORD; BEGIN
   END LOOP; END $$;
 
 CREATE POLICY "equipements_select" ON equipements FOR SELECT
-  USING (auth.uid() IS NOT NULL AND (site IS NULL OR site = get_my_site() OR is_admin()));
+  USING (auth.uid() IS NOT NULL);
 
 CREATE POLICY "equipements_write" ON equipements FOR ALL
-  USING (auth.uid() IS NOT NULL AND get_my_role() <> 'lecteur'
-    AND (site IS NULL OR site = get_my_site() OR is_admin()))
-  WITH CHECK (auth.uid() IS NOT NULL AND get_my_role() <> 'lecteur'
-    AND (site IS NULL OR site = get_my_site() OR is_admin()));
+  USING (auth.uid() IS NOT NULL AND get_my_role() <> 'lecteur')
+  WITH CHECK (auth.uid() IS NOT NULL AND get_my_role() <> 'lecteur');
 
 -- ── §B3 : Tables globales (pas de site_id) ───────────────────
 -- equivalences, prix_fournisseurs, historique_prix, lots_achat,
