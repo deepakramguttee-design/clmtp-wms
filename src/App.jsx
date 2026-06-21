@@ -5626,7 +5626,7 @@ export default function App() {
   },[user, siteId]);
 
   if (authLoading) return <Spinner />;
-  if (!user) return <Login />;
+  if (!user) return <Login siteId={siteId} setSiteId={setSiteId} />;
 
   const filterNavItem = n => {
     if (!n.sites.includes(siteId)) return false;
