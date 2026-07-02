@@ -3426,23 +3426,54 @@ function BarcodeDisplay({ value, width = 200, height = 60, showValue = true, fon
       const totalW = barW * bars.length;
       const svgH = showValue ? height + fontSize + 6 : height;
 
-      let rects = "";
+      // Build the SVG via DOM APIs — never innerHTML with the user-controlled
+      // `value`, which would be an XSS sink (e.g. an article ref containing
+      // "<img src=x onerror=...>"). textContent escapes it safely.
+      const SVG_NS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(SVG_NS, "svg");
+      svg.setAttribute("width", totalW);
+      svg.setAttribute("height", svgH);
+      svg.setAttribute("viewBox", `0 0 ${totalW} ${svgH}`);
+      svg.setAttribute("style", "max-width:100%;height:auto;");
+
+      const bg = document.createElementNS(SVG_NS, "rect");
+      bg.setAttribute("width", totalW);
+      bg.setAttribute("height", svgH);
+      bg.setAttribute("fill", "#fff");
+      svg.appendChild(bg);
+
       let x = 0;
       for (let i = 0; i < bars.length; i++) {
         if (bars[i] === "1") {
-          rects += `<rect x="${x}" y="0" width="${barW}" height="${height}" fill="#000"/>`;
+          const bar = document.createElementNS(SVG_NS, "rect");
+          bar.setAttribute("x", x);
+          bar.setAttribute("y", "0");
+          bar.setAttribute("width", barW);
+          bar.setAttribute("height", height);
+          bar.setAttribute("fill", "#000");
+          svg.appendChild(bar);
         }
         x += barW;
       }
 
-      node.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${svgH}" viewBox="0 0 ${totalW} ${svgH}" style="max-width:100%;height:auto;">
-          <rect width="${totalW}" height="${svgH}" fill="#fff"/>
-          ${rects}
-          ${showValue ? `<text x="${totalW/2}" y="${height + fontSize + 2}" text-anchor="middle" font-family="monospace" font-size="${fontSize}" fill="#000">${value}</text>` : ""}
-        </svg>`;
+      if (showValue) {
+        const text = document.createElementNS(SVG_NS, "text");
+        text.setAttribute("x", totalW / 2);
+        text.setAttribute("y", height + fontSize + 2);
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("font-family", "monospace");
+        text.setAttribute("font-size", fontSize);
+        text.setAttribute("fill", "#000");
+        text.textContent = value;
+        svg.appendChild(text);
+      }
+
+      node.replaceChildren(svg);
     } catch(e) {
-      node.innerHTML = `<div style="border:1px dashed #ccc;padding:10px;font-size:11px;color:#999;text-align:center">${value}</div>`;
+      const fallback = document.createElement("div");
+      fallback.setAttribute("style", "border:1px dashed #ccc;padding:10px;font-size:11px;color:#999;text-align:center");
+      fallback.textContent = value;
+      node.replaceChildren(fallback);
     }
   }, [value, width, height, showValue, fontSize]);
 

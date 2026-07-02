@@ -54,22 +54,6 @@
     </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-
-    <script>
-      // Prompt installation PWA
-      window.addEventListener('beforeinstallprompt', e => {
-        e.preventDefault();
-        window.__pwaPrompt = e;
-        window.dispatchEvent(new Event('pwa-installable'));
-      });
-
-      // Masquer splash
-      window.addEventListener('load', () => {
-        setTimeout(() => {
-          const s = document.getElementById('splash');
-          if(s){ s.classList.add('hidden'); setTimeout(()=>s.remove(),500); }
-        }, 1800);
-      });
-    </script>
+    <script src="/boot.js"></script>
   </body>
 </html>

@@ -3,6 +3,12 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  // Disable the inline module-preload polyfill so the production HTML ships no
+  // inline <script>, letting the CSP use `script-src 'self'` (no 'unsafe-inline').
+  // Safe here: all target devices support native ESM / modulepreload.
+  build: {
+    modulePreload: { polyfill: false },
+  },
   plugins: [
     react(),
     VitePWA({

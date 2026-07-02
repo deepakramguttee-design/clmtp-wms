@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from './supabase.js';
+import { supabase, getVueEclateeUrl, getVuesEclateesUrls } from './supabase.js';
 import { getVuesEclatees, addVueEclatee, updateVueEclatee, deleteVueEclatee } from './db.js';
 
 const SITES_CONFIG = [
@@ -34,6 +34,25 @@ function isPdfUrl(url) {
   return url.split('?')[0].toLowerCase().endsWith('.pdf');
 }
 
+// Résout image_url en chemin de stockage (bucket privé) à signer, ou null si
+// c'est un fichier local/externe à ouvrir directement.
+// - STATIC_DOCS : "/docs/xxx.pdf"                     → null (servi en statique)
+// - preview local : "blob:..."                        → null
+// - nouveau format en base : "clmtp_sable/xxx.pdf"    → chemin de stockage
+// - ancien format (URL publique/signée complète)      → chemin extrait de l'URL
+function toStoragePath(url) {
+  if (!url) return null;
+  if (url.startsWith('/') || url.startsWith('blob:')) return null;
+  const publicMarker = '/object/public/vues-eclatees/';
+  const signMarker = '/object/sign/vues-eclatees/';
+  for (const marker of [publicMarker, signMarker]) {
+    const idx = url.indexOf(marker);
+    if (idx !== -1) return decodeURIComponent(url.slice(idx + marker.length).split('?')[0]);
+  }
+  if (url.startsWith('http')) return null; // URL externe inconnue → laisser tel quel
+  return url; // chemin relatif déjà stocké
+}
+
 function Spinner() {
   return (
     <div style={{display:'flex',justifyContent:'center',padding:60}}>
@@ -57,6 +76,7 @@ export default function VueEclatee({ user, siteId }) {
   const [equipements, setEquipements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lightbox, setLightbox] = useState(null);
+  const [signedUrls, setSignedUrls] = useState({}); // { [equipementId]: signedUrl } — vignettes PNG signées
   const [showForm, setShowForm] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [form, setForm] = useState({ nom: '', description: '', site_id: siteId, file: null, fileType: null, filePreview: null, fileName: null });
@@ -66,7 +86,33 @@ export default function VueEclatee({ user, siteId }) {
   const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
-    getVuesEclatees().then(data => { setEquipements(data); setLoading(false); });
+    let cancelled = false;
+    (async () => {
+      const data = await getVuesEclatees();
+      if (cancelled) return;
+      setEquipements(data);
+      setLoading(false);
+
+      // Les vignettes PNG s'affichent toutes en même temps → on signe en batch
+      // (createSignedUrls) pour éviter un appel réseau par ligne. Les PDF, eux,
+      // sont signés à la demande au clic (voir handleCardClick).
+      const pngItems = data.filter(eq => !isPdfUrl(eq.image_url) && toStoragePath(eq.image_url));
+      if (pngItems.length === 0) return;
+      try {
+        const paths = [...new Set(pngItems.map(eq => toStoragePath(eq.image_url)))];
+        const urlMap = await getVuesEclateesUrls(paths);
+        if (cancelled) return;
+        const byId = {};
+        for (const eq of pngItems) {
+          const p = toStoragePath(eq.image_url);
+          if (urlMap.has(p)) byId[eq.id] = urlMap.get(p);
+        }
+        setSignedUrls(prev => ({ ...prev, ...byId }));
+      } catch (err) {
+        console.error('Échec de génération des URLs signées (vignettes) :', err);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -114,18 +160,29 @@ export default function VueEclatee({ user, siteId }) {
           alert("Erreur lors de l'upload du fichier : " + uploadErr.message);
           return;
         }
-        const { data: urlData } = supabase.storage.from('vues-eclatees').getPublicUrl(path);
-        image_url = urlData.publicUrl;
+        // Bucket privé : on stocke le chemin relatif, l'URL sera signée à l'affichage.
+        image_url = path;
       }
 
       const payload = { nom_equipement: form.nom, description: form.description, site_id: form.site_id, image_url };
 
+      let savedId = editTarget?.id || null;
       if (editTarget) {
         await updateVueEclatee(editTarget.id, payload);
         setEquipements(prev => prev.map(e => e.id === editTarget.id ? { ...e, ...payload } : e));
       } else {
         const saved = await addVueEclatee(payload);
-        if (saved) setEquipements(prev => [...prev, saved]);
+        if (saved) { setEquipements(prev => [...prev, saved]); savedId = saved.id; }
+      }
+
+      // Signer immédiatement la nouvelle vignette PNG pour un affichage direct.
+      if (form.file && form.fileType === 'png' && savedId) {
+        try {
+          const signed = await getVueEclateeUrl(image_url);
+          setSignedUrls(prev => ({ ...prev, [savedId]: signed }));
+        } catch (err) {
+          console.error('Échec de signature de la nouvelle vignette :', err);
+        }
       }
       setShowForm(false);
     } finally {
@@ -136,21 +193,31 @@ export default function VueEclatee({ user, siteId }) {
   const handleDelete = async (eq) => {
     if (!confirm(`Supprimer "${eq.nom_equipement}" ?`)) return;
     await deleteVueEclatee(eq.id);
-    if (eq.image_url) {
-      const parts = eq.image_url.split('/object/public/vues-eclatees/');
-      if (parts[1]) {
-        const storagePath = decodeURIComponent(parts[1].split('?')[0]);
-        supabase.storage.from('vues-eclatees').remove([storagePath]);
+    const storagePath = toStoragePath(eq.image_url);
+    if (storagePath) {
+      try {
+        await supabase.storage.from('vues-eclatees').remove([storagePath]);
+      } catch (err) {
+        console.error('Échec de suppression du fichier dans le stockage :', err);
       }
     }
     setEquipements(prev => prev.filter(e => e.id !== eq.id));
     if (lightbox?.id === eq.id) setLightbox(null);
   };
 
-  const handleCardClick = (eq) => {
+  const handleCardClick = async (eq) => {
     if (!eq.image_url) return;
     if (isPdfUrl(eq.image_url)) {
-      window.open(eq.image_url, '_blank');
+      const path = toStoragePath(eq.image_url);
+      if (!path) { window.open(eq.image_url, '_blank', 'noopener'); return; } // PDF statique /docs
+      // Bucket privé : URL signée générée à la demande, au clic.
+      try {
+        const url = await getVueEclateeUrl(path);
+        window.open(url, '_blank', 'noopener');
+      } catch (err) {
+        console.error("Échec d'ouverture du PDF :", err);
+        alert("Impossible d'ouvrir le document pour le moment. Veuillez réessayer.");
+      }
     } else {
       setLightbox(eq);
     }
@@ -194,6 +261,8 @@ export default function VueEclatee({ user, siteId }) {
               <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:16}}>
                 {items.map(eq=>{
                   const isPdf = isPdfUrl(eq.image_url);
+                  // URL d'affichage : vignette signée si dispo, sinon fichier local/statique direct.
+                  const imgSrc = signedUrls[eq.id] || (toStoragePath(eq.image_url) ? null : eq.image_url);
                   return (
                     <div key={eq.id} style={{background:'#fff',borderRadius:14,border:'1px solid #e5e7eb',overflow:'hidden',transition:'box-shadow 0.15s'}}
                       onMouseEnter={e=>e.currentTarget.style.boxShadow='0 4px 20px rgba(0,0,0,0.1)'}
@@ -205,8 +274,8 @@ export default function VueEclatee({ user, siteId }) {
                             <PdfIcon size={48}/>
                             <span style={{fontSize:11,color:'#dc2626',fontWeight:600}}>Ouvrir le PDF</span>
                           </>
-                        ):eq.image_url?(
-                          <img src={eq.image_url} alt={eq.nom_equipement} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+                        ):imgSrc?(
+                          <img src={imgSrc} alt={eq.nom_equipement} style={{width:'100%',height:'100%',objectFit:'cover'}}/>
                         ):(
                           <span style={{fontSize:32,color:'#d1d5db'}}>🔧</span>
                         )}
@@ -238,7 +307,7 @@ export default function VueEclatee({ user, siteId }) {
         <div onClick={()=>setLightbox(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.85)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000,padding:20}}>
           <button onClick={()=>setLightbox(null)} style={{position:'absolute',top:20,right:20,background:'rgba(255,255,255,0.15)',border:'none',borderRadius:8,padding:'8px 14px',color:'#fff',cursor:'pointer',fontSize:18,fontWeight:700}}>✕</button>
           <div onClick={e=>e.stopPropagation()} style={{maxWidth:'90vw',maxHeight:'90vh',display:'flex',flexDirection:'column',alignItems:'center',gap:14}}>
-            <img src={lightbox.image_url} alt={lightbox.nom_equipement} style={{maxWidth:'90vw',maxHeight:'75vh',objectFit:'contain',borderRadius:12}}/>
+            <img src={signedUrls[lightbox.id] || (toStoragePath(lightbox.image_url) ? null : lightbox.image_url)} alt={lightbox.nom_equipement} style={{maxWidth:'90vw',maxHeight:'75vh',objectFit:'contain',borderRadius:12}}/>
             <div style={{textAlign:'center',color:'#fff'}}>
               <div style={{fontWeight:800,fontSize:18}}>{lightbox.nom_equipement}</div>
               {lightbox.description&&<div style={{fontSize:13,color:'#9ca3af',marginTop:4}}>{lightbox.description}</div>}
