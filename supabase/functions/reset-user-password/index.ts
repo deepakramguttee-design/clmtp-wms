@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
-    // Verify caller is an admin
+    // Vérifier que l'appelant est admin
     const callerClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_ANON_KEY')!,
@@ -34,35 +34,14 @@ Deno.serve(async (req) => {
 
     if (callerProfile?.role !== 'admin') return json({ error: 'Forbidden' }, 403)
 
-    const { email, password, nom, prenom, role, site_id } = await req.json()
-    if (!email || !password || !nom || !prenom || !role || !site_id) {
-      return json({ error: 'Champs requis manquants' }, 400)
-    }
+    const { auth_id, password } = await req.json()
+    if (!auth_id || !password) return json({ error: 'auth_id et password requis' }, 400)
     if (password.length < 8) return json({ error: 'Mot de passe trop court (min. 8 caractères)' }, 400)
 
-    // Create Supabase Auth account (auto-confirmed, no email sent)
-    const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
-      email: email.toLowerCase().trim(),
-      password,
-      email_confirm: true,
-    })
-    if (authErr) return json({ error: authErr.message }, 400)
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(auth_id, { password })
+    if (error) return json({ error: error.message }, 400)
 
-    const auth_id = authData.user.id
-
-    // Insert profile row
-    const { data: utilisateur, error: dbErr } = await supabaseAdmin
-      .from('utilisateurs')
-      .insert([{ nom, prenom, email: email.toLowerCase().trim(), role, site_id, actif: true, auth_id }])
-      .select()
-      .single()
-
-    if (dbErr) {
-      await supabaseAdmin.auth.admin.deleteUser(auth_id)
-      return json({ error: dbErr.message }, 400)
-    }
-
-    return json({ user: utilisateur })
+    return json({ ok: true })
   } catch (err) {
     return json({ error: err.message }, 500)
   }
