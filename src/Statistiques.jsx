@@ -239,7 +239,7 @@ export default function Statistiques({ user, navigateTo }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 18, marginBottom: 18 }}>
         <Panel
           title="👷 TOP consommateurs"
-          subtitle={`Par ${dimLabel} · coût FIFO · sorties liées à un OR uniquement`}
+          subtitle={`Par ${dimLabel} · quantité sortie · sorties liées à un OR uniquement`}
           loading={loading} error={errors.conso} empty={!loading && data.conso.length === 0} h={400}>
           <div style={{ display: "flex", gap: 4, marginBottom: 12, background: "#f5f5f0", padding: 4, borderRadius: 9, width: "fit-content" }}>
             {[["machine", "🚜 Véhicule / engin"], ["technicien", "🧑‍🔧 Technicien"]].map(([k, lbl]) => (
@@ -252,24 +252,24 @@ export default function Statistiques({ user, navigateTo }) {
           </div>
           <ResponsiveContainer width="100%" height={Math.max(240, data.conso.length * 24)}>
             <BarChart data={data.conso} layout="vertical" margin={{ top: 4, right: 24, left: 8, bottom: 0 }}>
-              <XAxis type="number" tick={AXIS_TICK} axisLine={false} tickLine={false} />
+              <XAxis type="number" tick={AXIS_TICK} axisLine={false} tickLine={false} allowDecimals={false} />
               <YAxis type="category" dataKey="label" width={180} tick={{ fill: "#444", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => truncate(v, 26)} />
               <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "#00000008" }}
-                formatter={(v) => [fmtEur(v), "Coût FIFO"]} />
-              <Bar dataKey="total_cout" name="Coût FIFO" fill={ACCENT.green} radius={[0, 4, 4, 0]} />
+                formatter={(v, n, p) => [`${fmt(v)} pièces · ${fmtEur(p?.payload?.total_cout)} · ${fmt(p?.payload?.nb_or)} OR`, "Consommation"]} />
+              <Bar dataKey="total_qte" name="Quantité" fill={ACCENT.green} radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Panel>
 
-        <Panel title="🏭 Répartition par site" subtitle={`Coût FIFO des sorties · ${period.label.toLowerCase()}`}
+        <Panel title="🏭 Répartition par site" subtitle={`Quantité de sorties · ${period.label.toLowerCase()}`}
           loading={loading} error={errors.parSite} empty={!loading && parSiteChart.length === 0} h={400}>
           <ResponsiveContainer width="100%" height={320}>
             <PieChart>
-              <Pie data={parSiteChart} dataKey="total_cout" nameKey="label" cx="50%" cy="50%" outerRadius={110} innerRadius={55}
+              <Pie data={parSiteChart} dataKey="total_qte" nameKey="label" cx="50%" cy="50%" outerRadius={110} innerRadius={55}
                 label={({ label, percent }) => `${label} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
                 {parSiteChart.map(r => <Cell key={r.site} fill={SITE_META[r.site]?.color || "#94a3b8"} />)}
               </Pie>
-              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v, n, p) => [fmtEur(v), p?.payload?.label]} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v, n, p) => [`${fmt(v)} pièces · ${fmt(p?.payload?.nb_or)} OR`, p?.payload?.label]} />
               <Legend wrapperStyle={{ fontSize: 12, color: "#666" }} />
             </PieChart>
           </ResponsiveContainer>
