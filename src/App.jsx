@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ALL_PRODUCTS } from "./products.js";
 import AdminDashboard from "./AdminDashboard.jsx";
+import Statistiques from "./Statistiques.jsx";
 import VueEclatee from "./VueEclatee.jsx";
 import ReferenceFiltres from "./ReferenceFiltres.jsx";
 import Chantiers from "./components/Chantiers.jsx";
@@ -4934,6 +4935,7 @@ const NAV_ALL = [
   { id:"stock_critique",label:"Stock critique",        icon:"🚨", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"a_commander",  label:"À commander",            icon:"🚨", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"admin",         label:"Administration",        icon:"🛡️", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
+  { id:"statistiques",  label:"Statistiques",          icon:"📊", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"fournisseurs",  label:"Fournisseurs",          icon:"🏭", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
   { id:"bons_commande", label:"Demandes de devis",     icon:"📄", roles:["admin","magasinier","magasinier_preparateur"], sites:["clmtp_sable","claisse_rail","stmf"] },
 ];
@@ -4943,8 +4945,9 @@ const NAV_SECTIONS = [
   {
     id:"top", standalone:true,
     items:[
-      { id:"dashboard",  label:"Tableau de bord", icon:"🏠", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
-      { id:"admin",      label:"Administration",  icon:"🛡️", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"dashboard",    label:"Tableau de bord", icon:"🏠", roles:["admin","technicien","magasinier","preparateur","magasinier_preparateur","lecteur"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"admin",        label:"Administration",  icon:"🛡️", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
+      { id:"statistiques", label:"Statistiques",    icon:"📊", roles:["admin"], sites:["clmtp_sable","claisse_rail","stmf"] },
     ]
   },
   {
@@ -5011,6 +5014,7 @@ const MODULES_PERMISSIONS = [
   { id:"catalogue",    label:"Catalogue articles",   icon:"📋", desc:"Import catalogue Excel" },
   { id:"vue_eclatee",  label:"Vue éclatée",          icon:"🔍", desc:"Schémas éclatés des équipements" },
   { id:"ref_filtres",  label:"Références filtres",   icon:"🔩", desc:"Références filtres véhicules et engins" },
+  { id:"statistiques", label:"Statistiques",         icon:"📊", desc:"Tableaux de bord analytiques (admin)" },
 ];
 
 const DEFAULT_PERMISSIONS = {
@@ -5714,6 +5718,7 @@ export default function App() {
     if(page==="pret")      return <PretMateriel prets={prets} setPrets={setPrets} siteId={siteId} products={ALL_SITE_PRODUCTS} parc={parcVehicules}/>;
     if(page==="catalogue") return <GestionCatalogue siteId={siteId} catalogue={catalogue} setCatalogue={setCatalogue}/>;
     if(page==="admin")        return <AdminDashboard user={user} navigateTo={setPage}/>;
+    if(page==="statistiques") return <Statistiques user={user} navigateTo={setPage}/>;
     if(page==="fournisseurs")  return <GestionFournisseurs onRefresh={()=>getFournisseurs().then(setFournisseurs)}/>;
     if(page==="bons_commande") return <BonsCommande siteId={siteId} user={user} products={ALL_SITE_PRODUCTS} fournisseurs={fournisseurs}/>;
     if(page==="seuils")        return <SeuilsStock products={ALL_SITE_PRODUCTS} stockOverrides={stockOverrides} equivalences={equivalences} seuilsOverrides={seuilsOverrides} setSeuilsOverrides={setSeuilsOverrides} siteId={siteId}/>;
