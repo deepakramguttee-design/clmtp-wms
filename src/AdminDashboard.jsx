@@ -303,23 +303,37 @@ export default function AdminDashboard({ user, navigateTo }) {
               : "Chargement en cours…"}
           </p>
         </div>
-        <button
-          onClick={fetchAll}
-          disabled={loading}
-          style={{
-            padding: "10px 22px", borderRadius: 10, border: "1px solid #e0e0d8",
-            background: loading ? "#e0e0d8" : "#1e2330",
-            color: loading ? "#475569" : "#fff",
-            fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", fontSize: 14,
-            display: "flex", alignItems: "center", gap: 8,
-          }}
-        >
-          <span style={{
-            display: "inline-block",
-            animation: loading ? "spin 1s linear infinite" : "none",
-          }}>⟳</span>
-          {loading ? "Chargement…" : "Actualiser"}
-        </button>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {navigateTo && (
+            <button
+              onClick={() => navigateTo("statistiques")}
+              style={{
+                padding: "10px 18px", borderRadius: 10, border: "1px solid #c7d2fe",
+                background: "#eef2ff", color: "#3730a3", fontWeight: 700,
+                cursor: "pointer", fontSize: 14, display: "flex", alignItems: "center", gap: 8,
+              }}
+            >
+              📊 Statistiques
+            </button>
+          )}
+          <button
+            onClick={fetchAll}
+            disabled={loading}
+            style={{
+              padding: "10px 22px", borderRadius: 10, border: "1px solid #e0e0d8",
+              background: loading ? "#e0e0d8" : "#1e2330",
+              color: loading ? "#475569" : "#fff",
+              fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", fontSize: 14,
+              display: "flex", alignItems: "center", gap: 8,
+            }}
+          >
+            <span style={{
+              display: "inline-block",
+              animation: loading ? "spin 1s linear infinite" : "none",
+            }}>⟳</span>
+            {loading ? "Chargement…" : "Actualiser"}
+          </button>
+        </div>
       </div>
 
       {/* ── KPI CARDS ──────────────────────────────────────────────────────── */}

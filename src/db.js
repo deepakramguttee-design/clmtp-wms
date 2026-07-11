@@ -815,6 +815,38 @@ export async function deleteFiltrationEngin(id) {
   if (error) console.error(error);
 }
 
+// ── STATISTIQUES (RPC admin-only, agrégations côté serveur) ───────────────────
+// Chaque RPC est SECURITY INVOKER + garde is_admin() ; le RLS existant s'applique.
+// p_days: nombre de jours (null = tout) ; p_site: id site (null = tous les sites).
+async function callRpc(fn, params) {
+  const { data, error } = await supabase.rpc(fn, params)
+  if (error) { console.error(`[stats] ${fn}`, error); throw error; }
+  return data || [];
+}
+
+export function statsTopProduits(pDays, pSite, pLimit = 20) {
+  return callRpc('stats_top_produits', { p_days: pDays, p_site: pSite, p_limit: pLimit });
+}
+export function statsTopConsommateurs(pDays, pSite, pDim = 'machine', pLimit = 15) {
+  return callRpc('stats_top_consommateurs', { p_days: pDays, p_site: pSite, p_dim: pDim, p_limit: pLimit });
+}
+export function statsOrParTechnicien(pDays, pSite, pLimit = 15) {
+  return callRpc('stats_or_par_technicien', { p_days: pDays, p_site: pSite, p_limit: pLimit });
+}
+export function statsOrMensuel(pMonths, pSite) {
+  return callRpc('stats_or_mensuel', { p_months: pMonths, p_site: pSite });
+}
+export function statsSortiesMensuel(pMonths, pSite) {
+  return callRpc('stats_sorties_mensuel', { p_months: pMonths, p_site: pSite });
+}
+export function statsParSite(pDays) {
+  return callRpc('stats_par_site', { p_days: pDays });
+}
+export async function statsKpi(pSite) {
+  const rows = await callRpc('stats_kpi', { p_site: pSite });
+  return rows[0] || null;
+}
+
 // ── PARC VÉHICULES / ENGINS ───────────────────────────────────────────────────
 export async function getParcVehicules() {
   const all = []; let from = 0; const step = 1000;
