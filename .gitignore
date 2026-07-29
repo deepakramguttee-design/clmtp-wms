@@ -7,3 +7,12 @@ dev-dist/
 .DS_Store
 
 graphify-out/
+
+# Playwright E2E
+tests/.auth/
+test-results/
+playwright-report/
+.env.test
+
+.netlify/
+supabase/.temp/
