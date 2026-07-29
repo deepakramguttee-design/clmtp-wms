@@ -13,6 +13,7 @@ import SeuilsStock from "./components/SeuilsStock.jsx";
 import StockCritique from "./components/StockCritique.jsx";
 // parc.js supprimé — données migrées vers Supabase (table parc_vehicules)
 import { supabase } from "./supabase.js";
+import { safeSheetToJson, tooLarge } from "./xlsxSafe.js";
 import { useAuth } from "./AuthContext.jsx";
 import Login from "./Login.jsx";
 import {
@@ -1541,9 +1542,10 @@ function GestionPrix({ prixFournisseurs, setPrixFournisseurs, historiquePrix, se
     reader.onload=async(ev)=>{
       try {
         const XLSX=await import("xlsx");
+        if(tooLarge(file)){alert("Fichier trop volumineux (max 8 Mo).");setImporting(false);return;}
         const wb=XLSX.read(ev.target.result,{type:"array"});
         const ws=wb.Sheets[wb.SheetNames[0]];
-        const data=XLSX.utils.sheet_to_json(ws);
+        const data=safeSheetToJson(XLSX,ws);
         let imported=0;
         for(const row of data) {
           const articleId=String(row["SKU"]||row["ID"]||row["Référence"]||"").trim();
@@ -2084,7 +2086,7 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
 
   const canDelete = user && (user.role==="admin" || user.role==="magasinier");
   const [selectedVehicle,setSelectedVehicle]=useState(null);
-  const [form,setForm]=useState({machine:"",immat:"",typePanne:"",technicien:"",priorite:"normale",description:""});
+  const [form,setForm]=useState({machine:"",immat:"",typePanne:"",technicien:"",technicien2:"",priorite:"normale",description:""});
   const [panneSelect,setPanneSelect]=useState("");
   const [siteTechniciens,setSiteTechniciens]=useState([]);
 
@@ -2133,11 +2135,11 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
       dateOuverture:new Date().toISOString(), dateCloture:null, statut:"ouvert",
       ...form, pieces:[], notes:"",
     };
-    const saved = await createOrdre(newOrdre);
-    const ordreAvecId = saved ? {...newOrdre, id:saved.id} : {...newOrdre, id:Date.now()};
+    const saved = await createOrdreSite(newOrdre, siteId);
+    const ordreAvecId = saved ? {...newOrdre, site_id:siteId, id:saved.id} : {...newOrdre, site_id:siteId, id:Date.now()};
     setOrdres(prev=>[ordreAvecId,...prev]);
     setShowForm(false);
-    setForm({machine:"",immat:"",typePanne:"",technicien:"",priorite:"normale",description:""});
+    setForm({machine:"",immat:"",typePanne:"",technicien:"",technicien2:"",priorite:"normale",description:""});
     setPanneSelect("");
     setParcSearch(""); setSelectedVehicle(null); setRefFiltreSelectionne(null);
     setFicheOrdre(ordreAvecId);
@@ -2167,8 +2169,8 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
     const mouvement={type:"sortie",articleId:prod.id,articleName:prod.name,fournisseur:prod.fournisseur,
       quantite:piece.qte,stockAvant:stockActuel,stockApres:newStock,
       motif:`OR ${ordre.numero} — ${ordre.machine}`,reference:ordre.numero};
-    const saved=await addMouvement(mouvement);
-    await setStockOverride(prod.id,newStock);
+    const saved=await addMouvementSite(mouvement,siteId);
+    await setStockOverrideSite(prod.id,newStock,siteId);
     setMouvements(prev=>[saved||{...mouvement,id:Date.now(),created_at:new Date().toISOString()},...prev]);
     setStockOverrides(prev=>({...prev,[prod.id]:newStock}));
     const updatedOrdre={...ordre,pieces:ordre.pieces.map(p=>p.id===piece.id?{...p,sortie:true,dateSortie:new Date().toISOString()}:p)};
@@ -2178,7 +2180,7 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
   const filtered=ordres.filter(o=>{
     const okS=filterStatut==="tous"||o.statut===filterStatut;
     const s=filterSearch.toLowerCase();
-    const okSearch=!s||o.numero.toLowerCase().includes(s)||o.machine.toLowerCase().includes(s)||(o.immat||"").toLowerCase().includes(s)||o.typePanne.toLowerCase().includes(s)||(o.technicien||"").toLowerCase().includes(s);
+    const okSearch=!s||o.numero.toLowerCase().includes(s)||o.machine.toLowerCase().includes(s)||(o.immat||"").toLowerCase().includes(s)||o.typePanne.toLowerCase().includes(s)||(o.technicien||"").toLowerCase().includes(s)||(o.technicien2||"").toLowerCase().includes(s);
     return okS&&okSearch;
   });
 
@@ -2189,7 +2191,7 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
     const cost=orCost(o);
     const statLabel=OR_STATUTS[o.statut]?.label||o.statut;
     const prioLabel=o.priorite?o.priorite.charAt(0).toUpperCase()+o.priorite.slice(1):"—";
-    return{numero:o.numero,machine:o.machine,immat:o.immat||"",typePanne:o.typePanne||"",technicien:o.technicien||"",statut:statLabel,priorite:prioLabel,cout:cost,dateOuverture:new Date(o.dateOuverture).toLocaleDateString("fr-FR"),dateCloture:o.dateCloture?new Date(o.dateCloture).toLocaleDateString("fr-FR"):"",pieces:o.pieces.length,description:o.description||""};
+    return{numero:o.numero,machine:o.machine,immat:o.immat||"",typePanne:o.typePanne||"",technicien:[o.technicien,o.technicien2].filter(Boolean).join(", ")||"",statut:statLabel,priorite:prioLabel,cout:cost,dateOuverture:new Date(o.dateOuverture).toLocaleDateString("fr-FR"),dateCloture:o.dateCloture?new Date(o.dateCloture).toLocaleDateString("fr-FR"):"",pieces:o.pieces.length,description:o.description||""};
   });
 
   const exportPDF=async()=>{
@@ -2312,7 +2314,7 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
                       <Badge status={o.statut} map={OR_STATUTS}/><Badge status={o.priorite} map={OR_PRIORITES}/>
                     </div>
                     <div style={{fontWeight:700,fontSize:15,color:"#1a1a1a",marginBottom:3}}>🚗 {o.machine}{o.immat?` — ${o.immat}`:""}</div>
-                    <div style={{fontSize:13,color:"#6b7280"}}>🔧 {o.typePanne}{o.technicien?` · 👤 ${o.technicien}`:""}{(o.kilometrage||o.heures_moteur)&&<span style={{marginLeft:8,fontSize:12,color:"#8a9ab8"}}>{o.type_compteur==="h"?`⏱ ${o.heures_moteur} h`:`📏 ${(o.kilometrage||0).toLocaleString("fr-FR")} km`}</span>}</div>
+                    <div style={{fontSize:13,color:"#6b7280"}}>🔧 {o.typePanne}{[o.technicien,o.technicien2].filter(Boolean).length>0?` · 👤 ${[o.technicien,o.technicien2].filter(Boolean).join(", ")}`:""}{(o.kilometrage||o.heures_moteur)&&<span style={{marginLeft:8,fontSize:12,color:"#8a9ab8"}}>{o.type_compteur==="h"?`⏱ ${o.heures_moteur} h`:`📏 ${(o.kilometrage||0).toLocaleString("fr-FR")} km`}</span>}</div>
                     {o.description&&<div style={{fontSize:12,color:"#8a9ab8",marginTop:3,fontStyle:"italic"}}>{o.description.slice(0,80)}{o.description.length>80?"…":""}</div>}
                   </div>
                   <div style={{display:"flex",gap:14,alignItems:"center",flexWrap:"wrap"}}>
@@ -2425,6 +2427,14 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
                   </select>
                   :<input value={form.technicien} onChange={e=>setForm(p=>({...p,technicien:e.target.value}))} placeholder="Nom du technicien" style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
                 }</div>
+              <div><label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Technicien 2 <span style={{color:"#8a9ab8",fontWeight:400}}>(optionnel)</span></label>
+                {siteTechniciens.length>0
+                  ?<select value={form.technicien2} onChange={e=>setForm(p=>({...p,technicien2:e.target.value}))} style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box",background:"#fff"}}>
+                    <option value="">— Aucun 2e technicien —</option>
+                    {siteTechniciens.map(u=><option key={u.id} value={`${u.prenom} ${u.nom}`}>{u.prenom} {u.nom}</option>)}
+                  </select>
+                  :<input value={form.technicien2} onChange={e=>setForm(p=>({...p,technicien2:e.target.value}))} placeholder="Nom du 2e technicien" style={{width:"100%",padding:"10px 14px",border:"1px solid #e0e0d8",borderRadius:10,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                }</div>
               <div><label style={{fontSize:12,fontWeight:600,color:"#555",display:"block",marginBottom:5}}>Priorité</label>
                 <div style={{display:"flex",gap:8}}>
                   {[{v:"urgente",l:"🔴 Urgente"},{v:"haute",l:"🟡 Haute"},{v:"normale",l:"⚪ Normale"}].map(p=>(
@@ -2467,10 +2477,14 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
   const [filtresChecked,setFiltresChecked]=useState({});
   const [nbreRoues,setNbreRoues]=useState(4);
   const [editTechnicien,setEditTechnicien]=useState(ordre.technicien||"");
+  const [editTechnicien2,setEditTechnicien2]=useState(ordre.technicien2||"");
 
   const [tabFiche,setTabFiche]=useState("fiche");
   const [sessions,setSessions]=useState([]);
   const [loadingSessions,setLoadingSessions]=useState(false);
+  // Techniciens affectés à l'OR (en-tête) — pour attribuer le pointage à l'un ou l'autre.
+  const techniciensAffectes=[ordre.technicien,ordre.technicien2].filter(Boolean);
+  const [chronoTech,setChronoTech]=useState(ordre.technicien||"");
   const [elapsed,setElapsed]=useState(0);
   const [sessionOp,setSessionOp]=useState(false);
   const [chronoError,setChronoError]=useState("");
@@ -2527,7 +2541,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
       type:"Révision",
       started_at:new Date().toISOString(),
       statut:"en_cours",
-      technicien:ordre.technicien||"",
+      technicien:chronoTech||ordre.technicien||"",
     }]).select();
     if(error){
       console.error("[chrono] INSERT failed:",error);
@@ -2764,7 +2778,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
     let y=38;
     const compteurLabel=ordre.type_compteur==="h"?"Heures moteur":"Kilométrage";
     const compteurVal=ordre.type_compteur==="h"?(ordre.heures_moteur!=null?`${ordre.heures_moteur} h`:"—"):(ordre.kilometrage!=null?`${ordre.kilometrage.toLocaleString("fr-FR")} km`:"—");
-    const infos=[["Machine",ordre.machine||"—"],["Immatriculation",ordre.immat||"—"],[compteurLabel,compteurVal],["Technicien",ordre.technicien||"—"],["Statut",OR_STATUTS[ordre.statut]?.label||ordre.statut],["Priorité",ordre.priorite?ordre.priorite.charAt(0).toUpperCase()+ordre.priorite.slice(1):"—"],["Ouvert le",new Date(ordre.dateOuverture).toLocaleDateString("fr-FR")],...(ordre.dateCloture?[["Clôturé le",new Date(ordre.dateCloture).toLocaleDateString("fr-FR")]]:[])]
+    const infos=[["Machine",ordre.machine||"—"],["Immatriculation",ordre.immat||"—"],[compteurLabel,compteurVal],["Technicien(s)",[ordre.technicien,ordre.technicien2].filter(Boolean).join(", ")||"—"],["Statut",OR_STATUTS[ordre.statut]?.label||ordre.statut],["Priorité",ordre.priorite?ordre.priorite.charAt(0).toUpperCase()+ordre.priorite.slice(1):"—"],["Ouvert le",new Date(ordre.dateOuverture).toLocaleDateString("fr-FR")],...(ordre.dateCloture?[["Clôturé le",new Date(ordre.dateCloture).toLocaleDateString("fr-FR")]]:[])]
     const half=Math.ceil(infos.length/2);
     const drawCol=(items,x)=>{let cy=y;items.forEach(([l,v])=>{doc.setFont("helvetica","normal");doc.setFontSize(7);doc.setTextColor(107,114,128);doc.text(l,x,cy);doc.setFont("helvetica","bold");doc.setFontSize(10);doc.setTextColor(17,24,39);doc.text(String(v),x,cy+5);cy+=13;});return cy;};
     y=Math.max(drawCol(infos.slice(0,half),14),drawCol(infos.slice(half),110))+4;
@@ -2790,9 +2804,9 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
     const rows=[
       ["ORDRE DE RÉPARATION",ordre.numero],[],
       ["INFORMATIONS GÉNÉRALES"],[
-        "Numéro OR","Machine","Immatriculation","Type de panne","Technicien","Statut","Priorité","Ouvert le",...(ordre.dateCloture?["Clôturé le"]:[])
+        "Numéro OR","Machine","Immatriculation","Type de panne","Technicien(s)","Statut","Priorité","Ouvert le",...(ordre.dateCloture?["Clôturé le"]:[])
       ],[
-        ordre.numero,ordre.machine||"—",ordre.immat||"—",ordre.typePanne||"—",ordre.technicien||"—",OR_STATUTS[ordre.statut]?.label||ordre.statut,ordre.priorite||"—",new Date(ordre.dateOuverture).toLocaleDateString("fr-FR"),...(ordre.dateCloture?[new Date(ordre.dateCloture).toLocaleDateString("fr-FR")]:[])
+        ordre.numero,ordre.machine||"—",ordre.immat||"—",ordre.typePanne||"—",[ordre.technicien,ordre.technicien2].filter(Boolean).join(", ")||"—",OR_STATUTS[ordre.statut]?.label||ordre.statut,ordre.priorite||"—",new Date(ordre.dateOuverture).toLocaleDateString("fr-FR"),...(ordre.dateCloture?[new Date(ordre.dateCloture).toLocaleDateString("fr-FR")]:[])
       ],
       ["Description",ordre.description||""],["Notes",ordre.notes||""],[],
       ["PIÈCES NÉCESSAIRES"],
@@ -2825,7 +2839,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
               {ordre.typePanne&&<div style={{color:"#8a9ab8",fontSize:12,marginTop:2}}>🔧 {ordre.typePanne}</div>}
             </div>
             <div style={{display:"flex",gap:12,marginTop:6,flexWrap:"wrap"}}>
-              {ordre.technicien&&<span style={{color:"#d1d5db",fontSize:12}}>👤 {ordre.technicien}</span>}
+              {[ordre.technicien,ordre.technicien2].filter(Boolean).length>0&&<span style={{color:"#d1d5db",fontSize:12}}>👤 {[ordre.technicien,ordre.technicien2].filter(Boolean).join(", ")}</span>}
               {ordre.priorite&&(()=>{const p=OR_PRIORITES[ordre.priorite];return <span style={{background:p?.bg,color:p?.text,padding:"1px 8px",borderRadius:99,fontSize:11,fontWeight:700}}>{ordre.priorite.charAt(0).toUpperCase()+ordre.priorite.slice(1)}</span>;})()}
             </div>
           </div>
@@ -2848,7 +2862,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
         </div>
         <div style={{padding:"22px 26px",display:tabFiche==="fiche"?"flex":"none",flexDirection:"column",gap:20}}>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))",gap:10}}>
-            {[{l:"Machine",v:ordre.machine},{l:"Immat.",v:ordre.immat||"—"},...(ordre.type_compteur==="h"?[{l:"Heures moteur",v:ordre.heures_moteur!=null?`${ordre.heures_moteur} h`:"—"}]:[{l:"Kilométrage",v:ordre.kilometrage!=null?`${ordre.kilometrage.toLocaleString("fr-FR")} km`:"—"}]),{l:"Panne",v:ordre.typePanne},{l:"Technicien",v:ordre.technicien||"—"},{l:"Ouvert le",v:new Date(ordre.dateOuverture).toLocaleDateString("fr-FR")},{l:"Priorité",v:<Badge status={ordre.priorite} map={OR_PRIORITES}/>},...(ordre.statut==="termine"&&ordre.dateCloture?[{l:"Clôturé le",v:new Date(ordre.dateCloture).toLocaleDateString("fr-FR")}]:[])].map(r=>(
+            {[{l:"Machine",v:ordre.machine},{l:"Immat.",v:ordre.immat||"—"},...(ordre.type_compteur==="h"?[{l:"Heures moteur",v:ordre.heures_moteur!=null?`${ordre.heures_moteur} h`:"—"}]:[{l:"Kilométrage",v:ordre.kilometrage!=null?`${ordre.kilometrage.toLocaleString("fr-FR")} km`:"—"}]),{l:"Panne",v:ordre.typePanne},{l:"Technicien(s)",v:[ordre.technicien,ordre.technicien2].filter(Boolean).join(", ")||"—"},{l:"Ouvert le",v:new Date(ordre.dateOuverture).toLocaleDateString("fr-FR")},{l:"Priorité",v:<Badge status={ordre.priorite} map={OR_PRIORITES}/>},...(ordre.statut==="termine"&&ordre.dateCloture?[{l:"Clôturé le",v:new Date(ordre.dateCloture).toLocaleDateString("fr-FR")}]:[])].map(r=>(
               <div key={r.l} style={{background:"#f9fafb",borderRadius:10,padding:"10px 14px"}}>
                 <div style={{fontSize:11,color:"#8a9ab8",marginBottom:3}}>{r.l}</div>
                 <div style={{fontWeight:700,fontSize:13,color:"#1a1a1a"}}>{r.v}</div>
@@ -3181,6 +3195,12 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
               onKeyDown={e=>{if(e.key==="Enter"&&editTechnicien!==ordre.technicien)onUpdate({...ordre,technicien:editTechnicien});}}
               placeholder="Nom du technicien"
               style={{flex:1,padding:"7px 12px",border:"1px solid #e0e0d8",borderRadius:9,fontSize:13,outline:"none"}}/>
+            <div style={{fontSize:13,fontWeight:600,color:"#555",whiteSpace:"nowrap"}}>👤 Technicien 2 :</div>
+            <input value={editTechnicien2} onChange={e=>setEditTechnicien2(e.target.value)}
+              onBlur={()=>{if(editTechnicien2!==(ordre.technicien2||""))onUpdate({...ordre,technicien2:editTechnicien2});}}
+              onKeyDown={e=>{if(e.key==="Enter"&&editTechnicien2!==(ordre.technicien2||""))onUpdate({...ordre,technicien2:editTechnicien2});}}
+              placeholder="2e technicien (optionnel)"
+              style={{flex:1,padding:"7px 12px",border:"1px solid #e0e0d8",borderRadius:9,fontSize:13,outline:"none"}}/>
           </div>
 
           {allSorties&&ordre.statut!=="termine"&&(
@@ -3210,6 +3230,15 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
             return(
               <div style={{textAlign:"center",padding:"28px 0",background:"#f9fafb",borderRadius:16,border:`2px solid ${activeSession?"#fcd34d":"#e0e0d8"}`}}>
                 <div style={{fontSize:11,color:"#6b7280",fontWeight:600,marginBottom:8,letterSpacing:"0.08em"}}>TEMPS EN COURS</div>
+                {techniciensAffectes.length>1&&(
+                  <div style={{marginBottom:10,fontSize:12,color:"#6b7280"}}>
+                    Pointer pour :{" "}
+                    <select value={chronoTech} onChange={e=>setChronoTech(e.target.value)} disabled={!!activeSession}
+                      style={{padding:"5px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:13,outline:"none",background:activeSession?"#f3f4f6":"#fff"}}>
+                      {techniciensAffectes.map(t=><option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                )}
                 <div style={{fontFamily:"monospace",fontSize:52,fontWeight:900,color:activeSession?"#1e2330":"#d1d5db",letterSpacing:"0.04em",lineHeight:1}}>
                   {fmtElapsed(elapsed)}
                 </div>
@@ -3303,9 +3332,16 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
                   <div>
                     <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Technicien</div>
-                    <input value={manualForm.technicien} onChange={e=>setManualForm(f=>({...f,technicien:e.target.value}))}
-                      placeholder="Nom du technicien"
-                      style={{width:"100%",padding:"8px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                    {techniciensAffectes.length>0
+                      ?<select value={manualForm.technicien} onChange={e=>setManualForm(f=>({...f,technicien:e.target.value}))}
+                        style={{width:"100%",padding:"8px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box",background:"#fff"}}>
+                        <option value="">— Sélectionner —</option>
+                        {techniciensAffectes.map(t=><option key={t} value={t}>{t}</option>)}
+                      </select>
+                      :<input value={manualForm.technicien} onChange={e=>setManualForm(f=>({...f,technicien:e.target.value}))}
+                        placeholder="Nom du technicien"
+                        style={{width:"100%",padding:"8px 10px",border:"1px solid #e0e0d8",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/>
+                    }
                   </div>
                   <div>
                     <div style={{fontSize:11,color:"#6b7280",marginBottom:3,fontWeight:600}}>Description (optionnel)</div>
@@ -4116,11 +4152,11 @@ function LocationMateriel({ locations, setLocations, siteId, products, parc=[] }
     const reader = new FileReader();
     reader.onload = async (ev) => {
       try {
-        const XLSX = window.XLSX;
-        if (!XLSX) { alert("Rechargez la page et réessayez."); setImporting(false); return; }
+        const XLSX = await import("xlsx");
+        if (tooLarge(file)) { alert("Fichier trop volumineux (max 8 Mo)."); setImporting(false); return; }
         const wb = XLSX.read(ev.target.result, { type:"array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(ws);
+        const rows = safeSheetToJson(XLSX, ws);
         const parseDate = (v) => {
           if (!v) return null;
           if (typeof v === "number") return new Date(Math.round((v-25569)*86400*1000)).toISOString().split("T")[0];
@@ -4456,11 +4492,11 @@ function PretMateriel({ prets, setPrets, siteId, products, parc=[] }) {
     const reader = new FileReader();
     reader.onload = async (ev) => {
       try {
-        const XLSX = window.XLSX;
-        if (!XLSX) { alert("Rechargez la page."); setImporting(false); return; }
+        const XLSX = await import("xlsx");
+        if (tooLarge(file)) { alert("Fichier trop volumineux (max 8 Mo)."); setImporting(false); return; }
         const wb = XLSX.read(ev.target.result, { type:"array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(ws);
+        const rows = safeSheetToJson(XLSX, ws);
         const parseDate = (v) => {
           if (!v) return null;
           if (typeof v === "number") return new Date(Math.round((v-25569)*86400*1000)).toISOString().split("T")[0];
@@ -4742,12 +4778,14 @@ function GestionCatalogue({ siteId, catalogue, setCatalogue }) {
     const reader=new FileReader();
     reader.onload=async(ev)=>{
       try {
-        // Utilisation de SheetJS via CDN
-        const XLSX=window.XLSX;
-        if(!XLSX){alert("Rechargez la page et réessayez.");setImporting(false);return;}
+        // SheetJS officiel (durci) via import dynamique — voir src/xlsxSafe.js
+        const XLSX=await import("xlsx");
+        if(tooLarge(file)){alert("Fichier trop volumineux (max 8 Mo).");setImporting(false);return;}
         const wb=XLSX.read(ev.target.result,{type:"array"});
         const ws=wb.Sheets[wb.SheetNames[0]];
-        const data=XLSX.utils.sheet_to_json(ws);
+        // safeSheetToJson : objets à prototype nul (anti prototype-pollution).
+        // Les colonnes sont ensuite whitelistées explicitement ci-dessous (Nom, SKU, …).
+        const data=safeSheetToJson(XLSX,ws);
         let articles=[];
         let idx=1;
         for(const row of data){
@@ -4793,9 +4831,8 @@ function GestionCatalogue({ siteId, catalogue, setCatalogue }) {
           <p style={{color:"#6b7280",fontSize:13,margin:"4px 0 0"}}>{catalogue.length} article{catalogue.length!==1?"s":""} dans le catalogue</p>
         </div>
         <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-          <button onClick={()=>{
-            const XLSX = window.XLSX;
-            if(!XLSX){alert("Rechargez la page.");return;}
+          <button onClick={async()=>{
+            const XLSX = await import("xlsx");
             const headers = [["SKU","Nom / Désignation","Fournisseur","Stock initial","Stock minimum","Emplacement","Prix HT (€)","Catégorie","Unité"]];
             const exemple = [
               ["FIL-001","Filtre à air","MANN","10","2","A1-01","15.50","Filtration","pcs"],
@@ -5001,7 +5038,11 @@ const NAV_SECTIONS = [
 
 
 // ── GESTION UTILISATEURS ──────────────────────────────────────────────────────
-// Modules disponibles pour les permissions
+// Modules disponibles pour les permissions.
+// ⚠️ SÉCURITÉ (F-008) : ces « modules » ne servent qu'à MASQUER des écrans côté
+// client (ergonomie). Ils ne constituent PAS une frontière de sécurité : le RLS
+// Supabase (rôle + site) reste le seul véritable contrôle d'accès aux données.
+// Décocher un module n'empêche pas l'accès aux données correspondantes via l'API.
 const MODULES_PERMISSIONS = [
   { id:"dashboard",    label:"Tableau de bord",      icon:"🏠", desc:"KPIs, alertes, statistiques" },
   { id:"stock",        label:"Stocks",               icon:"📦", desc:"Consulter les références" },
@@ -5170,7 +5211,7 @@ function GestionUtilisateurs({ currentUser, siteId }) {
   };
 
   const handleAdminResetPassword = async (u, password) => {
-    if (password.length < 6) return;
+    if (password.length < 8) { alert("Le mot de passe doit faire au moins 8 caractères."); return; }
     setResetPwdSaving(true);
     const { data, error } = await supabase.functions.invoke('reset-user-password', {
       body: { auth_id: u.auth_id, password },
@@ -5488,7 +5529,7 @@ function ChangerMotDePasse({ onClose, onSuccess }) {
 
   const handleSave = async () => {
     setError("");
-    if (nouveau.length < 6) { setError("Le nouveau mot de passe doit faire au moins 6 caractères."); return; }
+    if (nouveau.length < 8) { setError("Le nouveau mot de passe doit faire au moins 8 caractères."); return; }
     if (nouveau !== confirmer) { setError("Les mots de passe ne correspondent pas."); return; }
     setSaving(true);
     const { error: authErr } = await supabase.auth.signInWithPassword({ email: authUser.email, password: actuel });
