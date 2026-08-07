@@ -63,3 +63,12 @@ export function secondesOuvreesEntre(debut, fin) {
 export function heuresOuvreesEntre(debut, fin) {
   return Math.round((minutesOuvreesEntre(debut, fin) / 60) * 100) / 100;
 }
+
+// Au-delà d'une journée d'atelier complète (8 h ouvrées) sans pause,
+// un chronomètre encore en marche est très probablement un oubli.
+export const SEUIL_CHRONO_OUBLIE_MINUTES = 8 * 60;
+
+/** Vrai si un chrono démarré à `startedAt` dépasse le seuil d'oubli. */
+export function chronoDepasseSeuil(startedAt, maintenant = new Date()) {
+  return minutesOuvreesEntre(new Date(startedAt), maintenant) >= SEUIL_CHRONO_OUBLIE_MINUTES;
+}

@@ -14,7 +14,7 @@ import StockCritique from "./components/StockCritique.jsx";
 // parc.js supprimé — données migrées vers Supabase (table parc_vehicules)
 import { supabase } from "./supabase.js";
 import { safeSheetToJson, tooLarge } from "./xlsxSafe.js";
-import { secondesOuvreesEntre, heuresOuvreesEntre } from "./tempsOuvre.js";
+import { secondesOuvreesEntre, heuresOuvreesEntre, chronoDepasseSeuil } from "./tempsOuvre.js";
 import { useAuth } from "./AuthContext.jsx";
 import Login from "./Login.jsx";
 import {
@@ -2090,6 +2090,17 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
   const [form,setForm]=useState({machine:"",immat:"",typePanne:"",technicien:"",technicien2:"",priorite:"normale",description:""});
   const [panneSelect,setPanneSelect]=useState("");
   const [siteTechniciens,setSiteTechniciens]=useState([]);
+  // Chronos ouverts (or_id → started_at) pour le badge « chrono oublié » sur les cartes.
+  // Rechargé à chaque ouverture/fermeture de fiche (le statut a pu changer).
+  const [chronosOuverts,setChronosOuverts]=useState({});
+  useEffect(()=>{
+    supabase.from("or_temps_passe").select("or_id,started_at").eq("statut","en_cours")
+      .then(({data,error})=>{
+        if(error){console.error("[chrono] fetch chronos ouverts:",error);return;}
+        const m={};(data||[]).forEach(s=>{m[s.or_id]=s.started_at;});
+        setChronosOuverts(m);
+      });
+  },[ficheOrdre]);
 
   useEffect(()=>{
     getFiltrationVehicules().then(setRefVehicules);
@@ -2313,6 +2324,7 @@ function OrdresReparation({ ordres, setOrdres, mouvements, setMouvements, stockO
                     <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:5,flexWrap:"wrap"}}>
                       <span style={{fontFamily:"monospace",fontWeight:800,fontSize:15,color:"#1a1a1a"}}>{o.numero}</span>
                       <Badge status={o.statut} map={OR_STATUTS}/><Badge status={o.priorite} map={OR_PRIORITES}/>
+                      {(()=>{const st=chronosOuverts[String(o.id||o.numero)];return st&&chronoDepasseSeuil(st)?<span style={{background:"#fee2e2",color:"#dc2626",padding:"2px 10px",borderRadius:99,fontSize:11,fontWeight:800}}>⏱️ Chrono oublié ?</span>:null;})()}
                     </div>
                     <div style={{fontWeight:700,fontSize:15,color:"#1a1a1a",marginBottom:3}}>🚗 {o.machine}{o.immat?` — ${o.immat}`:""}</div>
                     <div style={{fontSize:13,color:"#6b7280"}}>🔧 {o.typePanne}{[o.technicien,o.technicien2].filter(Boolean).length>0?` · 👤 ${[o.technicien,o.technicien2].filter(Boolean).join(", ")}`:""}{(o.kilometrage||o.heures_moteur)&&<span style={{marginLeft:8,fontSize:12,color:"#8a9ab8"}}>{o.type_compteur==="h"?`⏱ ${o.heures_moteur} h`:`📏 ${(o.kilometrage||0).toLocaleString("fr-FR")} km`}</span>}</div>
@@ -3271,6 +3283,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
                   )}
                 </div>
                 {activeSession&&<div style={{marginTop:10,fontSize:11,color:"#6b7280"}}>Démarré à {new Date(activeSession.started_at).toLocaleTimeString("fr-FR")}</div>}
+                {activeSession&&chronoDepasseSeuil(activeSession.started_at)&&<div style={{marginTop:10,fontSize:12,color:"#b45309",background:"#fef3c7",padding:"6px 12px",borderRadius:8,display:"inline-block",fontWeight:600}}>⚠️ Chrono en marche depuis plus de 8 h ouvrées — oubli probable. Pensez à « Pause » ou « Terminé ».</div>}
                 {chronoError&&<div style={{marginTop:10,fontSize:12,color:"#dc2626",padding:"6px 12px",background:"#fef2f2",borderRadius:8,display:"inline-block"}}>{chronoError}</div>}
               </div>
             );
