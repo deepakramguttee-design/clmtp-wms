@@ -2538,6 +2538,11 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
 
   const startChronometer=async()=>{
     setChronoError("");
+    // Garde-fou : un seul chrono actif par OR (doublé par un index unique en base).
+    if(sessions.some(s=>s.statut==="en_cours")){
+      setChronoError("Un chronomètre est déjà actif sur cet OR.");
+      return;
+    }
     setSessionOp(true);
     const {data:rows,error}=await supabase.from("or_temps_passe").insert([{
       or_id:String(ordre.id||ordre.numero),
@@ -2548,7 +2553,10 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
     }]).select();
     if(error){
       console.error("[chrono] INSERT failed:",error);
-      setChronoError(error.message||"Erreur INSERT — voir console");
+      // 23505 = violation de l'index unique (chrono déjà démarré depuis un autre poste).
+      setChronoError(error.code==="23505"
+        ?"Un chronomètre est déjà actif sur cet OR (démarré depuis un autre poste)."
+        :(error.message||"Erreur INSERT — voir console"));
       setSessionOp(false);
       return;
     }

@@ -26,3 +26,9 @@ alter table or_temps_passe alter column duree_heures drop not null;
 alter table or_temps_passe add column if not exists started_at timestamptz;
 alter table or_temps_passe add column if not exists ended_at   timestamptz;
 alter table or_temps_passe add column if not exists statut     text default 'termine';
+
+-- Garde-fou : un seul chronomètre actif ('en_cours') par OR
+-- (appliqué en prod le 2026-08-07 via migration or_temps_passe_un_seul_chrono_actif)
+create unique index if not exists or_temps_passe_un_seul_en_cours
+  on or_temps_passe (or_id)
+  where statut = 'en_cours';
