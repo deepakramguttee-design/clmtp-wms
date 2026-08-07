@@ -14,6 +14,7 @@ import StockCritique from "./components/StockCritique.jsx";
 // parc.js supprimé — données migrées vers Supabase (table parc_vehicules)
 import { supabase } from "./supabase.js";
 import { safeSheetToJson, tooLarge } from "./xlsxSafe.js";
+import { secondesOuvreesEntre, heuresOuvreesEntre } from "./tempsOuvre.js";
 import { useAuth } from "./AuthContext.jsx";
 import Login from "./Login.jsx";
 import {
@@ -2520,7 +2521,9 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
 
   useEffect(()=>{
     if(!activeSession||orClos){setElapsed(0);return;}
-    const tick=()=>setElapsed(Math.floor((Date.now()-new Date(activeSession.started_at))/1000));
+    // Temps ouvré uniquement : la pause 12h-13h et les heures hors atelier
+    // (après 17h, 16h le mercredi, week-end) ne font pas tourner le chrono.
+    const tick=()=>setElapsed(secondesOuvreesEntre(new Date(activeSession.started_at),new Date()));
     tick();
     const id=setInterval(tick,1000);
     return ()=>clearInterval(id);
@@ -2558,7 +2561,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
     if(!activeSession) return;
     setSessionOp(true);
     const now=new Date().toISOString();
-    const duree=Math.round((Date.now()-new Date(activeSession.started_at))/36000)/100;
+    const duree=heuresOuvreesEntre(new Date(activeSession.started_at),new Date());
     await supabase.from("or_temps_passe").update({ended_at:now,statut:"pause",duree_heures:duree}).eq("id",activeSession.id);
     setSessions(prev=>prev.map(s=>s.id===activeSession.id?{...s,ended_at:now,statut:"pause",duree_heures:duree}:s));
     setSessionOp(false);
@@ -2568,7 +2571,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
     const active=sessions.find(s=>s.statut==="en_cours");
     if(!active) return;
     const now=new Date().toISOString();
-    const duree=Math.round((Date.now()-new Date(active.started_at))/36000)/100;
+    const duree=heuresOuvreesEntre(new Date(active.started_at),new Date());
     await supabase.from("or_temps_passe").update({ended_at:now,statut:"termine",duree_heures:duree}).eq("id",active.id);
     setSessions(prev=>prev.map(s=>s.id===active.id?{...s,ended_at:now,statut:"termine",duree_heures:duree}:s));
   };
@@ -2576,6 +2579,7 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
   const handleChangeStatut=async newStatut=>{
     const now=new Date().toISOString();
     if(newStatut==="en_cours"&&ordre.statut!=="en_cours") startChronometer();
+    if(newStatut==="en_attente"&&ordre.statut!=="en_attente") await pauseChronometer();
     if(newStatut==="termine"&&ordre.statut!=="termine") await endCurrentSession();
     onUpdate({...ordre,statut:newStatut,dateCloture:newStatut==="termine"?now:ordre.dateCloture});
   };
@@ -2593,7 +2597,8 @@ function FicheOR({ ordre, onClose, onUpdate, onSortir, getStock, products, refEn
       const s=new Date(`${date}T${heure_debut}:00`);
       let e=new Date(`${date}T${heure_fin}:00`);
       if(e<=s) e=new Date(e.getTime()+86400000);
-      duree_heures=Math.round((e-s)/36000)/100;
+      // Durée bornée aux heures ouvrées (pause déjeuner et hors atelier exclus).
+      duree_heures=heuresOuvreesEntre(s,e);
       started_at=s.toISOString();
       ended_at=e.toISOString();
     }else{
